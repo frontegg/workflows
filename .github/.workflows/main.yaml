@@ -1,0 +1,48 @@
+name: POC for main workflow
+
+on:
+  workflow_call:
+    inputs:
+
+      repository_name:
+        description: 'The repository name'
+        required: true
+      image_name:
+        required: true
+        type: string
+      tag:
+        type: string
+    secrets:
+      npm_token:
+        description: 'Npm Token'
+        type: string
+        required: true
+      docker_hub_password:
+        description: 'Docker Hub Password'
+        required: true
+      docker_hub_user:
+        description: 'Docker Hub User'
+        type: string
+        required: true
+
+jobs:
+  build-docker:
+    name: Build and publish docker images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install make
+        run: sudo apt-get install make
+        shell: bash
+      - name: Make npmrc
+        run: make generate-npmrc-file NPM_TOKEN=${{ secrets.npm_token }}
+        shell: bash
+      - name: Build and push docker image
+        run: |
+          make build-docker-image NPM_TOKEN=${{ inputs.npm_token }} COMMIT_HASH=${{ github.sha }} TAG_NAME=${{ env.BRANCH_NAME }}
+          make push-docker-image
+        shell: bash
+        env:
+          COMMIT_HASH: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
