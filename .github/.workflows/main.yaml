@@ -2,16 +2,6 @@ name: POC for main workflow
 
 on:
   workflow_call:
-    inputs:
-
-      repository_name:
-        description: 'The repository name'
-        required: true
-      image_name:
-        required: true
-        type: string
-      tag:
-        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
