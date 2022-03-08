@@ -57,10 +57,10 @@ jobs:
           repository: frontegg/workflows
           path: .github/shared-actions
       - run: |
-          ls ./github -a -1
+          ls ./.github -a -1
         shell: bash
       - run: |
-          ls ./github/shared-actions -1 -a
+          ls ./.github/shared-actions -1 -a
         shell: bash
 #      - run: |
 #          cd .github/shared-actions/deploy
