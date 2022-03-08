@@ -57,7 +57,8 @@ jobs:
           repository: frontegg/workflows
           path: .github/shared-actions
       - run: |
-          ls -1 -a
+          apt-get install tree
+          tree
         shell: bash
       - run: |
           cd .github/shared-actions
