@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       short_sha:
-        required: true
+        required: false
         default: ${GITHUB_SHA::7}
         type: string
     secrets:
