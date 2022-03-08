@@ -52,10 +52,10 @@ jobs:
 #      - build-hybrid-docker
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
-          path: './.github/shared-actions'
+          path: .github/shared-actions
       - run: |
           cd ..
           ls -1
