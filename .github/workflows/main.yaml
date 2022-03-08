@@ -51,13 +51,10 @@ jobs:
       - build-docker
 #      - build-hybrid-docker
     steps:
-      - uses: actions/checkout@v2.3.4 # Necessary to access local action
-      - run: |
-          cd .github/actions
-          ls -1
-        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: 'Deploy to staging'
-        uses: frontegg/workflows/.github/actions/deploy
+        uses: ./.github/actions/deploy
         with:
           environment: staging
           github_token: ${{ secrets.GITHUB_TOKEN }}
