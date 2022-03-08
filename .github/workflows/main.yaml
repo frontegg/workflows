@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: frontegg/workflows
-          path: './github/shared-actions'
+          path: './.github/shared-actions'
       - run: |
           ls -1
         shell: bash
