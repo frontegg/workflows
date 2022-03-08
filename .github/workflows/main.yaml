@@ -58,7 +58,7 @@ jobs:
           path: .github/shared-actions
       - run: |
           ls -1 -a
-          shell: bash
+        shell: bash
       - run: |
           cd .github/shared-actions
           ls -1 -a
