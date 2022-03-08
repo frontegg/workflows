@@ -56,7 +56,6 @@ jobs:
         with:
           repository: frontegg/workflows
           path: .github/shared-actions
-        shell: bash
       - name: 'Deploy to staging'
         uses: ./.github/shared-actions/deploy
         with:
