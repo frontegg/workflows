@@ -5,14 +5,14 @@ on:
     secrets:
       npm_token:
         description: 'Npm Token'
-        type: string
+        #type: string
         required: true
       docker_hub_password:
         description: 'Docker Hub Password'
         required: true
       docker_hub_user:
         description: 'Docker Hub User'
-        type: string
+        #type: string
         required: true
 
 jobs:
