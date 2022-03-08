@@ -1,0 +1,60 @@
+name: Deploy to staging
+description: This action should deploy the current branch to staging.
+inputs:
+  organization:
+    description: 'Set the organization name both in docker and github'
+    required: false
+    default: froneggg
+  github_token:
+    description: 'The github token'
+    required: true
+  repository_name:
+    description: 'The repository name'
+    required: true
+  environment:
+    description: 'Environment'
+    required: true
+  docker_hub_user:
+    description: 'Docker Hub User'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub Password'
+    required: true
+  current_tag:
+    description: 'The Tag to use when creating a new version Tag and version'
+    required: false
+    default: ${GITHUB_SHA::7}
+
+runs:
+  using: "composite"
+  steps:
+  - name: Generate new tag for current version
+    id: generate-tag
+    run: echo "::set-output name=new-tag::${{ inputs.environment }}-$(date +date +'%Y%m%d.%H%M%S')"
+    shell: bash
+  - name: Set docker full registry
+    id: generate-registry-name
+    run: echo "::set-output name=registry::${{ inputs.organization }}/${{ inputs.repository_name }}"
+    shell: bash
+  - name: Login to Docker Hub
+    uses: docker/login-action@v1
+    with:
+      username: ${{ inputs.docker_hub_user }}
+      password: ${{ inputs.docker_hub_password }}
+  - name: Tag docker
+    shell: bash
+    run: |
+      docker manifest create ${{ steps.generate-registry-name.output.registry }}:${{ steps.generate-tag.output.new-tag }} \
+      ${{ steps.generate-registry-name.output.registry }}:${{ inputs.current_tag }}
+      docker manifest push ${{ steps.generate-registry-name.output.registry }}:${{ inputs.current_tag }}
+  - name: Git Tag with new tag
+    uses: tvdias/github-tagger@v0.0.1
+    with:
+      repo-token: ${{ inputs.github_token }}
+      tag: ${{ inputs.environment}}-${{ steps.generate-tag.outputs.new-tag }}
+  - name: Set current HEAD to environment Tag
+    uses: tvdias/github-tagger@v0.0.1
+    with:
+      repo-token: ${{ inputs.github_token }}
+      tag: ${{ inputs.environment}}
+      

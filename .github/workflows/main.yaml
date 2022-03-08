@@ -4,20 +4,17 @@ on:
   workflow_call:
     inputs:
       short_sha:
-        required: false
         default: ${GITHUB_SHA::7}
         type: string
     secrets:
       npm_token:
         description: 'Npm Token'
-        #type: string
         required: true
       docker_hub_password:
         description: 'Docker Hub Password'
         required: true
       docker_hub_user:
         description: 'Docker Hub User'
-        #type: string
         required: true
 
 jobs:
@@ -36,7 +33,7 @@ jobs:
 #      - name: Make npmrc
 #        run: make generate-npmrc-file NPM_TOKEN=${{ secrets.npm_token }}
 #        shell: bash
-      - name: Build and push docker image
+      - name: Build and push docker image with tag ${{ inputs.short_sha }}
         run: |
           make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.short_sha }} TAG_NAME=${{ env.BRANCH_NAME }}
           make push-docker-image
@@ -46,3 +43,55 @@ jobs:
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+
+  deploy-to-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    needs:
+      - build-docker
+      - build-hybrid-docker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: 'Deploy to staging'
+        uses: ./.github/actions/deploy
+        with:
+          environment: staging
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ github.repository }}
+          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+  us-deployment:
+    needs: deploy-to-staging
+    name: 'Deploy to US production'
+    runs-on: ubuntu-latest
+    environment:
+      name: production-us
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deploy to production US
+        uses: ./.github/actions/deploy
+        with:
+          environment: production-us
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ github.repository }}
+          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+  eu-deployment:
+    name: 'Deploy to EU production'
+    needs: deploy-to-staging
+    runs-on: ubuntu-latest
+    environment:
+      name: production-global
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Deploy to production global
+        uses: ./.github/actions/deploy
+        with:
+          environment: production-global
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ github.repository }}
+          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
