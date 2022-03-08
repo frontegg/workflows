@@ -57,7 +57,6 @@ jobs:
           repository: frontegg/workflows
           path: './github/shared-actions'
       - run: |
-          cd .github
           ls -1
         shell: bash
       - name: 'Deploy to staging'
