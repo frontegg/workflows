@@ -51,9 +51,13 @@ jobs:
       - build-docker
 #      - build-hybrid-docker
     steps:
-      - uses: actions/checkout@v2.3.4 # Necessary to access local action
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          repository: frontegg/workflows
+          path: './github/shared-actions'
       - run: |
-          cd .github/actions
+          cd .github
           ls -1
         shell: bash
       - name: 'Deploy to staging'
