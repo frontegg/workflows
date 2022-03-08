@@ -25,6 +25,9 @@ jobs:
     name: Build and publish docker images
     runs-on: ubuntu-latest
     steps:
+      - name: Display
+        run: echo ${{ inputs.short_sha }}
+        shell: bash
       - name: Checkout
         uses: actions/checkout@v2
 #      - name: Install make
