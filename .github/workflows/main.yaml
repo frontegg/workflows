@@ -54,7 +54,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: 'Deploy to staging'
-        uses: ./.github/actions/deploy
+        uses: frontegg/workflows/.github/actions/deploy
         with:
           environment: staging
           github_token: ${{ secrets.GITHUB_TOKEN }}
