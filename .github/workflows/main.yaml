@@ -35,7 +35,7 @@ jobs:
 #        shell: bash
 #      - name: Make npmrc
 #        run: make generate-npmrc-file NPM_TOKEN=${{ secrets.npm_token }}
-        shell: bash
+#        shell: bash
       - name: Build and push docker image
         run: |
           make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.short_sha }} TAG_NAME=${{ env.BRANCH_NAME }}
