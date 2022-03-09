@@ -48,7 +48,7 @@ runs:
     run: |
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
       ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
-      docker manifest push ${{ steps.variables.output.registry }}:${{ inputs.current_tag }}
+      docker manifest push ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
     with:
