@@ -31,11 +31,13 @@ runs:
   - name: Set variables
     id: variables
     run: |
+      echo ::set-output name=test::"hello"
       echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')"
       echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
     shell: bash
   - name: display variables
     run: |
+      echo ${{ steps.variables.output.test }}
       echo ${{ steps.variables.output.new-tag }}
       echo ${{ steps.variables.output.registry }}
     shell: bash
