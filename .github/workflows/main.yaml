@@ -6,6 +6,9 @@ on:
       short_sha:
         default: ${GITHUB_SHA::7}
         type: string
+      repository_name:
+        type: string
+        required: true
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -58,42 +61,43 @@ jobs:
       - name: 'Deploy to staging'
         uses: ./.github/shared-actions/deploy
         with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository }}
           environment: staging
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ github.repository }}
           docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-  us-deployment:
-    needs: deploy-to-staging
-    name: 'Deploy to US production'
-    runs-on: ubuntu-latest
-    environment:
-      name: production-us
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Deploy to production US
-        uses: ./.github/actions/deploy
-        with:
-          environment: production-us
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ github.repository }}
-          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-  eu-deployment:
-    name: 'Deploy to EU production'
-    needs: deploy-to-staging
-    runs-on: ubuntu-latest
-    environment:
-      name: production-global
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Deploy to production global
-        uses: ./.github/actions/deploy
-        with:
-          environment: production-global
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ github.repository }}
-          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          current_tag:  ${{ inputs.short_sha }}
+#  us-deployment:
+#    needs: deploy-to-staging
+#    name: 'Deploy to US production'
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: production-us
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Deploy to production US
+#        uses: ./.github/actions/deploy
+#        with:
+#          environment: production-us
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          repository_name: ${{ github.repository }}
+#          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+#          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+#  eu-deployment:
+#    name: 'Deploy to EU production'
+#    needs: deploy-to-staging
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: production-global
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v2
+#      - name: Deploy to production global
+#        uses: ./.github/actions/deploy
+#        with:
+#          environment: production-global
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          repository_name: ${{ github.repository }}
+#          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+#          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
