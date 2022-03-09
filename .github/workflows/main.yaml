@@ -62,7 +62,7 @@ jobs:
         uses: ./.github/shared-actions/deploy
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository }}
+          repository_name: ${{ inputs.repository_name }}
           environment: staging
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
