@@ -28,13 +28,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: Generate new tag for current version
-    id: generate-tag
-    run: echo "::set-output name=new-tag::${{ inputs.environment }}-$(date +date +'%Y%m%d.%H%M%S')"
+  - name: Set variables
+    id: variables
+    run: |
+      echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S)"
+      echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
     shell: bash
-  - name: Set docker full registry
-    id: generate-registry-name
-    run: echo "::set-output name=registry::${{ inputs.organization }}/${{ inputs.repository_name }}"
+  - name: display variables
+    run: |
+      echo ${{ steps.variables.output.new-tag }}
+      echo ${{ steps.variables.output.registry }}
     shell: bash
   - name: Login to Docker Hub
     uses: docker/login-action@v1
