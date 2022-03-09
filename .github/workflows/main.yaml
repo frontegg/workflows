@@ -3,8 +3,8 @@ name: POC for main workflow
 on:
   workflow_call:
     inputs:
-      short_sha:
-        default: ${GITHUB_SHA::7}
+      tag:
+        required: true
         type: string
       repository_name:
         type: string
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Display
-        run: echo ${{ inputs.short_sha }}
+        run: echo ${{ inputs.tag }}
         shell: bash
       - name: Checkout
         uses: actions/checkout@v2
@@ -64,9 +64,9 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository }}
           environment: staging
-          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          current_tag:  ${{ inputs.short_sha }}
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag:  ${{ inputs.tag }}
 #  us-deployment:
 #    needs: deploy-to-staging
 #    name: 'Deploy to US production'
