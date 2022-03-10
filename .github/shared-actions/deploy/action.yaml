@@ -23,13 +23,15 @@ inputs:
   current_tag:
     description: 'The Tag to use when creating a new version Tag and version'
     required: false
+    default: ${GITHUB_SHA::7}
 
 runs:
   using: "composite"
   steps:
-  - name: s
+  - name: sasx
     id: xxx
     run: |
+      echo ${{ inputs.current_tag }}
       echo ${GITHUB_SHA::7}
       echo ::set-output name=poop::"${GITHUB_SHA::7}"
     shell: bash
