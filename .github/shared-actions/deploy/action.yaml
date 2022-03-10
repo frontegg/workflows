@@ -31,7 +31,7 @@ runs:
     id: test
     run: |
       echo ${GITHUB_SHA}
-      echo ::set-output name=poop::"${{ inputs.current_tag | ${GITHUB_SHA} }}"
+      echo ::set-output name=poop::"${{ inputs.current_tag || ${GITHUB_SHA} }}"
     shell: bash
   - name: Set variables
     id: variables
