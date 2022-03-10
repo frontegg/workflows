@@ -30,8 +30,8 @@ runs:
   - name: s
     id: test
     run: |
-      echo ${GITHUB_SHA}
-      echo ::set-output name=poop::"${{ inputs.current_tag || ${GITHUB_SHA} }}"
+      echo ${GITHUB_SHA::7}
+      echo ::set-output name=poop::"${{ inputs.current_tag || ${GITHUB_SHA::7} }}"
     shell: bash
   - name: Set variables
     id: variables
