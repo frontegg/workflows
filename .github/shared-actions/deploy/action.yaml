@@ -61,6 +61,7 @@ runs:
   - name: Tag docker
     shell: bash
     run: |
+      docker login -u="${{ inputs.docker_hub_user }}" -p="${{ inputs.docker_hub_password }}"
       echo ${{ steps.variables.outputs.new-tag }}  --> ${{ inputs.current_tag }}
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
       ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
