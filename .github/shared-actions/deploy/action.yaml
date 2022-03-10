@@ -22,11 +22,17 @@ inputs:
     required: true
   current_tag:
     description: 'The Tag to use when creating a new version Tag and version'
-    required: true
+    required: false
 
 runs:
   using: "composite"
   steps:
+  - name: s
+    id: test
+    run: |
+      echo ${GITHUB_SHA}
+      echo ::set-output name=poop::"${{ inputs.current_tag | ${GITHUB_SHA} }}"
+    shell: bash
   - name: Set variables
     id: variables
     run: |
@@ -35,6 +41,7 @@ runs:
     shell: bash
   - name: display variables
     run: |
+      echo ${{ steps.test.outputs.poop }}
       echo ${{ steps.variables.outputs.new-tag }}
       echo ${{ steps.variables.outputs.registry }}
     shell: bash
