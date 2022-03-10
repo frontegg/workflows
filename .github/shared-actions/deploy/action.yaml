@@ -28,10 +28,16 @@ runs:
   using: "composite"
   steps:
   - name: s
+    id: xxx
+    run: |
+      echo ${GITHUB_SHA::7}
+      echo ::set-output name=poop::"${GITHUB_SHA::7}"
+    shell: bash
+  - name: s
     id: test
     run: |
       echo ${GITHUB_SHA::7}
-      echo ::set-output name=poop::"${{ inputs.current_tag || ${GITHUB_SHA::7} }}"
+      echo ::set-output name=poop::"${{ inputs.current_tag || steps.xxx.outputs.poop }}"
     shell: bash
   - name: Set variables
     id: variables
