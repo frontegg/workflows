@@ -72,9 +72,7 @@ runs:
     shell: bash
     run: |
       docker manifest create froneggg/api-gateway-poc:staging-20220313.123815 froneggg/api-gateway-poc:74baa14
-      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
-      ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
-      docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
+      
 
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
