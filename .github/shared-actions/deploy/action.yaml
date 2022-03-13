@@ -79,7 +79,7 @@ runs:
     uses: mathieudutour/github-tag-action@v6.0
     with:
       github_token: ${{ inputs.github_token }}
-      custom_tag: ${{ steps.variables.outputs.-inputs.environment }}
+      custom_tag: ${{ inputs.environment }}
 
 #  - uses: rickstaa/action-create-tag@v1
 #    with:
