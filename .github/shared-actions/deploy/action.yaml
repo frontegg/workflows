@@ -73,7 +73,7 @@ runs:
     run: |
       export DOCKER_CLI_EXPERIMENTAL=enabled
       
-      docker manifest create 'froneggg/api-gateway-poc:poop' 'froneggg/api-gateway-poc:74baa14'
+      docker manifest create froneggg/api-gateway-poc:poop froneggg/api-gateway-poc:74baa14
 
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
