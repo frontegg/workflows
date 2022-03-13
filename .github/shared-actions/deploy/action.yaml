@@ -82,6 +82,6 @@ runs:
 
   - name: Git Tag with new tag
     run: |
-      git tag ${{ inputs.environment}} -force && git push origin refs/tags/${{ inputs.environment}} --force
+      git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
     shell: bash
       
