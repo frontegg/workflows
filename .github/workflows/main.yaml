@@ -56,8 +56,6 @@ jobs:
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
-        with:
-          fetch-depth: '0'
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
