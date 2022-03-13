@@ -109,7 +109,7 @@ runs:
 #
   - name: Git Tag with new tag
     run: |
-      git remote set-url origin "https://${GITHUB_ACTOR}:${INPUT_GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+      git remote set-url origin "https://${GITHUB_ACTOR}:${{ inputs.github_token }}@github.com/${GITHUB_REPOSITORY}.git"
       git config user.name "${GITHUB_ACTOR}"
       git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
       git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
