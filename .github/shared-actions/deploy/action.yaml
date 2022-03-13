@@ -63,7 +63,7 @@ runs:
 #    uses: docker/metadata-action@v3
 #    with:
 #      images: frontegg/api-gateway-poc
-  - name: Tag docker
+  - name: fvhdfb
     shell: bash
     run: |
       echo ${{ steps.variables.outputs.new-tag }}  --> ${{ inputs.current_tag }}
@@ -71,6 +71,7 @@ runs:
   - name: Tag docker
     shell: bash
     run: |
+      export DOCKER_CLI_EXPERIMENTAL=enabled
       docker manifest create 'froneggg/api-gateway-poc:staging-20220313.12381' 'froneggg/api-gateway-poc:74baa14'
       
 
