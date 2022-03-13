@@ -74,9 +74,12 @@ runs:
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
       docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-  - run: |
-      git tag ${{ inputs.environment }} --force && git push origin refs/tags/${{ inputs.environment }} --force
-    shell: bash
+  - name: Bump version and push tag
+    id: tag_version
+    uses: mathieudutour/github-tag-action@v6.0
+    with:
+      github_token: ${{ inputs.github_token }}
+      custom_tag: ${{ steps.variables.outputs.-inputs.environment }}
 
 #  - uses: rickstaa/action-create-tag@v1
 #    with:
