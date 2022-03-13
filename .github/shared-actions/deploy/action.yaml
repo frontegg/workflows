@@ -71,8 +71,7 @@ runs:
   - name: Tag docker
     shell: bash
     run: |
-      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
-      ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
+      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
       docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
   - name: Git Tag with new tag
@@ -80,9 +79,9 @@ runs:
     with:
       repo-token: ${{ inputs.github_token }}
       tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
-  - name: Set current HEAD to environment Tag
-    uses: tvdias/github-tagger@v0.0.1
-    with:
-      repo-token: ${{ inputs.github_token }}
-      tag: ${{ inputs.environment}}
+
+  - name: Git Tag with new tag
+    run: |
+      git tag ${{ inputs.environment}} -force && git push origin refs/tags/${{ inputs.environment}} --force
+    shell: bashs
       
