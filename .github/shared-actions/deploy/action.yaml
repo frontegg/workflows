@@ -60,7 +60,7 @@ runs:
       password: ${{ inputs.docker_hub_password }}
   - name: Extract metadata (tags, labels) for Docker
     id: meta
-    uses: docker/metadata-action
+    uses: docker/metadata-action@v3
     with:
       images: frontegg/api-gateway-poc
   - name: Tag docker
