@@ -67,14 +67,12 @@ runs:
     shell: bash
     run: |
       echo ${{ steps.variables.outputs.new-tag }}  --> ${{ inputs.current_tag }}
-# docker manifest create 'froneggg/api-gateway-poc:staging-20220313.12381' 'froneggg/api-gateway-poc:74baa14'
 
   - name: Tag docker
     shell: bash
     run: |
       export DOCKER_CLI_EXPERIMENTAL=enabled
-      
-      docker manifest create  frontegg/api-gateway-poc:test-1 frontegg/api-gateway-poc:74baa14
+      docker manifest create "froneggg/api-gateway-poc:staging-20220313.12381" 'froneggg/api-gateway-poc:74baa14'
 
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
