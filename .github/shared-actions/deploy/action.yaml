@@ -67,10 +67,9 @@ runs:
     shell: bash
     run: |
       export DOCKER_CLI_EXPERIMENTAL=enabled
-      echo docker login -u="${{ inputs.docker_hub_user }}" -p="${{ inputs.docker_hub_password }}" | base64
       echo ${{ steps.variables.outputs.new-tag }}  --> ${{ inputs.current_tag }}
       docker manifest create frontegg/api-gateway-poc:test frontegg/api-gateway-poc:74baa14
-      
+      docker manifest push frontegg/api-gateway-poc:test
 
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
