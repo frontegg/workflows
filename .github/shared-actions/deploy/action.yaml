@@ -81,6 +81,15 @@ runs:
       github_token: ${{ inputs.github_token }}
       custom_tag: ${{ inputs.environment }}
 
+  - uses: EndBug/add-and-commit@v9
+    with:
+      message: Tag version to ${{ inputs.environment }}
+      committer_name: GitHub Actions
+      committer_email: devops@fronegg.com
+      tag: '${{ inputs.environment }}--force'
+      tag_push: '--force'
+      push: true
+
 #  - uses: rickstaa/action-create-tag@v1
 #    with:
 #      github_token: ${{ inputs.github_token }}
