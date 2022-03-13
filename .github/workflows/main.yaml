@@ -54,12 +54,12 @@ jobs:
 #      - build-docker
 #      - build-hybrid-docker
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
+      - name: Checkout codes
+        uses: actions/checkout@v3
       - name: 'Deploy to staging'
         uses: ./.github/shared-actions/deploy
         with:

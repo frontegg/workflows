@@ -112,8 +112,8 @@ runs:
 #      tag: ${{ inputs.environment}}
 #      message: "Latest release"
 #      force_push_tag: true
-  - name: Checkout codes
-    uses: actions/checkout@v3
+#  - name: Checkout codes
+#    uses: actions/checkout@v3
   - name: Git Tag with new tag
     run: |
       git remote set-url origin "https://${GITHUB_ACTOR}:${{ inputs.github_token }}@github.com/${GITHUB_REPOSITORY}.git"
