@@ -84,9 +84,7 @@ runs:
   - uses: EndBug/add-and-commit@v9
     with:
       message: Tag version to ${{ inputs.environment }}
-      committer_name: GitHub Actions
-      committer_email: devops@fronegg.com
-      tag: '${{ inputs.environment }}--force'
+      tag: '${{ inputs.environment }} --force'
       tag_push: '--force'
       push: true
 
