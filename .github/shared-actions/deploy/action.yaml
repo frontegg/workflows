@@ -74,14 +74,27 @@ runs:
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
       docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-  - name: Git Tag with new tag
-    uses: tvdias/github-tagger@v0.0.1
+  - uses: rickstaa/action-create-tag@v1
     with:
-      repo-token: ${{ inputs.github_token }}
+      github_token: ${{ inputs.github_token }}
       tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
+      message: "[Automated Tag] - Tag version"
 
-  - name: Git Tag with new tag
-    run: |
-      git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
-    shell: bash
-      
+  - uses: rickstaa/action-create-tag@v1
+    with:
+      github_token: ${{ inputs.github_token }}
+      tag: ${{ inputs.environment}}
+      message: "[Automated Tag] - Tag version"
+      force_push_tag: true
+#
+#  - name: Git Tag with new tag
+#    uses: tvdias/github-tagger@v0.0.1
+#    with:
+#      repo-token: ${{ inputs.github_token }}
+#      tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
+#
+#  - name: Git Tag with new tag
+#    run: |
+#      git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
+#    shell: bash
+#
