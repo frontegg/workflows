@@ -71,8 +71,9 @@ runs:
   - name: Tag docker
     shell: bash
     run: |
-      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
-      docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
+      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
+      ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
+      docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
   - name: Git Tag with new tag
     uses: tvdias/github-tagger@v0.0.1
