@@ -107,8 +107,10 @@ runs:
 #      repo-token: ${{ inputs.github_token }}
 #      tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
 #
-#  - name: Git Tag with new tag
-#    run: |
-#      git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
-#    shell: bash
+  - name: Git Tag with new tag
+    run: |
+      git config user.name "${GITHUB_ACTOR}"
+      git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+      git tag ${{ inputs.environment}} --force && git push origin refs/tags/${{ inputs.environment}} --force
+    shell: bash
 #
