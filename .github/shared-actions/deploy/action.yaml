@@ -71,7 +71,7 @@ runs:
   - name: Tag docker
     shell: bash
     run: |
-      docker manifest create "froneggg/api-gateway-poc:staging-20220313.123815" "froneggg/api-gateway-poc:74baa14"
+      docker manifest create 'froneggg/api-gateway-poc:staging-20220313.12381' 'froneggg/api-gateway-poc:74baa14'
       
 
   - name: Git Tag with new tag
