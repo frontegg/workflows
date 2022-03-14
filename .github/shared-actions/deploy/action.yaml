@@ -113,9 +113,12 @@ runs:
 #      message: "Latest release"
 #      force_push_tag: true
 #  - name: Checkout codes
+#  - name: Checkout codes
 #    uses: actions/checkout@v3
   - name: Git Tag with new tag
+    working-directory: code
     run: |
+      ls -1 
       git remote set-url origin "https://${GITHUB_ACTOR}:${{ inputs.github_token }}@github.com/${GITHUB_REPOSITORY}.git"
       git config user.name "${GITHUB_ACTOR}"
       git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"

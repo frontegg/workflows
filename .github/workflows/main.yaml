@@ -55,15 +55,16 @@ jobs:
 #      - build-hybrid-docker
     steps:
       - name: Checkout codes
-          uses: actions/checkout@v3
-
+        uses: actions/checkout@v3
+        with:
+          path: code
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
-          clean: false
+          path: workflows
       - name: 'Deploy to staging'
-        uses: ./.github/shared-actions/deploy
+        uses: workflows/.github/shared-actions/deploy
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
