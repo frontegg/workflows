@@ -59,6 +59,7 @@ jobs:
         id: build-docker
         run: |
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
+          echo ${HYBRID_VERSION}
           echo ::set-output name=version::"${HYBRID_VERSION}"
           make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} \
           COMMIT_HASH=${{ inputs.tag }} \
