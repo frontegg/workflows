@@ -63,7 +63,7 @@ jobs:
           echo ::set-output name=version::"${HYBRID_VERSION}"
           make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} \
           COMMIT_HASH=${{ inputs.tag }} \
-          TAG_NAME=${{ env.BRANCH_NAME }} \ 
+          TAG_NAME=${{ env.BRANCH_NAME }} \
           HYBRID_VERSION=${HYBRID_VERSION}
           make push-docker-image
         shell: bash
@@ -131,3 +131,16 @@ jobs:
 #          repository_name: ${{ github.repository }}
 #          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
 #          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+#  failed-pipeline:
+#    name: Failure Notification
+#    if: filure()
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Send OpsGenie Alert
+#        uses: eonx-com/actions-opsgenie@master
+#        with:
+#          API_KEY: ${{ secrets.OPSGENIE_API_KEY }}
+#          PRIORITY: 'P5'
+#          ALIAS: 'deploy-production'
+#          MESSAGE: 'Deployment to production completed successfully'
