@@ -28,12 +28,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: sasx
-    id: xxx
+  - name: Display Currnet SHA/Tag for current repository
     run: |
-      echo ${{ inputs.current_tag }}
-      echo ${GITHUB_SHA::7}
-      echo ::set-output name=poop::"${GITHUB_SHA::7}"
+      echo SHA/Tag: ${{ inputs.current_tag }} for repository: ${{ github.repository }}
     shell: bash
   - name: s
     id: test
@@ -58,15 +55,7 @@ runs:
     with:
       username: ${{ inputs.docker_hub_user }}
       password: ${{ inputs.docker_hub_password }}
-#  - name: Extract metadata (tags, labels) for Docker
-#    id: meta
-#    uses: docker/metadata-action@v3
-#    with:
-#      images: frontegg/api-gateway-poc
-  - name: Tag docker
-    shell: bash
-    run: |
-      echo ${{ steps.variables.outputs.new-tag }}  --> ${{ inputs.current_tag }}
+
 
   - name: Tag docker
     shell: bash
@@ -74,48 +63,6 @@ runs:
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
       docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-#  - name: Bump version and push tag
-#    id: tag_version
-#    uses: mathieudutour/github-tag-action@v6.0
-#    with:
-#      github_token: ${{ inputs.github_token }}
-#      custom_tag: ${{ inputs.environment }}
-
-#  - uses: EndBug/add-and-commit@v9
-#    with:
-#      message: Tag version to ${{ inputs.environment }}
-#      tag: '${{ inputs.environment }} --force'
-#      tag_push: '--force'
-#      push: true
-
-#  - uses: rickstaa/action-create-tag@v1
-#    with:
-#      github_token: ${{ inputs.github_token }}
-#      tag: ${{ steps.variables.outputs.new-tag }}
-#      message: "[Automated Tag] - Tag version"
-#
-#  - uses: rickstaa/action-create-tag@v1
-#    with:
-#      github_token: ${{ inputs.github_token }}
-#      tag: ${{ inputs.environment}}
-#      message: "[Automated Tag] - Tag version"
-#      force_push_tag: true
-#
-#  - name: Git Tag with new tag
-#    uses: tvdias/github-tagger@v0.0.1
-#    with:
-#      repo-token: ${{ inputs.github_token }}
-#      tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
-#
-#  - uses: rickstaa/action-create-tag@v1
-#    working-directory: code
-#    with:
-#      tag: ${{ inputs.environment }}
-#      message: "Latest release"
-#      force_push_tag: true
-#  - name: Checkout codes
-#  - name: Checkout codes
-#    uses: actions/checkout@v3
   - name: Git Tag with new tag
     working-directory: code
     run: |
