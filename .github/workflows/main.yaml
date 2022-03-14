@@ -57,8 +57,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Build and push docker image with tag ${{ inputs.tag }}
         run: |
-          make generate-npmrc-file NPM_TOKEN=$NPM_TOKEN
-          make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
+          make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
           make push-docker-image
         shell: bash
       - name:
