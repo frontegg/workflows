@@ -68,8 +68,6 @@ jobs:
           make push-hybrid-docker-image
         shell: bash
         env:
-          COMMIT_HASH: ${{ github.sha }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
       - name:
