@@ -107,11 +107,12 @@ runs:
 #      repo-token: ${{ inputs.github_token }}
 #      tag: ${{ inputs.environment}}-${{ steps.variables.outputs.new-tag }}
 #
-#  - uses: rickstaa/action-create-tag@v1
-#    with:
-#      tag: ${{ inputs.environment}}
-#      message: "Latest release"
-#      force_push_tag: true
+  - uses: rickstaa/action-create-tag@v1
+    working-directory: code
+    with:
+      tag: ${{ inputs.environment}}
+      message: "Latest release"
+      force_push_tag: true
 #  - name: Checkout codes
 #  - name: Checkout codes
 #    uses: actions/checkout@v3

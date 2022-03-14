@@ -21,31 +21,31 @@ on:
         required: true
 
 jobs:
-  build-docker:
-    name: Build and publish docker images
-    runs-on: ubuntu-latest
-    steps:
-      - name: Display
-        run: echo ${{ inputs.tag }}
-        shell: bash
-      - name: Checkout
-        uses: actions/checkout@v3
-#      - name: Install make
-#        run: sudo apt-get install make
+#  build-docker:
+#    name: Build and publish docker images
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Display
+#        run: echo ${{ inputs.tag }}
 #        shell: bash
-#      - name: Make npmrc
-#        run: make generate-npmrc-file NPM_TOKEN=${{ secrets.npm_token }}
+#      - name: Checkout
+#        uses: actions/checkout@v3
+##      - name: Install make
+##        run: sudo apt-get install make
+##        shell: bash
+##      - name: Make npmrc
+##        run: make generate-npmrc-file NPM_TOKEN=${{ secrets.npm_token }}
+##        shell: bash
+#      - name: Build and push docker image with tag ${{ inputs.tag }}
+#        run: |
+#          make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
+#          make push-docker-image
 #        shell: bash
-      - name: Build and push docker image with tag ${{ inputs.tag }}
-        run: |
-          make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
-          make push-docker-image
-        shell: bash
-        env:
-          COMMIT_HASH: ${{ github.sha }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+#        env:
+#          COMMIT_HASH: ${{ github.sha }}
+#          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
 
   deploy-to-staging:
     name: Deploy to staging
