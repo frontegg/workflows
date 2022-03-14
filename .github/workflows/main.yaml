@@ -13,6 +13,10 @@ on:
         required: false
         default: false
         type: boolean
+      enable_notifications:
+        required: false
+        default: true
+        type: boolean
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -103,34 +107,30 @@ jobs:
 #          docker_hub_password: ${{ secrets.docker_hub_password }}
 #          current_tag: ${{ inputs.tag }}
 #
-#  failed-pipeline:
-#    name: Failure Notification
-#    if: failure()
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Send OpsGenie Alert
-#        uses: eonx-com/actions-opsgenie@master
-#        with:
-#          API_KEY: ${{ secrets.opsgenie_key }}
-#          PRIORITY: 'P3'
-#          ALIAS: '${{ github.repository }} MASTER build has failed'
-#          MESSAGE: |
-#            ${BITBUCKET_REPO_SLUG} master build has failed.
-#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
 
-  sujccess-pipeline:
+  failed-pipeline:
     name: Failure Notification
-    if: success()
+    if: success() && intpus.enable_notifications
     runs-on: ubuntu-latest
     steps:
-      - uses: rockem/create-opsgenie-alert-action@v1
-        with:
-          api_key: ${{ secrets.opsgenie_key }}
-          alias: master-pipeline-failure
-          message: >
-            Activity exceeded timeout: exceeded 60 seconds
-          description: >
-            ${BITBUCKET_REPO_SLUG} master build has failed.
-            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
-          priority: P2
-          tags: backend,timeout
+      - name: View the information of the pusher
+        run: |
+          echo "The name of the pusher: ${{ github.event.pusher.name }}"
+          echo "The email of the pusher: ${{ github.event.pusher.email }}"
+        shell: base
+      - name: View the github context
+        run: echo "$GITHUB_CONTEXT"
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }
+        shell: base
+#      - uses: rockem/create-opsgenie-alert-action@v1
+#        with:
+#          api_key: ${{ secrets.opsgenie_key }}
+#          alias: master-pipeline-failure
+#          message: >
+#            Activity exceeded timeout: exceeded 60 seconds
+#          description: >
+#            ${BITBUCKET_REPO_SLUG} master build has failed.
+#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
+#          priority: P2
+#          tags: backend,timeout
