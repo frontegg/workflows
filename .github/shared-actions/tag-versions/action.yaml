@@ -1,4 +1,4 @@
-name: Deploy to staging
+name: Deploy to environment
 description: This action should deploy the current branch to staging.
 inputs:
   organization:
@@ -28,45 +28,48 @@ inputs:
 runs:
   using: "composite"
   steps:
+
   - name: Display Currnet SHA/Tag for current repository
     run: |
-      echo SHA/Tag: ${{ inputs.current_tag }} for repository: ${{ github.repository }}
+      echo Working in repository: ${{ github.repository }} on SHA/Tag: ${{ inputs.current_tag }} for
     shell: bash
-  - name: s
-    id: test
-    run: |
-      echo ${GITHUB_SHA::7}
-      echo ::set-output name=poop::"${{ inputs.current_tag || steps.xxx.outputs.poop }}"
-    shell: bash
+
   - name: Set variables
     id: variables
     run: |
       echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')"
       echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
     shell: bash
-  - name: display variables
+
+  - name: Display variables
     run: |
-      echo ${{ steps.test.outputs.poop }}
       echo ${{ steps.variables.outputs.new-tag }}
       echo ${{ steps.variables.outputs.registry }}
     shell: bash
+
   - name: Login to Docker Hub
     uses: docker/login-action@v1
     with:
       username: ${{ inputs.docker_hub_user }}
       password: ${{ inputs.docker_hub_password }}
 
-
-  - name: Tag docker
+  - name: Tag docker image with versions
     shell: bash
     run: |
-      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} ${{ steps.variables.outputs.registry }}:${{ steps.test.outputs.poop }}
+      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
+      ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
       docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-  - name: Git Tag with new tag
+  - name: Tag github repository with version update
     working-directory: code
     run: |
-      ls -1
+      git tag ${{ steps.variables.outputs.new-tag }}
+      git push origin refs/tags/${{ steps.variables.outputs.new-tag }}
+    shell: bash
+
+  - name: Tag github repository with latest environment Tag
+    working-directory: code
+    run: |
       git tag ${{ inputs.environment}} --force
       git push origin refs/tags/${{ inputs.environment }} --force
     shell: bash

@@ -64,7 +64,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
       - name: 'Deploy to staging'
-        uses: ./workflows/.github/shared-actions/deploy
+        uses: ./workflows/.github/shared-actions/tag-versions
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
