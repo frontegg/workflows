@@ -65,7 +65,7 @@ jobs:
           COMMIT_HASH=${{ inputs.tag }} \
           TAG_NAME=${{ env.BRANCH_NAME }} \
           HYBRID_VERSION=${HYBRID_VERSION}
-          make push-docker-image
+          make push-hybrid-docker-image
         shell: bash
       - name:
         run: |
