@@ -157,14 +157,22 @@ jobs:
     if: success()
     runs-on: ubuntu-latest
     steps:
-      - name: Send OpsGenie Alert
-        uses: eonx-com/actions-opsgenie@master
+      - uses: rockem/create-opsgenie-alert-action@v1
         with:
-          API_KEY: ${{ secrets.opsgenie_key }}
-          PRIORITY: 'P3'
-          ALIAS: '${{ github.repository }} MASTER build has failed'
-          MESSAGE: |
-            Hellp
+          api_key: ${{ secrets.opsgenie_key }}
+          alias: timeout-alert-alias
+          message: >
+            Activity exceeded timeout: exceeded 60 seconds
+          priority: P2
+          tags: backend,timeout
+#      - name: Send OpsGenie Alert
+#        uses: eonx-com/actions-opsgenie@master
+#        with:
+#          API_KEY: ${{ secrets.opsgenie_key }}
+#          PRIORITY: 'P3'
+#          ALIAS: '${{ github.repository }} MASTER build has failed'
+#          MESSAGE: |
+#            Hellp
             
 
 #            ${BITBUCKET_REPO_SLUG} master build has failed.
