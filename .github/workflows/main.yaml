@@ -70,13 +70,17 @@ jobs:
         env:
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-      - name:
-        run: |
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git tag -a hybrid-${{ steps.build-docker.outputs.version }}
-          git push origin refs/tags/hybrid-${{ steps.build-docker.outputs.version }}
-        shell: bash
+      - uses: rickstaa/action-create-tag@v1
+        with:
+          tag: hybrid-${{ steps.build-docker.outputs.version }}
+          message: "Latest hybrid release"
+#      - name:
+#        run: |
+#          git config user.name "${GITHUB_ACTOR}"
+#          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+#          git tag -a hybrid-${{ steps.build-docker.outputs.version }}
+#          git push origin refs/tags/hybrid-${{ steps.build-docker.outputs.version }}
+#        shell: bash
 
   deploy-to-staging:
     name: Deploy to staging
