@@ -28,129 +28,95 @@ on:
         required: true
 
 jobs:
-  build-docker:
-    name: Build and publish docker image
-    runs-on: ubuntu-latest
-    steps:
-      - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ inputs.tag }}
-        shell: bash
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Build and push docker image with tag ${{ inputs.tag }}
-        run: |
-          make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
-          make push-docker-image
-        shell: bash
-        env:
-          COMMIT_HASH: ${{ github.sha }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-
-  build-hybrid-docker:
-    name: Build and publish hybrid docker image
-    runs-on: ubuntu-latest
-    if: inputs.has_hybrid
-    steps:
-      - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ inputs.tag }}
-        shell: bash
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Build and push docker image with tag ${{ inputs.tag }}
-        id: build-docker
-        run: |
-          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ${HYBRID_VERSION}
-          echo ::set-output name=version::"${HYBRID_VERSION}"
-          make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} \
-          COMMIT_HASH=${{ inputs.tag }} \
-          TAG_NAME=${{ env.BRANCH_NAME }} \
-          HYBRID_VERSION=${HYBRID_VERSION}
-          make push-hybrid-docker-image
-        shell: bash
-        env:
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-      - uses: rickstaa/action-create-tag@v1
-        with:
-          tag: hybrid-${{ steps.build-docker.outputs.version }}
-          message: "Latest hybrid release"
-
-  deploy-to-staging:
-    name: Deploy to staging
-    runs-on: ubuntu-latest
-    needs:
-      - build-docker
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to staging'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: staging
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ inputs.tag }}
-#  us-deployment:
-#    needs: deploy-to-staging
-#    name: 'Deploy to US production'
+#  build-docker:
+#    name: Build and publish docker image
 #    runs-on: ubuntu-latest
-#    environment:
-#      name: production-us
 #    steps:
+#      - name: Display Current Tag/SHA
+#        run: echo Tag/SHA ${{ inputs.tag }}
+#        shell: bash
 #      - name: Checkout
-#        uses: actions/checkout@v2
-#      - name: Deploy to production US
-#        uses: ./.github/actions/deploy
-#        with:
-#          environment: production-us
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository_name: ${{ github.repository }}
-#          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-#          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-#  eu-deployment:
-#    name: 'Deploy to EU production'
-#    needs: deploy-to-staging
+#        uses: actions/checkout@v3
+#      - name: Build and push docker image with tag ${{ inputs.tag }}
+#        run: |
+#          make build-docker-image NPM_TOKEN=${{ secrets.npm_token }} COMMIT_HASH=${{ inputs.tag }} TAG_NAME=${{ env.BRANCH_NAME }}
+#          make push-docker-image
+#        shell: bash
+#        env:
+#          COMMIT_HASH: ${{ github.sha }}
+#          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+#
+#  build-hybrid-docker:
+#    name: Build and publish hybrid docker image
 #    runs-on: ubuntu-latest
-#    environment:
-#      name: production-global
+#    if: inputs.has_hybrid
 #    steps:
+#      - name: Display Current Tag/SHA
+#        run: echo Tag/SHA ${{ inputs.tag }}
+#        shell: bash
 #      - name: Checkout
-#        uses: actions/checkout@v2
-#      - name: Deploy to production global
-#        uses: ./.github/actions/deploy
+#        uses: actions/checkout@v3
+#      - name: Build and push docker image with tag ${{ inputs.tag }}
+#        id: build-docker
+#        run: |
+#          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
+#          echo ${HYBRID_VERSION}
+#          echo ::set-output name=version::"${HYBRID_VERSION}"
+#          make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} \
+#          COMMIT_HASH=${{ inputs.tag }} \
+#          TAG_NAME=${{ env.BRANCH_NAME }} \
+#          HYBRID_VERSION=${HYBRID_VERSION}
+#          make push-hybrid-docker-image
+#        shell: bash
+#        env:
+#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+#      - uses: rickstaa/action-create-tag@v1
 #        with:
-#          environment: production-global
+#          tag: hybrid-${{ steps.build-docker.outputs.version }}
+#          message: "Latest hybrid release"
+#
+#  deploy-to-staging:
+#    name: Deploy to staging
+#    runs-on: ubuntu-latest
+#    needs:
+#      - build-docker
+#    steps:
+#      - name: Checkout codes
+#        uses: actions/checkout@v3
+#        with:
+#          path: code
+#      - name: Checkout workflows
+#        uses: actions/checkout@v3
+#        with:
+#          repository: frontegg/workflows
+#          path: workflows
+#      - name: 'Deploy to staging'
+#        uses: ./workflows/.github/shared-actions/tag-versions
+#        with:
 #          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository_name: ${{ github.repository }}
-#          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-#          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-
-  failed-pipeline:
-    name: Failure Notification
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send OpsGenie Alert
-        uses: eonx-com/actions-opsgenie@master
-        with:
-          API_KEY: ${{ secrets.opsgenie_key }}
-          PRIORITY: 'P3'
-          ALIAS: '${{ github.repository }} MASTER build has failed'
-          MESSAGE: |
-            ${BITBUCKET_REPO_SLUG} master build has failed.
-            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
+#          repository_name: ${{ inputs.repository_name }}
+#          environment: staging
+#          docker_hub_user: ${{ secrets.docker_hub_user }}
+#          docker_hub_password: ${{ secrets.docker_hub_password }}
+#          current_tag: ${{ inputs.tag }}
+#
+#  failed-pipeline:
+#    name: Failure Notification
+#    if: failure()
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Send OpsGenie Alert
+#        uses: eonx-com/actions-opsgenie@master
+#        with:
+#          API_KEY: ${{ secrets.opsgenie_key }}
+#          PRIORITY: 'P3'
+#          ALIAS: '${{ github.repository }} MASTER build has failed'
+#          MESSAGE: |
+#            ${BITBUCKET_REPO_SLUG} master build has failed.
+#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
 
   sujccess-pipeline:
     name: Failure Notification
@@ -160,23 +126,11 @@ jobs:
       - uses: rockem/create-opsgenie-alert-action@v1
         with:
           api_key: ${{ secrets.opsgenie_key }}
-          alias: timeout-alert-alias
+          alias: master-pipeline-failure
           message: >
             Activity exceeded timeout: exceeded 60 seconds
-          description: |
+          description: >
             ${BITBUCKET_REPO_SLUG} master build has failed.
             Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
           priority: P2
           tags: backend,timeout
-#      - name: Send OpsGenie Alert
-#        uses: eonx-com/actions-opsgenie@master
-#        with:
-#          API_KEY: ${{ secrets.opsgenie_key }}
-#          PRIORITY: 'P3'
-#          ALIAS: '${{ github.repository }} MASTER build has failed'
-#          MESSAGE: |
-#            Hellp
-            
-
-#            ${BITBUCKET_REPO_SLUG} master build has failed.
-#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
