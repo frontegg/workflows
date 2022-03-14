@@ -73,7 +73,6 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-docker
-      - build-hybrid-docker
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
@@ -92,7 +91,7 @@ jobs:
           environment: staging
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag:  ${{ inputs.tag }}
+          current_tag: ${{ inputs.tag }}
 #  us-deployment:
 #    needs: deploy-to-staging
 #    name: 'Deploy to US production'
