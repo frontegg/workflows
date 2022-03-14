@@ -67,6 +67,11 @@ jobs:
           HYBRID_VERSION=${HYBRID_VERSION}
           make push-hybrid-docker-image
         shell: bash
+        env:
+          COMMIT_HASH: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
       - name:
         run: |
           git tag -a hybrid-${{ steps.build-docker.outputs.version }}
@@ -141,6 +146,6 @@ jobs:
 #        uses: eonx-com/actions-opsgenie@master
 #        with:
 #          API_KEY: ${{ secrets.OPSGENIE_API_KEY }}
-#          PRIORITY: 'P5'
-#          ALIAS: 'deploy-production'
-#          MESSAGE: 'Deployment to production completed successfully'
+#          PRIORITY: 'P3'
+#          ALIAS: 'pipeline-failed'
+#          MESSAGE: '${{ github.repository }} MASTER build has failed'
