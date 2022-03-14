@@ -110,7 +110,7 @@ jobs:
 
   failed-pipeline:
     name: Failure Notification
-    if: success() && intpus.enable_notifications
+    if: success() && ${{ inputs.enable_notifications == true }}
     runs-on: ubuntu-latest
     steps:
       - name: View the information of the pusher
@@ -121,7 +121,7 @@ jobs:
       - name: View the github context
         run: echo "$GITHUB_CONTEXT"
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         shell: base
 #      - uses: rockem/create-opsgenie-alert-action@v1
 #        with:
