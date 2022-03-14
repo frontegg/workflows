@@ -117,7 +117,7 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
-        shell: base
+        shell: bash
 #      - uses: rockem/create-opsgenie-alert-action@v1
 #        with:
 #          api_key: ${{ secrets.opsgenie_key }}
