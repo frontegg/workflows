@@ -164,5 +164,8 @@ jobs:
           PRIORITY: 'P3'
           ALIAS: '${{ github.repository }} MASTER build has failed'
           MESSAGE: |
-            ${BITBUCKET_REPO_SLUG} master build has failed.
-            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
+            Hellp
+            
+
+#            ${BITBUCKET_REPO_SLUG} master build has failed.
+#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
