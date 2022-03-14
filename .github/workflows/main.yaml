@@ -23,6 +23,9 @@ on:
       docker_hub_user:
         description: 'Docker Hub User'
         required: true
+      opsgenie_key:
+        description: 'OpsGenie api key'
+        required: true
 
 jobs:
   build-docker:
@@ -74,13 +77,6 @@ jobs:
         with:
           tag: hybrid-${{ steps.build-docker.outputs.version }}
           message: "Latest hybrid release"
-#      - name:
-#        run: |
-#          git config user.name "${GITHUB_ACTOR}"
-#          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-#          git tag -a hybrid-${{ steps.build-docker.outputs.version }}
-#          git push origin refs/tags/hybrid-${{ steps.build-docker.outputs.version }}
-#        shell: bash
 
   deploy-to-staging:
     name: Deploy to staging
@@ -141,15 +137,32 @@ jobs:
 #          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
 #          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
-#  failed-pipeline:
-#    name: Failure Notification
-#    if: filure()
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Send OpsGenie Alert
-#        uses: eonx-com/actions-opsgenie@master
-#        with:
-#          API_KEY: ${{ secrets.OPSGENIE_API_KEY }}
-#          PRIORITY: 'P3'
-#          ALIAS: 'pipeline-failed'
-#          MESSAGE: '${{ github.repository }} MASTER build has failed'
+  failed-pipeline:
+    name: Failure Notification
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send OpsGenie Alert
+        uses: eonx-com/actions-opsgenie@master
+        with:
+          API_KEY: ${{ secrets.opsgenie_key }}
+          PRIORITY: 'P3'
+          ALIAS: '${{ github.repository }} MASTER build has failed'
+          MESSAGE: |
+            ${BITBUCKET_REPO_SLUG} master build has failed.
+            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
+
+  sujccess-pipeline:
+    name: Failure Notification
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send OpsGenie Alert
+        uses: eonx-com/actions-opsgenie@master
+        with:
+          API_KEY: ${{ secrets.opsgenie_key }}
+          PRIORITY: 'P3'
+          ALIAS: '${{ github.repository }} MASTER build has failed'
+          MESSAGE: |
+            ${BITBUCKET_REPO_SLUG} master build has failed.
+            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
