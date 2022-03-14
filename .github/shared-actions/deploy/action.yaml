@@ -117,9 +117,8 @@ runs:
 #  - name: Checkout codes
 #    uses: actions/checkout@v3
   - name: Git Tag with new tag
-#    working-directory: √
+    working-directory: code
     run: |
-      cd code
       ls -1
       git tag ${{ inputs.environment}} --force
       git push origin refs/tags/${{ inputs.environment }} --force
