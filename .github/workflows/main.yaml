@@ -113,11 +113,6 @@ jobs:
     if: success() && ${{ inputs.enable_notifications == true }}
     runs-on: ubuntu-latest
     steps:
-      - name: View the information of the pusher
-        run: |
-          echo "The name of the pusher: ${{ github.event.pusher.name }}"
-          echo "The email of the pusher: ${{ github.event.pusher.email }}"
-        shell: base
       - name: View the github context
         run: echo "$GITHUB_CONTEXT"
         env:
