@@ -71,9 +71,9 @@ jobs:
   deploy-to-staging:
     name: Deploy to staging
     runs-on: ubuntu-latest
-#    needs:
-#      - build-docker
-#      - build-hybrid-docker
+    needs:
+      - build-docker
+      - build-hybrid-docker
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
