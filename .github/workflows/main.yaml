@@ -113,19 +113,20 @@ jobs:
     if: success() && ${{ inputs.enable_notifications == true }}
     runs-on: ubuntu-latest
     steps:
-      - name: View the github context
-        run: echo "$GITHUB_CONTEXT"
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        shell: bash
-#      - uses: rockem/create-opsgenie-alert-action@v1
-#        with:
-#          api_key: ${{ secrets.opsgenie_key }}
-#          alias: master-pipeline-failure
-#          message: >
-#            Activity exceeded timeout: exceeded 60 seconds
-#          description: >
-#            ${BITBUCKET_REPO_SLUG} master build has failed.
-#            Click here to see the pipelines <a href='https://bitbucket.org/${BITBUCKET_WORKSPACE}/${BITBUCKET_REPO_SLUG}/addon/pipelines/home#!/results/${BITBUCKET_BUILD_NUMBER}'>Pipeline #${BITBUCKET_BUILD_NUMBER}</a>.
-#          priority: P2
-#          tags: backend,timeout
+#      - name: View the github context
+#        run: echo "$GITHUB_CONTEXT"
+#        env:
+#          GITHUB_CONTEXT: ${{ toJson(github) }}
+#        shell: bash
+      - uses: rockem/create-opsgenie-alert-action@v1
+        with:
+          api_key: ${{ secrets.opsgenie_key }}
+          alias: master-pipeline-failure
+          message: >
+            Dear ${{ github.actor }}, ${{ github.repository }} Master is broken
+          description: >
+            ${{ github.repository }} master/main pipeline has failed.
+            Click here to see the pipelines 
+            <a href='https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID >Here</a>.
+          priority: P2
+          tags: backend,timeout
