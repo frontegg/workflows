@@ -126,7 +126,8 @@ jobs:
             Dear ${{ github.actor }}, ${{ github.repository }} Master is broken
           description: >
             ${{ github.repository }} master/main pipeline has failed.
-            Click here to see the pipelines 
+            Click here to see the pipelines
+            https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
             <a href='https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID >Here</a>.
           priority: P2
           tags: backend,timeout
