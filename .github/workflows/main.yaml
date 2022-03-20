@@ -138,7 +138,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to staging'
+      - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -165,7 +165,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to staging'
+      - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
