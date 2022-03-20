@@ -17,6 +17,18 @@ on:
         required: false
         default: true
         type: boolean
+      staging_environment_name:
+        required: false
+        default: staging
+        type: string
+      first_environment_name:
+        required: false
+        default: production-us
+        type: string
+      global_environment_name:
+        required: false
+        default: production-global
+        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -86,7 +98,7 @@ jobs:
     name: Deploy to staging
     runs-on: ubuntu-latest
     environment:
-      name: staging
+      name: ${{ inputs.staging_environment_name }}
     needs:
       - build-and-publish-docker
     steps:
@@ -109,6 +121,59 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ inputs.tag }}
 
+  deploy-to-us:
+    name: Deploy to US East 1
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.first_environment_name }}
+    needs:
+      - deploy-to-staging
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: production-us
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ inputs.tag }}
+
+  deploy-to-global:
+    name: Deploy to All Global Environments
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.global_environment_name }}
+    needs:
+      - deploy-to-staging
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: production-global
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ inputs.tag }}
 
   failed-pipeline:
     name: Failure Notification
@@ -116,6 +181,8 @@ jobs:
       - build-and-publish-docker
       - build-and-publish-hybrid-docker
       - deploy-to-staging
+      - deploy-to-us
+
     if: failure()
     runs-on: ubuntu-latest
     steps:
