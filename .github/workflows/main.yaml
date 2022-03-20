@@ -110,7 +110,7 @@ jobs:
 
   failed-pipeline:
     name: Failure Notification
-    if: success() && ${{ inputs.enable_notifications == true }}
+    if: ${{ github.event.workflow_call.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
 #      - name: View the github context
