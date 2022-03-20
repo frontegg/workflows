@@ -48,8 +48,6 @@ jobs:
     name: Build and publish docker image
     runs-on: ubuntu-latest
     steps:
-      - run: exit 1
-        shell: bash
       - name: Display Current Tag/SHA
         run: echo Tag/SHA ${{ inputs.tag }}
         shell: bash
@@ -188,11 +186,6 @@ jobs:
     if: failure()
     runs-on: ubuntu-latest
     steps:
-#      - name: View the github context
-#        run: echo "$GITHUB_CONTEXT"
-#        env:
-#          GITHUB_CONTEXT: ${{ toJson(github) }}
-#        shell: bash
       - uses: rockem/create-opsgenie-alert-action@v1
         with:
           api_key: ${{ secrets.opsgenie_key }}
@@ -201,6 +194,6 @@ jobs:
             Dear ${{ github.actor }}, ${{ github.repository }} Master is broken
           description: >
             ${{ github.repository }} master/main pipeline has failed.
-            Click <a href='https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}>here</a> to see the pipelines.
+            https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}
           priority: P3
-          tags: backend,timeout
+          tags: master-failed, ${{ github.repository }}
