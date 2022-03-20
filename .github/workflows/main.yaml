@@ -182,7 +182,7 @@ jobs:
       - build-and-publish-hybrid-docker
       - deploy-to-staging
       - deploy-to-us
-
+      - deploy-to-global
     if: failure()
     runs-on: ubuntu-latest
     steps:
