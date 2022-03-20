@@ -48,6 +48,8 @@ jobs:
     name: Build and publish docker image
     runs-on: ubuntu-latest
     steps:
+      - run: exit 1
+        shell: bash
       - name: Display Current Tag/SHA
         run: echo Tag/SHA ${{ inputs.tag }}
         shell: bash
