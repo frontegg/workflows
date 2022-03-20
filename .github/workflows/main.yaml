@@ -183,7 +183,7 @@ jobs:
       - deploy-to-staging
       - deploy-to-us
       - deploy-to-global
-    if: failure()
+    if: failure() && inputs.enable_notifications
     runs-on: ubuntu-latest
     steps:
       - uses: rockem/create-opsgenie-alert-action@v1
