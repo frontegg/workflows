@@ -110,7 +110,7 @@ jobs:
 
   failed-pipeline:
     name: Failure Notification
-    if: ${{ github.event.workflow_call.conclusion == 'success' }}
+    if: always()
     runs-on: ubuntu-latest
     steps:
 #      - name: View the github context
@@ -127,7 +127,7 @@ jobs:
           description: >
             ${{ github.repository }} master/main pipeline has failed.
             Click here to see the pipelines
-            https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+            https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}
             <a href='https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} >Here</a>.
           priority: P2
           tags: backend,timeout
