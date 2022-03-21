@@ -91,7 +91,7 @@ jobs:
         env:
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-          HYBRID_VERSION: ${{ steps.variables.output.version }}
+          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
           TAG_NAME: ${{ env.BRANCH_NAME }}
           COMMIT_HASH: ${{ inputs.tag }}
       - uses: rickstaa/action-create-tag@v1
