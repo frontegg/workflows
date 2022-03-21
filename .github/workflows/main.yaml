@@ -13,10 +13,6 @@ on:
         required: false
         default: false
         type: boolean
-      enable_notifications:
-        required: false
-        default: true
-        type: boolean
       staging_environment_name:
         required: false
         default: staging
@@ -38,9 +34,6 @@ on:
         required: true
       docker_hub_user:
         description: 'Docker Hub User'
-        required: true
-      opsgenie_key:
-        description: 'OpsGenie api key'
         required: true
 
 jobs:
@@ -174,26 +167,3 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ inputs.tag }}
-
-  failed-pipeline:
-    name: Failure Notification
-    needs:
-      - build-and-publish-docker
-      - build-and-publish-hybrid-docker
-      - deploy-to-staging
-      - deploy-to-us
-      - deploy-to-global
-    if: failure() && inputs.enable_notifications
-    runs-on: ubuntu-latest
-    steps:
-      - uses: rockem/create-opsgenie-alert-action@v1
-        with:
-          api_key: ${{ secrets.opsgenie_key }}
-          alias: master-pipeline-failure
-          message: >
-            Dear ${{ github.actor }}, ${{ github.repository }} Master is broken
-          description: >
-            ${{ github.repository }} master/main pipeline has failed.
-            https://github.com/${{ github.repository}}/actions/runs/${{ github.run_id}}
-          priority: P3
-          tags: master-failed, ${{ github.repository }}
