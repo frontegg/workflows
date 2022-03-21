@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       tag:
-        required: true
+        required: false
         type: string
       repository_name:
         type: string
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ inputs.tag }}
+        run: echo Tag/SHA ${{ inputs.tag || ${GITHUB_SHA::7} }}
         shell: bash
       - name: Checkout
         uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
           ${{ inputs.build_image_script }}
         shell: bash
         env:
-          COMMIT_HASH: ${{ inputs.tag }}
+          COMMIT_HASH: ${{ inputs.tag || ${GITHUB_SHA::7} }}
           NPM_TOKEN: ${{ secrets.npm_token }}
           TAG_NAME: ${{ github.ref_name }}
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
@@ -76,7 +76,7 @@ jobs:
     if: inputs.has_hybrid
     steps:
       - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ inputs.tag }}
+        run: echo Tag/SHA ${{ inputs.tag || ${GITHUB_SHA::7} }}
         shell: bash
       - name: Checkout
         uses: actions/checkout@v3
@@ -86,7 +86,7 @@ jobs:
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
           echo ::set-output name=version::"${HYBRID_VERSION}"
         shell: bash
-      - name: Build and push docker image with tag ${{ inputs.tag }}
+      - name: Build and push docker image with tag ${{ inputs.tag || ${GITHUB_SHA::7} }}
         run: |
           sudo chmod +x ${{ inputs.build_hybrid_image_script }}
           ${{ inputs.build_hybrid_image_script }}
@@ -96,7 +96,7 @@ jobs:
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
           HYBRID_VERSION: ${{ steps.variables.outputs.version }}
           TAG_NAME: ${{ github.ref_name }}
-          COMMIT_HASH: ${{ inputs.tag }}
+          COMMIT_HASH: ${{ inputs.tag || ${GITHUB_SHA::7} }}
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: hybrid-${{ steps.variables.output.version }}
@@ -127,7 +127,7 @@ jobs:
           environment: staging
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ inputs.tag }}
+          current_tag: ${{ inputs.tag || ${GITHUB_SHA::7} }}
 
   deploy-to-us:
     name: Deploy to US East 1
@@ -154,7 +154,7 @@ jobs:
           environment: production-us
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ inputs.tag }}
+          current_tag: ${{ inputs.tag || ${GITHUB_SHA::7} }}
 
   deploy-to-global:
     name: Deploy to All Global Environments
@@ -181,4 +181,4 @@ jobs:
           environment: production-global
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ inputs.tag }}
+          current_tag: ${{ inputs.tag || ${GITHUB_SHA::7} }}
