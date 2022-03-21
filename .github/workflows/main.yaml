@@ -29,6 +29,10 @@ on:
         required: false
         default: ./ci/build-and-publish-image.sh
         type: string
+      build_hybrid_image_script:
+        required: false
+        default: ./ci/build-and-publish-hybrid-image.sh
+        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -72,24 +76,25 @@ jobs:
         shell: bash
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build and push docker image with tag ${{ inputs.tag }}
-        id: build-docker
+      - name: Set variables
+        id: variables
         run: |
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ${HYBRID_VERSION}
           echo ::set-output name=version::"${HYBRID_VERSION}"
-          make build-hybrid-docker-image NPM_TOKEN=${{ secrets.npm_token }} \
-          COMMIT_HASH=${{ inputs.tag }} \
-          TAG_NAME=${{ env.BRANCH_NAME }} \
-          HYBRID_VERSION=${HYBRID_VERSION}
-          make push-hybrid-docker-image
+        shell: bash
+      - name: Build and push docker image with tag ${{ inputs.tag }}
+        run: |
+          ${{ inputs.build_hybrid_image_script }}
         shell: bash
         env:
           DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
           DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+          HYBRID_VERSION: ${{ steps.variables.output.version }}
+          TAG_NAME: ${{ env.BRANCH_NAME }}
+          COMMIT_HASH: ${{ inputs.tag }}
       - uses: rickstaa/action-create-tag@v1
         with:
-          tag: hybrid-${{ steps.build-docker.outputs.version }}
+          tag: hybrid-${{ steps.variables.output.version }}
           message: "Latest hybrid release"
 
   deploy-to-staging:
