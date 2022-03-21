@@ -54,7 +54,7 @@ jobs:
         shell: bash
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Build and push docker image with tag ${{ inputs.tag }}
+      - name: Build and push docker image
         run: |
           ls -1
           ${{ inputs.build_image_script }}
