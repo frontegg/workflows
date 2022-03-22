@@ -102,6 +102,7 @@ jobs:
         id: variables
         run: |
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
+          echo ${{ steps.variables.outputs.version }}
           echo ::set-output name=version::"${HYBRID_VERSION}"
         shell: bash
       - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
