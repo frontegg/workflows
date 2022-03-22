@@ -106,6 +106,7 @@ jobs:
         shell: bash
       - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
         run: |
+          echo ${HYBRID_VERSION}
           sudo chmod +x ${{ inputs.build_hybrid_image_script }}
           ${{ inputs.build_hybrid_image_script }}
         shell: bash
