@@ -54,11 +54,11 @@ jobs:
       - name: Parse short sha
         id: short-sha
         run: |
-          if [ -z "${{ intputs.tag }}" ]
+          if [ -z "${{ inputs.tag }}" ]
           then
             echo "::set-output name=short_sha::$(${GITHUB_SHA::7})"
           else
-            echo "::set-output name=short_sha::$(${{ intputs.tag }})"
+            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
           fi
 
   build-and-publish-docker:
