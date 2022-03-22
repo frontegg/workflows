@@ -150,58 +150,58 @@ jobs:
 #          docker_hub_password: ${{ secrets.docker_hub_password }}
 #          current_tag: ${{ needs.params.outputs.short_sha }}
 
-  deploy-to-us:
-    name: Deploy to US East 1
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.first_environment_name }}
-    needs:
-      - params
-      - deploy-to-staging
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to Production US'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: production-us
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
-
-  deploy-to-global:
-    name: Deploy to All Global Environments
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.global_environment_name }}
-    needs:
-      - params
-      - deploy-to-staging
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to Production Global'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: production-global
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
+#  deploy-to-us:
+#    name: Deploy to US East 1
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: ${{ inputs.first_environment_name }}
+#    needs:
+#      - params
+#      - deploy-to-staging
+#    steps:
+#      - name: Checkout codes
+#        uses: actions/checkout@v3
+#        with:
+#          path: code
+#      - name: Checkout workflows
+#        uses: actions/checkout@v3
+#        with:
+#          repository: frontegg/workflows
+#          path: workflows
+#      - name: 'Deploy to Production US'
+#        uses: ./workflows/.github/shared-actions/tag-versions
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          repository_name: ${{ inputs.repository_name }}
+#          environment: production-us
+#          docker_hub_user: ${{ secrets.docker_hub_user }}
+#          docker_hub_password: ${{ secrets.docker_hub_password }}
+#          current_tag: ${{ needs.params.outputs.short_sha }}
+#
+#  deploy-to-global:
+#    name: Deploy to All Global Environments
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: ${{ inputs.global_environment_name }}
+#    needs:
+#      - params
+#      - deploy-to-staging
+#    steps:
+#      - name: Checkout codes
+#        uses: actions/checkout@v3
+#        with:
+#          path: code
+#      - name: Checkout workflows
+#        uses: actions/checkout@v3
+#        with:
+#          repository: frontegg/workflows
+#          path: workflows
+#      - name: 'Deploy to Production Global'
+#        uses: ./workflows/.github/shared-actions/tag-versions
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          repository_name: ${{ inputs.repository_name }}
+#          environment: production-global
+#          docker_hub_user: ${{ secrets.docker_hub_user }}
+#          docker_hub_password: ${{ secrets.docker_hub_password }}
+#          current_tag: ${{ needs.params.outputs.short_sha }}
