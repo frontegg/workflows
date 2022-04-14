@@ -115,7 +115,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.npm_token }}
           TAG_NAME: ${{ github.ref_name }}
           COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
-      - name: echo useful stuff
+      - name: Tag Hybrid
         run: |
           git tag hybrid-${{ steps.variables.outputs.version }} --force
           git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }} --force
