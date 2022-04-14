@@ -117,19 +117,9 @@ jobs:
           COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
       - name: echo useful stuff
         run: |
-          echo "listing directory"
-          ls -lahtr
-          echo "workdir"
-          pwd
           git tag hybrid-${{ steps.variables.outputs.version }} --force
           git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }} --force
         shell: bash
-      # - name: checkout again
-      #   uses: actions/checkout@v2
-      # - uses: rickstaa/action-create-tag@v1
-      #   with:
-      #     tag: hybrid-${{ steps.variables.outputs.version }}
-      #     message: "Latest hybrid release"
 
   deploy-to-staging:
     name: Deploy to staging
