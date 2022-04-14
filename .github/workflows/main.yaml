@@ -117,10 +117,10 @@ jobs:
           COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
       - name: echo useful stuff
         run: |
-        echo "listing directory"
-        ls -lahtr
-        echo "workdir"
-        pwd
+          echo "listing directory"
+          ls -lahtr
+          echo "workdir"
+          pwd
         shell: bash
       - name: checkout again
         uses: actions/checkout@v2
