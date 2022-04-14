@@ -115,6 +115,15 @@ jobs:
           NPM_TOKEN: ${{ secrets.npm_token }}
           TAG_NAME: ${{ github.ref_name }}
           COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
+      - name: echo useful stuff
+        run: |
+        echo "listing directory"
+        ls -lahtr
+        echo "workdir"
+        pwd
+        shell: bash
+      - name: checkout again
+        uses: actions/checkout@v2
       - uses: rickstaa/action-create-tag@v1
         with:
           tag: hybrid-${{ steps.variables.outputs.version }}
