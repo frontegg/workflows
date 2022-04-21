@@ -1,6 +1,6 @@
 on:
   workflow_call:
-    input:
+    inputs:
       frontegg_jira_url:
         required: false
         default:  https://frontegg.atlassian.net
