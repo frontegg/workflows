@@ -1,0 +1,35 @@
+on:
+  workflow_call:
+    input:
+      frontegg_jira_url:
+        required: false
+        default:  https://frontegg.atlassian.net
+        type: string
+      string_to_lint:
+        required: false
+        default: ${{ github.event.pull_request.title }}
+        type: string
+    secrets:
+      frontegg_jira_email:
+        description: "Please provide an email of user admin in jira"
+        required: true
+      frontegg_jira_token:
+        description: "Please provide the api token associated with the user email"
+        required: true
+
+jobs:
+  lint_jira_issue:
+    runs-on: ubuntu-latest
+    name: Jira linting and validation
+    steps:
+      - name: Login
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: ${{ inputs.frontegg_jira_url }}
+          JIRA_USER_EMAIL: ${{ secrets.frontegg_jira_email }}
+          JIRA_API_TOKEN: ${{ secrets.frontegg_jira_token }}
+      - name: Jira Find issue key
+        id: jiraIssueExtractor
+        uses: atlassian/gajira-find-issue-key@v2.0.2
+        with:
+          string: ${{ inputs.string_to_lint }}

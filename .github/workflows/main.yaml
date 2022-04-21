@@ -1,4 +1,4 @@
-name: POC for main workflow
+name: Main Service Deployment Workflow
 
 on:
   workflow_call:
