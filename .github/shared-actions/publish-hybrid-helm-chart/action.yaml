@@ -35,6 +35,7 @@ runs:
       working-directory: code/k8s/${{ inputs.repository_name }}
     - name: "Copy ${{ inputs.repository_name }} hybrid chart to helm-charts github repository"
       run: |
+        ls -1
         cp -p -a "code/k8s/${{ inputs.repository_name }}" "charts/helm-charts/charts"
       shell: bash
     - name: Git Identity
