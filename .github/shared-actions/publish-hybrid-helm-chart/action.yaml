@@ -29,7 +29,7 @@ runs:
       working-directory: code
     - name: Deleting values.*.yaml file
       run: |
-        rm $(ls | grep "values.*.yaml")
+        rm "values.*.yaml"
         ls -1
       shell: bash
       working-directory: code/k8s/${{ inputs.repository_name }}
