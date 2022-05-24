@@ -136,7 +136,7 @@ jobs:
           working-directory: code
           filters: |
             hybrid:
-              - 'k8s/${{ inputs.repository_name }}/hybrid/**'
+              - 'k8s/hybrid/**'
       - name: Publish hybrid helm chart
         if: steps.filter.outputs.hybrid == 'true'
         uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
