@@ -95,31 +95,31 @@ jobs:
       - name: Display Current Tag/SHA
         run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
         shell: bash
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set variables
-        id: variables
-        run: |
-          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ::set-output name=version::"${HYBRID_VERSION}"
-        shell: bash
-      - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
-        run: |
-          sudo chmod +x ${{ inputs.build_hybrid_image_script }}
-          ${{ inputs.build_hybrid_image_script }}
-        shell: bash
-        env:
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
-          NPM_TOKEN: ${{ secrets.npm_token }}
-          TAG_NAME: ${{ github.ref_name }}
-          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
-      - name: Tag Hybrid
-        run: |
-          git tag hybrid-${{ steps.variables.outputs.version }}
-          git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
-        shell: bash
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#      - name: Set variables
+#        id: variables
+#        run: |
+#          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
+#          echo ::set-output name=version::"${HYBRID_VERSION}"
+#        shell: bash
+#      - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
+#        run: |
+#          sudo chmod +x ${{ inputs.build_hybrid_image_script }}
+#          ${{ inputs.build_hybrid_image_script }}
+#        shell: bash
+#        env:
+#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+#          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
+#          NPM_TOKEN: ${{ secrets.npm_token }}
+#          TAG_NAME: ${{ github.ref_name }}
+#          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
+#      - name: Tag Hybrid
+#        run: |
+#          git tag hybrid-${{ steps.variables.outputs.version }}
+#          git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
+#        shell: bash
 
   publish-hybrid-helm-chart:
     name: Check for hybrid helm chart changes
@@ -133,9 +133,10 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
+          working-directory: code
           filters: |
             hybrid:
-              - 'code/k8s/${{ inputs.repository_name }}/hybrid/**'
+              - 'k8s/${{ inputs.repository_name }}/hybrid/**'
       - name: Publish hybrid helm chart
         if: steps.filter.outputs.hybrid == 'true'
         uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
