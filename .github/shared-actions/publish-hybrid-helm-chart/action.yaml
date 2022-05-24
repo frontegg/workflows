@@ -29,7 +29,7 @@ runs:
       working-directory: code
     - name: Deleting values.*.yaml file
       run: |
-        rm $('ls "values.*.yaml"')
+        rm $(ls | grep "values.*.yaml")
       shell: bash
       working-directory: code/k8s/${{ inputs.repository_name }}
     - name: "Copy ${{ inputs.repository_name }} hybrid chart to helm-charts github repository"
