@@ -126,15 +126,18 @@ jobs:
     needs: [ build-and-publish-hybrid-docker ]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: code
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          path: code
+      - name: fdlksvmdf
+        run: ls -1
+        shell: bash
       - uses: dorny/paths-filter@v2
         id: filter
         with:
