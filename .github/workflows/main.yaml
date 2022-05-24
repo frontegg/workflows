@@ -135,9 +135,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: fdlksvmdf
-        run: ls -1
-        shell: bash
+          ref: 'hybrid-helm-chart'
       - uses: dorny/paths-filter@v2
         id: filter
         with:
