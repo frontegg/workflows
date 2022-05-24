@@ -126,6 +126,11 @@ jobs:
     needs: [ build-and-publish-hybrid-docker ]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -139,7 +144,7 @@ jobs:
               - 'k8s/hybrid/**'
       - name: Publish hybrid helm chart
         if: steps.filter.outputs.hybrid == 'true'
-        uses: .github/shared-actions/publish-hybrid-helm-chart
+        uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
