@@ -43,6 +43,8 @@ on:
       docker_hub_user:
         description: 'Docker Hub User'
         required: true
+      admin_github_token:
+        required: true
 
 jobs:
   params:
@@ -147,7 +149,7 @@ jobs:
         if: steps.filter.outputs.hybrid == 'true'
         uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
         with:
-          github_token: ${{ secrets.PROTECTED_BRANCH_PUSH_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
 
 #  deploy-to-staging:
