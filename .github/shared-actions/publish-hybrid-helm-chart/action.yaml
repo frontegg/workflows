@@ -30,11 +30,12 @@ runs:
     - name: Deleting values.*.yaml file
       run: |
         rm $(ls | grep "values.*.yaml")
+        ls -1
       shell: bash
       working-directory: code/k8s/${{ inputs.repository_name }}
     - name: "Copy ${{ inputs.repository_name }} hybrid chart to helm-charts github repository"
       run: |
-        cp -p -a "code/k8s/${{ inputs.repository_name }}/" charts/helm-charts/charts/
+        cp -p -a "code/k8s/${{ inputs.repository_name }}" "charts/helm-charts/charts"
       shell: bash
     - name: Git Identity
       run: |
