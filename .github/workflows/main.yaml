@@ -139,7 +139,7 @@ jobs:
               - 'k8s/hybrid/**'
       - name: Publish hybrid helm chart
         if: steps.filter.outputs.hybrid == 'true'
-        uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
+        uses: .github/shared-actions/publish-hybrid-helm-chart
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
