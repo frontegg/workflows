@@ -44,6 +44,7 @@ on:
         description: 'Docker Hub User'
         required: true
       admin_github_token:
+        description: 'Github repository admin token'
         required: true
 
 jobs:
@@ -63,30 +64,30 @@ jobs:
             echo "::set-output name=short_sha::$(${{ inputs.tag }})"
           fi
 
-#  build-and-publish-docker:
-#    name: Build and publish docker image
-#    runs-on: ubuntu-latest
-#    needs: [params]
-#    steps:
-#      - name: Display Current Tag/SHA
-#        run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
-#        shell: bash
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#      - name: Build and push docker image
-#        run: |
-#          echo commit hash: ${COMMIT_HASH}
-#          echo tag: ${TAG_NAME}
-#          echo branch: ${BRANCH_NAME}
-#          sudo chmod +x ${{ inputs.build_image_script }}
-#          ${{ inputs.build_image_script }}
-#        shell: bash
-#        env:
-#          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
-#          NPM_TOKEN: ${{ secrets.npm_token }}
-#          TAG_NAME: ${{ github.ref_name }}
-#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+  build-and-publish-docker:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    needs: [params]
+    steps:
+      - name: Display Current Tag/SHA
+        run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
+        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build and push docker image
+        run: |
+          echo commit hash: ${COMMIT_HASH}
+          echo tag: ${TAG_NAME}
+          echo branch: ${BRANCH_NAME}
+          sudo chmod +x ${{ inputs.build_image_script }}
+          ${{ inputs.build_image_script }}
+        shell: bash
+        env:
+          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
+          NPM_TOKEN: ${{ secrets.npm_token }}
+          TAG_NAME: ${{ github.ref_name }}
+          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
 
   build-and-publish-hybrid-docker:
     name: Build and publish hybrid docker image
@@ -97,34 +98,34 @@ jobs:
       - name: Display Current Tag/SHA
         run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
         shell: bash
-#      - name: Checkout
-#        uses: actions/checkout@v3
-#      - name: Set variables
-#        id: variables
-#        run: |
-#          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-#          echo ::set-output name=version::"${HYBRID_VERSION}"
-#        shell: bash
-#      - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
-#        run: |
-#          sudo chmod +x ${{ inputs.build_hybrid_image_script }}
-#          ${{ inputs.build_hybrid_image_script }}
-#        shell: bash
-#        env:
-#          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-#          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-#          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
-#          NPM_TOKEN: ${{ secrets.npm_token }}
-#          TAG_NAME: ${{ github.ref_name }}
-#          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
-#      - name: Tag Hybrid
-#        run: |
-#          git tag hybrid-${{ steps.variables.outputs.version }}
-#          git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
-#        shell: bash
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set variables
+        id: variables
+        run: |
+          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
+          echo ::set-output name=version::"${HYBRID_VERSION}"
+        shell: bash
+      - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
+        run: |
+          sudo chmod +x ${{ inputs.build_hybrid_image_script }}
+          ${{ inputs.build_hybrid_image_script }}
+        shell: bash
+        env:
+          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
+          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
+          NPM_TOKEN: ${{ secrets.npm_token }}
+          TAG_NAME: ${{ github.ref_name }}
+          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
+      - name: Tag Hybrid
+        run: |
+          git tag hybrid-${{ steps.variables.outputs.version }}
+          git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
+        shell: bash
 
   publish-hybrid-helm-chart:
-    name: Check for hybrid helm chart changes
+    name: Publish hybrid helm chart changes
     needs: [ build-and-publish-hybrid-docker ]
     runs-on: ubuntu-latest
     steps:
@@ -137,101 +138,100 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-          ref: 'hybrid-helm-chart'
       - uses: dorny/paths-filter@v2
         id: filter
         with:
           working-directory: code
           filters: |
-            hybrid:
-              - 'k8s/hybrid/**'
+            chart:
+              - 'k8s/**'
       - name: Publish hybrid helm chart
-        if: steps.filter.outputs.hybrid == 'true'
+        if: steps.filter.outputs.chart == 'true'
         uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
         with:
           github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
 
-#  deploy-to-staging:
-#    name: Deploy to staging
-#    runs-on: ubuntu-latest
-#    environment:
-#      name: ${{ inputs.staging_environment_name }}
-#    needs:
-#      - params
-#      - build-and-publish-docker
-#    steps:
-#      - name: Checkout codes
-#        uses: actions/checkout@v3
-#        with:
-#          path: code
-#      - name: Checkout workflows
-#        uses: actions/checkout@v3
-#        with:
-#          repository: frontegg/workflows
-#          path: workflows
-#      - name: 'Deploy to staging'
-#        uses: ./workflows/.github/shared-actions/tag-versions
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository_name: ${{ inputs.repository_name }}
-#          environment: staging
-#          docker_hub_user: ${{ secrets.docker_hub_user }}
-#          docker_hub_password: ${{ secrets.docker_hub_password }}
-#          current_tag: ${{ needs.params.outputs.short_sha }}
-#
-#  deploy-to-us:
-#    name: Deploy to US East 1
-#    runs-on: ubuntu-latest
-#    environment:
-#      name: ${{ inputs.first_environment_name }}
-#    needs:
-#      - params
-#      - deploy-to-staging
-#    steps:
-#      - name: Checkout codes
-#        uses: actions/checkout@v3
-#        with:
-#          path: code
-#      - name: Checkout workflows
-#        uses: actions/checkout@v3
-#        with:
-#          repository: frontegg/workflows
-#          path: workflows
-#      - name: 'Deploy to Production US'
-#        uses: ./workflows/.github/shared-actions/tag-versions
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository_name: ${{ inputs.repository_name }}
-#          environment: production-us
-#          docker_hub_user: ${{ secrets.docker_hub_user }}
-#          docker_hub_password: ${{ secrets.docker_hub_password }}
-#          current_tag: ${{ needs.params.outputs.short_sha }}
-#
-#  deploy-to-global:
-#    name: Deploy to All Global Environments
-#    runs-on: ubuntu-latest
-#    environment:
-#      name: ${{ inputs.global_environment_name }}
-#    needs:
-#      - params
-#      - deploy-to-staging
-#    steps:
-#      - name: Checkout codes
-#        uses: actions/checkout@v3
-#        with:
-#          path: code
-#      - name: Checkout workflows
-#        uses: actions/checkout@v3
-#        with:
-#          repository: frontegg/workflows
-#          path: workflows
-#      - name: 'Deploy to Production Global'
-#        uses: ./workflows/.github/shared-actions/tag-versions
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          repository_name: ${{ inputs.repository_name }}
-#          environment: production-global
-#          docker_hub_user: ${{ secrets.docker_hub_user }}
-#          docker_hub_password: ${{ secrets.docker_hub_password }}
-#          current_tag: ${{ needs.params.outputs.short_sha }}
+  deploy-to-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.staging_environment_name }}
+    needs:
+      - params
+      - build-and-publish-docker
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: staging
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ needs.params.outputs.short_sha }}
+
+  deploy-to-us:
+    name: Deploy to US East 1
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.first_environment_name }}
+    needs:
+      - params
+      - deploy-to-staging
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production US'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: production-us
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ needs.params.outputs.short_sha }}
+
+  deploy-to-global:
+    name: Deploy to All Global Environments
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.global_environment_name }}
+    needs:
+      - params
+      - deploy-to-staging
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production Global'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: production-global
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ needs.params.outputs.short_sha }}
