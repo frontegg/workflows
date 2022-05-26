@@ -19,26 +19,21 @@ runs:
         token: ${{ inputs.github_token }}
     - name: Remove old chart
       run: |
-        ls -1
         rm -rf "charts/${{ inputs.repository_name }}"
       shell: bash
       working-directory: helm-charts
     - name: Copy hybrid templates to chart repository
       run: |
         cp -p -a k8s/hybrid/. "k8s/${{ inputs.repository_name }}/"
-        ls -1
       shell: bash
       working-directory: code
-    - name: Deleting values.*.yaml file
+    - name: Deleting values.*.yaml files
       run: |
-        ls -1
         rm values.*.yaml
-        ls -1
       shell: bash
       working-directory: code/k8s/${{ inputs.repository_name }}
     - name: "Copy ${{ inputs.repository_name }} hybrid chart to helm-charts github repository"
       run: |
-        ls -1
         cp -p -a "code/k8s/${{ inputs.repository_name }}" "helm-charts/charts"
       shell: bash
     - name: Git Identity
