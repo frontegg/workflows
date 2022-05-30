@@ -210,8 +210,11 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
       - name: Notify Slack on deployment
-        if:  secrets.slack_production_webhook != undefined
+        if:  steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -249,8 +252,11 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
-      - name: Notify Slack on deployment
-        if: secrets.slack_production_webhook != undefined
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+          - name: Notify Slack on deployment
+            if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
