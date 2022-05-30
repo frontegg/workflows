@@ -46,6 +46,9 @@ on:
       admin_github_token:
         description: 'Github repository admin token'
         required: true
+      slack_production_webhook:
+        description: 'Slack webhook token'
+        required: false
 
 jobs:
   params:
@@ -207,6 +210,17 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+      - name: Notify Slack on deployment
+        if: ${{ secrets.slack_production_webhook }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.first_environment_name }} :rocket:'
+          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
 
   deploy-to-global:
     name: Deploy to All Global Environments
@@ -235,3 +249,15 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+      - name: Notify Slack on deployment
+        if: ${{ secrets.slack_production_webhook }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:'
+          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+
