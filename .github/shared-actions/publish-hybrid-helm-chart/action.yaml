@@ -1,0 +1,49 @@
+name: Publish Hybrid Helm Chart
+description: This action should publish hybrid helm chart to frontegg/helm-charts repository.
+inputs:
+  github_token:
+    description: 'The github token'
+    required: true
+  repository_name:
+    description: 'The repository name'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Helm Charts
+      uses: actions/checkout@v3
+      with:
+        path: helm-charts
+        repository: 'frontegg/helm-charts'
+        token: ${{ inputs.github_token }}
+    - name: Remove old chart
+      run: |
+        rm -rf "charts/${{ inputs.repository_name }}"
+      shell: bash
+      working-directory: helm-charts
+    - name: Copy hybrid templates to chart repository
+      run: |
+        cp -p -a k8s/hybrid/. "k8s/${{ inputs.repository_name }}/"
+      shell: bash
+      working-directory: code
+    - name: Deleting values.*.yaml files
+      run: |
+        rm values.*.yaml
+      shell: bash
+      working-directory: code/k8s/${{ inputs.repository_name }}
+    - name: "Copy ${{ inputs.repository_name }} hybrid chart to helm-charts github repository"
+      run: |
+        cp -p -a "code/k8s/${{ inputs.repository_name }}" "helm-charts/charts"
+      shell: bash
+    - name: Git Identity
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor}}@users.noreply.github.com"
+        git add .
+        git commit -m "publish ${{ inputs.repository_name }} hybrid helm chart"
+        git push origin master
+      shell: bash
+      working-directory: helm-charts
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}

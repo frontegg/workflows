@@ -43,6 +43,9 @@ on:
       docker_hub_user:
         description: 'Docker Hub User'
         required: true
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
 
 jobs:
   params:
@@ -120,6 +123,34 @@ jobs:
           git tag hybrid-${{ steps.variables.outputs.version }}
           git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
         shell: bash
+
+  publish-hybrid-helm-chart:
+    name: Publish hybrid helm chart changes
+    needs: [ build-and-publish-hybrid-docker ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          working-directory: code
+          filters: |
+            chart:
+              - 'k8s/**'
+      - name: Publish hybrid helm chart
+        if: steps.filter.outputs.chart == 'true'
+        uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
+        with:
+          github_token: ${{ secrets.admin_github_token }}
+          repository_name: ${{ inputs.repository_name }}
 
   deploy-to-staging:
     name: Deploy to staging
