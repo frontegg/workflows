@@ -211,7 +211,7 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
       - name: Notify Slack on deployment
-        if: ${{ secrets.slack_production_webhook != undefined }}
+        if:  secrets.slack_production_webhook != undefined
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -250,7 +250,7 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
       - name: Notify Slack on deployment
-        if: ${{ secrets.slack_production_webhook != undefined}}
+        if: secrets.slack_production_webhook != undefined
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
