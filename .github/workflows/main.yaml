@@ -221,7 +221,7 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
           SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.first_environment_name }} :rocket:'
-          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
+          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.first_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
           MSG_MINIMAL: Commit,actions url
