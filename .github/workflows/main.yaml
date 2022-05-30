@@ -224,6 +224,7 @@ jobs:
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+          MSG_MINIMAL: Commit,actions url
 
   deploy-to-global:
     name: Deploy to All Global Environments
@@ -266,4 +267,4 @@ jobs:
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
-
+          MSG_MINIMAL: Commit,actions url
