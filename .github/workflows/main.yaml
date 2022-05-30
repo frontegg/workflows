@@ -255,8 +255,8 @@ jobs:
       - name: Assign variable
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
-          - name: Notify Slack on deployment
-            if: steps.secret.outputs.secret
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
