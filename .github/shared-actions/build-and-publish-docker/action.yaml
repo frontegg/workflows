@@ -1,0 +1,32 @@
+name: Build and publish docker
+description: This action should Build a docker image and publish to docker hub
+inputs:
+  short_sha:
+    description: 'Git commit SHA'
+    required: true
+  build_image_script:
+    description: 'The shell script that builds the docker image'
+    required: required
+    default: ./ci/build-and-publish-image.sh
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Display Current Tag/SHA
+      run: echo Tag/SHA ${{ inputs.short_sha }}
+      shell: bash
+    - name: Build and push docker image
+      run: |
+        echo commit hash: ${COMMIT_HASH}
+        echo tag: ${TAG_NAME}
+        echo branch: ${BRANCH_NAME}
+        sudo chmod +x ${{ inputs.build_image_script }}
+        ${{ inputs.build_image_script }}
+      shell: bash
+      env:
+        COMMIT_HASH: ${{ inputs.short_sha }}
+        NPM_TOKEN: ${{ secrets.npm_token }}
+        TAG_NAME: ${{ github.ref_name }}
+        DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
+        DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
