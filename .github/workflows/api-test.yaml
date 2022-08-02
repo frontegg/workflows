@@ -1,0 +1,62 @@
+name: API tests job
+
+on:
+  workflow_call:
+    inputs:
+      build_image_script:
+        required: false
+        default: ./ci/build-and-publish-image.sh
+        type: string
+      build_hybrid_image_script:
+        required: false
+        default: ./ci/build-and-publish-hybrid-image.sh
+        type: string
+    secrets:
+      npm_token:
+        description: 'Npm Token'
+        required: true
+      docker_hub_password:
+        description: 'Docker Hub Password'
+        required: true
+      docker_hub_user:
+        description: 'Docker Hub User'
+        required: true
+
+
+jobs:
+  params:
+    name: Prepare Parmas
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.short-sha.outputs.short_sha }}
+    steps:
+      - name: Parse short sha
+        id: short-sha
+        run: |
+          if [ -z "${{ inputs.tag }}" ]
+          then
+            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+          else
+            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
+          fi
+
+  build-and-publish-docker:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    needs: [ params ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Display Current Tag/SHA
+        run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
+        shell: bash
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: Publish hybrid helm chart
+        uses: ./workflows/.github/shared-actions/build-and-publish-docker
+        with:
+          short_sha: ${{ needs.params.outputs.short_sha }}
+          build_image_script: ${{ inputs.build_image_script }}
