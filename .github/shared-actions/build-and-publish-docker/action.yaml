@@ -25,7 +25,6 @@ runs:
   steps:
     - name: Build and push docker image
       run: |
-        echo eldad: ${NPM_TOKEN}
         echo commit hash: ${COMMIT_HASH}
         echo tag: ${TAG_NAME}
         echo branch: ${BRANCH_NAME}
@@ -34,7 +33,4 @@ runs:
       shell: bash
       env:
         COMMIT_HASH: ${{ inputs.short_sha }}
-        NPM_TOKEN: ${{ inputs.npm_token }}
         TAG_NAME: ${{ github.ref_name }}
-        DOCKER_HUB_USER: ${{ inputs.docker_hub_user }}
-        DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
