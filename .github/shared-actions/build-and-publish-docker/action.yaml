@@ -24,7 +24,7 @@ runs:
   using: "composite"
   steps:
     - name: Display Current Tag/SHA
-      run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
+      run: echo Tag/SHA ${{ inputs.short_sha }}
       shell: bash
     - name: Build and push docker image
       run: |
