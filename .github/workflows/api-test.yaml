@@ -56,7 +56,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
       - name: Publish hybrid helm chart
-        uses: ./workflows/.github/shared-actions/build-and-publish-docker
+        uses: ./workflows/.github/shared-actions/build-and-publish-docker@move-build-and-push-docker-action
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
