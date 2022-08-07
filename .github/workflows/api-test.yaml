@@ -57,11 +57,7 @@ jobs:
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
-          eldad: 'this is eldad'
+          npm_token: 'token'
           docker_hub_user: ${{ secrets.docker_hub_password }}
           docker_hub_password: ${{ secrets.docker_hub_user }}
-        env:
-          NPM_TOKEN: ${{ secrets.npm_token }}
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
 
