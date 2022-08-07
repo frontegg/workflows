@@ -48,7 +48,6 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-          ref: move-build-and-push-docker-action
       - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
