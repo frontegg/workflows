@@ -7,10 +7,6 @@ on:
         required: false
         default: ./ci/build-and-publish-image.sh
         type: string
-      build_hybrid_image_script:
-        required: false
-        default: ./ci/build-and-publish-hybrid-image.sh
-        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -56,8 +52,12 @@ jobs:
           repository: frontegg/workflows
           path: workflows
           ref: move-build-and-push-docker-action
-      - name: Publish hybrid helm chart
+      - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
+        secrets:
+          npm_token: ${{ secrets.npm_token }}
+          docker_hub_user: ${{ secrets.docker_hub_password }}
+          docker_hub_password: ${{ secrets.docker_hub_user }}
