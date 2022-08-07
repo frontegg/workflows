@@ -49,8 +49,11 @@ jobs:
 #          repository: frontegg/workflows
 #          path: workflows
 #          ref: move-build-and-push-docker-action
+      - name: ls
+        run: ls -al
+        shell: bash
       - name: build and publish docker image
-        uses: ../shared-actions/build-and-publish-docker
+        uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
