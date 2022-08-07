@@ -43,15 +43,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-#      - name: Checkout workflows
-#        uses: actions/checkout@v3
-#        with:
-#          repository: frontegg/workflows
-#          path: workflows
-#          ref: move-build-and-push-docker-action
-      - name: ls
-        run: ls -al
-        shell: bash
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+          ref: move-build-and-push-docker-action
       - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
