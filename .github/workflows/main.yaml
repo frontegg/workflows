@@ -82,11 +82,14 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Publish hybrid helm chart
+      - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
+          npm_token: ${{secrets.npm_token}}
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
 
   build-and-publish-hybrid-docker:
     name: Build and publish hybrid docker image

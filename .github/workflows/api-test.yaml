@@ -43,17 +43,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
-        shell: bash
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-          ref: move-build-and-push-docker-action
+#      - name: Checkout workflows
+#        uses: actions/checkout@v3
+#        with:
+#          repository: frontegg/workflows
+#          path: workflows
+#          ref: move-build-and-push-docker-action
       - name: build and publish docker image
-        uses: ./workflows/.github/shared-actions/build-and-publish-docker
+        uses: ../shared-actions/build-and-publish-docker
         with:
           short_sha: ${{ needs.params.outputs.short_sha }}
           build_image_script: ${{ inputs.build_image_script }}
