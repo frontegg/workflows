@@ -8,15 +8,18 @@ inputs:
     description: 'The shell script that builds the docker image'
     required: true
     default: ./ci/build-and-publish-image.sh
-  npm_token:
-    description: 'Npm Token'
+  eldad:
+    description: 'stam'
     required: true
-  docker_hub_password:
-    description: 'Docker Hub Password'
-    required: true
-  docker_hub_user:
-    description: 'Docker Hub User'
-    required: true
+#  npm_token:
+#    description: 'Npm Token'
+#    required: true
+#  docker_hub_password:
+#    description: 'Docker Hub Password'
+#    required: true
+#  docker_hub_user:
+#    description: 'Docker Hub User'
+#    required: true
 
 
 
@@ -26,6 +29,7 @@ runs:
     - name: Build and push docker image
       run: |
         echo commit hash: ${COMMIT_HASH}
+        echo Eldad: ${ELDAD}
         echo tag: ${TAG_NAME}
         echo branch: ${BRANCH_NAME}
         sudo chmod +x ${{ inputs.build_image_script }}
@@ -34,3 +38,4 @@ runs:
       env:
         COMMIT_HASH: ${{ inputs.short_sha }}
         TAG_NAME: ${{ github.ref_name }}
+        ELDAD: ${{inputs.eldad}}
