@@ -25,6 +25,7 @@ runs:
   steps:
     - name: Build and push docker image
       run: |
+        echo eldad: ${NPM_TOKEN}
         echo commit hash: ${COMMIT_HASH}
         echo tag: ${TAG_NAME}
         echo branch: ${BRANCH_NAME}
