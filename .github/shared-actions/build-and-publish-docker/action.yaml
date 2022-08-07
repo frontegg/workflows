@@ -6,8 +6,9 @@ inputs:
     required: true
   build_image_script:
     description: 'The shell script that builds the docker image'
-    required: required
+    required: true
     default: ./ci/build-and-publish-image.sh
+
 
 
 runs:
