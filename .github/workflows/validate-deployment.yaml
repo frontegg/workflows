@@ -24,6 +24,5 @@ jobs:
         uses: ./deployment-validator
         env: 
           admin_github_token: ${{ secrets.github_token }}
-      - name: Get the output
-          run: echo "Output ${{ steps.versions_verifier.outputs.synced }} - ${{ steps.versions_verifier.outputs.author }} ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}"
-        
+      # - name: Get the output
+      #     run: echo "Output ${{ steps.versions_verifier.outputs.synced }} - ${{ steps.versions_verifier.outputs.author }} ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}"
