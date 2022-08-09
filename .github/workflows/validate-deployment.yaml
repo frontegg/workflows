@@ -1,28 +1,32 @@
 name: Validate deployment
-description: This action should alert for un-deployed services
-inputs:
-  github_token:
-    description: 'The github token'
-    required: true
-  repository_name:
-    description: 'The repository name'
-    required: true
+on:
+  workflow_call:
+    inputs:
+      repository_name:
+        description: 'The repository name'
+        required: true
+        type: string
+    secrets:
+      admin_github_token:
+        description: 'The github token'
+        required: true
+
 
 jobs:
-  validate deployment:
+  validate_deployment:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           repository: frontegg/deployment-validator
-          token: ${{ inputs.github_token }}
+          token: ${{ secrets.admin_github_token }}
           ref: master
           path: ./deployment-validator
       - name: Verify version
         id: versions_verifier
         uses: ./deployment-validator
         env: 
-          admin_github_token: ${{ secrets.github_token }}
+          admin_github_token: ${{ secrets.admin_github_token }}
       # - name: Get the output
       #     run: echo "Output ${{ steps.versions_verifier.outputs.synced }} - ${{ steps.versions_verifier.outputs.author }} ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}"
