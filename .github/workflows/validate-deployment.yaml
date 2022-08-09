@@ -1,15 +1,13 @@
 name: Validate deployment
 on:
   workflow_call:
-    inputs:
-      repository_name:
-        description: 'The repository name'
-        required: true
-        type: string
     secrets:
       admin_github_token:
         description: 'The github token'
         required: true
+      slack_production_webhook:
+        description: 'Slack webhook token'
+        required: false
 
 
 jobs:
@@ -29,4 +27,15 @@ jobs:
         env: 
           admin_github_token: ${{ secrets.admin_github_token }}
       - name: Get the output
-        run: echo Output ${{ steps.versions_verifier.outputs.synced }} - ${{ steps.versions_verifier.outputs.author }} ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}
+        run: echo Output  ${{ steps.versions_verifier.outputs.synced }} - ${{ steps.versions_verifier.outputs.author }} ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}
+      - name: Notify Slack on deployment
+        if: steps.versions_verifier.outputs.author
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: '#FF0000'
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: 'Dear ${{ steps.versions_verifier.outputs.author }} please deploy ${{ github.repository }} to ${{ steps.versions_verifier.outputs.nonSyncedEnvs }}'
+          SLACK_TITLE: Un-deployed commits detected on master
+          SLACK_USERNAME: Github
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
