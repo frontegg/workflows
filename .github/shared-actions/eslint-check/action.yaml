@@ -1,0 +1,29 @@
+name: ESLint check
+description: Checks code style
+runs:
+  using: "composite"
+  steps:
+    - name: Setup node environment
+      uses: actions/setup-node@v3
+      with:
+        always-auth: true
+        node-version: "14"
+    - name: Cache node modules
+      uses: actions/cache@v2
+      env:
+        cache-name: cache-node-modules
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Setup npmrc
+      run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npm_token }}" > .npmrc
+      shell: bash
+    - name: Install node dependencies
+      run: npm ci
+      shell: bash
+    - run: npm run lint
+      shell: bash
