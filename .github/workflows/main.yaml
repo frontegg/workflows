@@ -178,7 +178,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
-          environment: staging
+          environment: ${{ inputs.staging_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
@@ -206,7 +206,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
-          environment: production-us
+          environment: ${{ inputs.first_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
@@ -249,7 +249,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
-          environment: production-global
+          environment: ${{ inputs.global_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
