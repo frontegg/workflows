@@ -33,7 +33,7 @@ jobs:
     name: start-venv
     runs-on: ubuntu-latest
     outputs:
-      short_sha: ${{ steps.short-sha.outputs.short_sha }}
+      environmentId: ${{ steps.builder.outputs.environmentId }}
     steps:
       - name: Checkout Venv Repository
         uses: actions/checkout@v3
