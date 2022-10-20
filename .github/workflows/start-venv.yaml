@@ -9,6 +9,7 @@ on:
         description: 'Creates a Volatile environment not related to other branches, ingresses will get the value of x.random.domain'
         default: false
       envDomain:
+        type: string
         required: false
         description: 'Set the environment domain so for ingress hosts, for example domain xxx.com will set portal.hash.xxx.com'
         default: "dev.frontegg.com"
@@ -18,9 +19,10 @@ on:
         description: 'Termination protection prevents the environment to be shut down after default time'
         default: false
       leaseTime:
+        type: string
         required: false
         description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6 default is 2 hours'
-        default: 1
+        default: "1"
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
