@@ -1,0 +1,96 @@
+name: Start Frontegg's Virtual Environment
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      volatileEnvironment:
+        type: boolean
+        required: false
+        description: 'Creates a Volatile environment not related to other branches, ingresses will get the value of x.random.domain'
+        default: false
+      envDomain:
+        required: false
+        description: 'Set the environment domain so for ingress hosts, for example domain xxx.com will set portal.hash.xxx.com'
+        default: "dev.frontegg.com"
+      terminationProtection:
+        type: boolean
+        required: false
+        description: 'Termination protection prevents the environment to be shut down after default time'
+        default: false
+      leaseTime:
+        type: choice
+        options:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+        required: false
+        description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6 default is 2 hours'
+        default: 1
+    secrets:
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
+      slack_production_webhook:
+        description: 'Slack webhook token'
+        required: false
+
+jobs:
+  start-venv:
+    name: start-venv
+    id: start-venv
+    runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.short-sha.outputs.short_sha }}
+    steps:
+      - name: Checkout Venv Repository
+        uses: actions/checkout@v3
+        with:
+          repository: 'frontegg/venv-env-poc'
+          path: venv
+          token: ${{ secrets.admin_github_token }}
+      - name: Checkout Venv Builder
+        uses: actions/checkout@v3
+        with:
+          repository: 'frontegg/venv-builder'
+          path: builder
+          token: ${{ secrets.admin_github_token }}
+      - uses: ./builder
+        id: builder
+        with:
+          githubToken: ${{ secrets.admin_github_token }}
+          volatileEnvironment: ${{ inputs.volatileEnvironment }}
+          envDomain: ${{ inputs.envDomain }}
+          terminationProtection: ${{ inputs.terminationProtection }}
+          leaseTime: ${{ inputs.leaseTime }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+          venvRepository: venv-env-poc
+          venvRepositoryMainBranchName: 'master'
+      - name: Add and push Env Files
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: Continuous Integration
+          message: 'Automation Workflow Merge'
+          cwd: './venv'
+  wait:
+    name: wait-for-venv-ready
+    needs: [start-venv]
+    runs-on: [self-hosted]
+    steps:
+      - name: Wait for ArgoCD
+        uses: whatnick/wait-action@master
+        with:
+          time: '3m'
+      - uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: 2.4.7
+          command: login
+          options: argocd-server.argocd.svc.cluster.local  --insecure --plaintext --username admin --password thisIStheSHIT!
+      - uses: clowdhaus/argo-cd-action/@main
+        with:
+          version: 2.4.7
+          command: app wait venv-${{needs.start-venv.outputs.environmentId }}
+
