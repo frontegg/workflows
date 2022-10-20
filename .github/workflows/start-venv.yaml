@@ -25,9 +25,6 @@ on:
       admin_github_token:
         description: 'Github repository admin token'
         required: true
-      slack_production_webhook:
-        description: 'Slack webhook token'
-        required: false
 
 jobs:
   start-venv:
