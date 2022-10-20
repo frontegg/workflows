@@ -31,7 +31,6 @@ on:
 jobs:
   start-venv:
     name: start-venv
-    id: start-venv
     runs-on: ubuntu-latest
     outputs:
       short_sha: ${{ steps.short-sha.outputs.short_sha }}
