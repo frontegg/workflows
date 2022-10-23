@@ -33,7 +33,7 @@ jobs:
     name: start-venv
     runs-on: ubuntu-latest
     outputs:
-      environmentId: ${{ steps.builder.outputs.environmentId }}
+      environmentId: ${{ steps.venv-actions.outputs.environmentId }}
     steps:
       - name: Checkout Venv Repository
         uses: actions/checkout@v3
@@ -41,14 +41,14 @@ jobs:
           repository: 'frontegg/venv-env-poc'
           path: venv
           token: ${{ secrets.admin_github_token }}
-      - name: Checkout Venv Builder
+      - name: Checkout Venv Actions
         uses: actions/checkout@v3
         with:
-          repository: 'frontegg/venv-builder'
-          path: builder
+          repository: 'frontegg/venv-actions'
+          path: venv-actions
           token: ${{ secrets.admin_github_token }}
-      - uses: ./builder
-        id: builder
+      - uses: ./venv-actions
+        id: venv-actions
         with:
           githubToken: ${{ secrets.admin_github_token }}
           volatileEnvironment: ${{ inputs.volatileEnvironment }}
