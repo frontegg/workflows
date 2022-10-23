@@ -34,11 +34,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
+      portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
+      apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
     steps:
       - name: Checkout Venv Repository
         uses: actions/checkout@v3
         with:
-          repository: 'frontegg/venv-env-poc'
+          repository: 'frontegg/venv'
           path: venv
           token: ${{ secrets.admin_github_token }}
       - name: Checkout Venv Actions
