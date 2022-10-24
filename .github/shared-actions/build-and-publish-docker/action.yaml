@@ -17,7 +17,7 @@ inputs:
   docker_hub_user:
     description: 'Docker Hub User'
     required: true
-  tagName:
+  tag_name:
     description: 'Set the tag of the docker image'
     required: false
 
@@ -27,16 +27,16 @@ runs:
     - name: Prepare params
       id: params
       run: |
-        if [ -z "${{ inputs.tagName }}" ]
+        if [ -z "${{ inputs.tag_name }}" ]
         then
-          echo "::set-output name=tagName::${{ github.ref_name }}"
+          echo "::set-output name=tag_name::${{ github.ref_name }}"
         else
-          echo "::set-output name=tagName::$(${{ inputs.tagName }})"
+          echo "::set-output name=tag_name::$(${{ inputs.tag_name }})"
         fi
       shell: bash
     - name: Display Current variables
       run: |
-        echo input TagName: ${{ steps.params.outputs.tagName }}
+        echo input tag_name: ${{ steps.params.outputs.tag_name }}
         echo Commit Hash: ${COMMIT_HASH}
         echo Commit Tag: ${TAG_NAME}
         echo Branch: ${BRANCH_NAME}
@@ -49,7 +49,7 @@ runs:
       shell: bash
       env:
         COMMIT_HASH: ${{ inputs.tag }}
-        TAG_NAME: ${{ steps.params.outputs.tagName }}
+        TAG_NAME: ${{ steps.params.outputs.tag_name }}
         NPM_TOKEN: ${{ inputs.npm_token }}
         DOCKER_HUB_USER: ${{ inputs.docker_hub_user }}
         DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
