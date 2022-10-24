@@ -21,11 +21,14 @@ on:
       leaseTime:
         type: string
         required: false
-        description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6 default is 2 hours'
+        description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
         default: "1"
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
+        required: true
+      argocd_password:
+        description: 'ArgoCD password'
         required: true
 
 jobs:
@@ -79,7 +82,7 @@ jobs:
         with:
           version: 2.4.7
           command: login
-          options: argocd-server.argocd.svc.cluster.local  --insecure --plaintext --username admin --password thisIStheSHIT!
+          options: argocd-server.argocd.svc.cluster.local --insecure --timeout 900 --plaintext --username admin --password ${{ secrets.argocd_password }}
       - uses: clowdhaus/argo-cd-action/@main
         with:
           version: 2.4.7
