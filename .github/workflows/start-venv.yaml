@@ -58,9 +58,9 @@ jobs:
           script: |
             let tag = core.getInput('tag');
             if(tag) {
-              tag = github.context.sha.substring(0, 7);
+              tag = context.sha.substring(0, 7);
             }
-            const branchName = github.context.ref.replace('refs/heads/', '');
+            const branchName = context.ref.replace('refs/heads/', '');
             const hashedBranch =  branchName.split('')
               .reduce(function (a, b) {
                 a = (a << 5) - a + b.charCodeAt(0);
