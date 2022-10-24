@@ -23,6 +23,11 @@ on:
         required: false
         description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
         default: "1"
+      shouldBuildDocker:
+        type: boolean
+        required: true
+        description: 'Set true to allow the workflow to build docker image'
+        default: true
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
@@ -32,6 +37,54 @@ on:
         required: true
 
 jobs:
+  build-and-publish-docker:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    steps:
+#      - name: Parse short sha
+#        id: short-sha
+#        run: |
+#          if [ -z "${{ inputs.tag }}" ]
+#          then
+#            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+#          else
+#            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
+#          fi
+      - name: "Prepare parameters"
+        uses: actions/github-script@v6
+        id: 'params'
+        with:
+          result-encoding: json
+          script: |
+            let tag = core.getInput('tag');
+            if(tag) {
+              tag = github.context.sha.substring(0, 7);
+            }
+            const branchName = github.context.ref.replace('refs/heads/', '');
+            const hashedBranch =  branchName.split('')
+              .reduce(function (a, b) {
+                a = (a << 5) - a + b.charCodeAt(0);
+                return a & a;
+                }, 0)
+            .toString();
+            return { hashedBranch, tag };
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: build and publish docker image
+        uses: ./workflows/.github/shared-actions/build-and-publish-docker
+        with:
+          tag: ${{ fromJSON(steps.params.outputs.result).tag }}
+          tagName: ${{ fromJSON(steps.params.outputs.result).hashedBranch }}
+          build_image_script: ${{ inputs.build_image_script }}
+          npm_token: ${{ secrets.npm_token }}
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+
   start-venv:
     name: start-venv
     runs-on: ubuntu-latest
