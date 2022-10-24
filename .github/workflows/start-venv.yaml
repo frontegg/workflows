@@ -25,7 +25,7 @@ on:
         default: "1"
       shouldBuildDocker:
         type: boolean
-        required: true
+        required: false
         description: 'Set true to allow the workflow to build docker image'
         default: true
     secrets:
