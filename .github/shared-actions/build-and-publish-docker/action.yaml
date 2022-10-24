@@ -1,0 +1,42 @@
+name: Build and publish docker
+description: This action should Build a docker image and publish to docker hub
+inputs:
+  tag:
+    description: 'Set the tag of the docker image'
+    required: true
+  build_image_script:
+    description: 'The shell script that builds the docker image'
+    required: true
+    default: ./ci/build-and-publish-image.sh
+  npm_token:
+    description: 'Npm Token'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub Password'
+    required: true
+  docker_hub_user:
+    description: 'Docker Hub User'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Display Current variables
+      run: |
+        echo input Tag: ${{ inputs.short_sha }}
+        echo Commit Hash: ${COMMIT_HASH}
+        echo Commit Tag: ${TAG_NAME}
+        echo Branch: ${BRANCH_NAME}
+      shell: bash
+    - name: Build and push docker image
+      run: |
+        echo using script ${{ inputs.build_image_script }} to build the image.
+        sudo chmod +x ${{ inputs.build_image_script }}
+        ${{ inputs.build_image_script }}
+      shell: bash
+      env:
+        COMMIT_HASH: ${{ inputs.tag }}
+        TAG_NAME: ${{ github.ref_name }}
+        NPM_TOKEN: ${{ inputs.npm_token }}
+        DOCKER_HUB_USER: ${{ inputs.docker_hub_user }}
+        DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
