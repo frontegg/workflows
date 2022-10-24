@@ -41,15 +41,6 @@ jobs:
     name: Build and publish docker image
     runs-on: ubuntu-latest
     steps:
-#      - name: Parse short sha
-#        id: short-sha
-#        run: |
-#          if [ -z "${{ inputs.tag }}" ]
-#          then
-#            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
-#          else
-#            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
-#          fi
       - name: "Prepare parameters"
         uses: actions/github-script@v6
         id: 'params'
