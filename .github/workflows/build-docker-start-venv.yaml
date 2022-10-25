@@ -137,9 +137,9 @@ jobs:
         with:
           version: 2.4.7
           command: login
-          options: argocd-server.argocd.svc.cluster.local --insecure --timeout 900 --plaintext --username admin --password ${{ secrets.argocd_password }}
+          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
       - uses: clowdhaus/argo-cd-action/@main
         with:
           version: 2.4.7
-          command: app wait venv-${{needs.start-venv.outputs.environmentId }}
+          command: app wait venv-${{needs.start-venv.outputs.environmentId }} --timeout 900
 
