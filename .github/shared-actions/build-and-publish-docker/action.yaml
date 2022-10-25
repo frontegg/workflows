@@ -31,7 +31,7 @@ runs:
         then
           echo "::set-output name=tag_name::${{ github.ref_name }}"
         else
-          echo "::set-output name=tag_name::$(${{ inputs.tag_name }})"
+          echo "::set-output name=tag_name::${{ inputs.tag_name }}"
         fi
       shell: bash
     - name: Display Current variables
