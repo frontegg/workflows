@@ -56,7 +56,7 @@ jobs:
           result-encoding: json
           script: |
             let tag = core.getInput('tag');
-            console.log(`input tag value: ${tag}`)
+           
             if(tag) {
               tag = context.sha.substring(0, 7);
             }
@@ -67,7 +67,9 @@ jobs:
                 return a & a;
                 }, 0)
             .toString();
-            return { hashedBranch, tag };
+            const result = { hashedBranch, tag }
+            console.log(`result: ${JSON.stringify(result)}`)
+            return result;
       - name: Checkout Current Repository
         uses: actions/checkout@v3
       - name: Checkout Workflows
