@@ -37,9 +37,7 @@ runs:
     - name: Display Current variables
       run: |
         echo input tag_name: ${{ steps.params.outputs.tag_name }}
-        echo Commit Hash: ${COMMIT_HASH}
-        echo Commit Tag: ${TAG_NAME}
-        echo Branch: ${BRANCH_NAME}
+        echo Commit Tag: ${{ inputs.tag }}
       shell: bash
     - name: Build and push docker image
       run: |

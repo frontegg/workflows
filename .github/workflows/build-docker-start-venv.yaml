@@ -3,6 +3,10 @@ name: Build docker image and Start Frontegg's Virtual Environment
 on:
   workflow_call:
     inputs:
+      tag:
+        type: string
+        required: false
+        description: 'Set the tag in which the Docker image will be tag with'
       volatileEnvironment:
         type: boolean
         required: false
