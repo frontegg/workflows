@@ -64,16 +64,11 @@ jobs:
               core.info(`Tag was not provided, setting tag as short_sha`);
               tag = context.sha.substring(0, 7);
             }
-            console.log(`result: ${JSON.stringify(context)}`);
             const branchName = context.ref.replace('refs/heads/', '');
             core.info(`Branch name is ${branchName}`);
-            const hashedBranch =  branchName.split('')
-              .reduce(function (a, b) {
-                a = (a << 5) - a + b.charCodeAt(0);
-                return a & a;
-                }, 0)
-            .toString();
+            const hashedBranch = Buffer.from(branchName, 'base64');
             const result = { hashedBranch, tag };
+            console.log(`result: ${JSON.stringify(result)}`);
             return result;
       - name: Checkout Current Repository
         uses: actions/checkout@v3
