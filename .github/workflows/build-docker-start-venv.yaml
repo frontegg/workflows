@@ -112,7 +112,7 @@ jobs:
           repository: 'frontegg/venv-actions'
           path: venv-actions
           token: ${{ secrets.admin_github_token }}
-      - uses: ./venv-actions
+      - uses: ./venv-actions/actions/venv-builder
         id: venv-actions
         with:
           githubToken: ${{ secrets.admin_github_token }}
