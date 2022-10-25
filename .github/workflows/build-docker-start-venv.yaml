@@ -1,4 +1,4 @@
-name: Start Frontegg's Virtual Environment
+name: Build docker image and Start Frontegg's Virtual Environment
 
 on:
   workflow_call:
@@ -23,17 +23,25 @@ on:
         required: false
         description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
         default: "1"
-      shouldBuildDocker:
-        type: boolean
+      build_image_script:
         required: false
-        description: 'Set true to allow the workflow to build docker image'
-        default: true
+        default: ./ci/build-and-publish-image.sh
+        type: string
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
         required: true
       argocd_password:
         description: 'ArgoCD password'
+        required: true
+      npm_token:
+        description: 'Npm Token'
+        required: true
+      docker_hub_password:
+        description: 'Docker Hub Password'
+        required: true
+      docker_hub_user:
+        description: 'Docker Hub User'
         required: true
 
 jobs:
@@ -70,7 +78,7 @@ jobs:
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
           tag: ${{ fromJSON(steps.params.outputs.result).tag }}
-          tagName: ${{ fromJSON(steps.params.outputs.result).hashedBranch }}
+          tag_name: ${{ fromJSON(steps.params.outputs.result).hashedBranch }}
           build_image_script: ${{ inputs.build_image_script }}
           npm_token: ${{ secrets.npm_token }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -115,7 +123,7 @@ jobs:
           cwd: './venv'
   wait:
     name: wait-for-venv-ready
-    needs: [start-venv]
+    needs: [start-venv, build-and-publish-docker]
     runs-on: [self-hosted]
     steps:
       - name: Wait for ArgoCD
