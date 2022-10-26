@@ -126,3 +126,26 @@ jobs:
         with:
           argocd_password: ${{ secrets.argocd_password }}
           environmentId: ${{ needs.start-venv.outputs.environmentId }}
+
+  notify:
+    name: Notify outcome
+    needs: [ wait ]
+    steps:
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: |
+            ${{ github.actor }} your venv is ready. :rocket:
+            You can access the portal at ${{ needs.start-venv.outputs.portalUrl }}
+          SLACK_TITLE: |
+            Yay, ${{ github.actor }} your venv is ready.
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+          MSG_MINIMAL: actions url
