@@ -33,7 +33,7 @@ on:
 
 jobs:
   start-venv:
-    name: start-venv
+    name: start venv
     runs-on: ubuntu-latest
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
@@ -46,6 +46,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
       - uses: ./workflows/.github/shared-actions/start-venv
+        name: Generate venv files
         id: venv-actions
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
@@ -56,7 +57,7 @@ jobs:
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
 
   wait:
-    name: wait-for-venv-ready
+    name: waiting for venv readiness
     needs: [start-venv, build-and-publish-docker]
     runs-on: [self-hosted]
     steps:
@@ -65,7 +66,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Wait for venv
+      - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
           argocd_password: ${{ secrets.argocd_password }}

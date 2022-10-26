@@ -88,7 +88,7 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
 
   start-venv:
-    name: start-venv
+    name: Start Venv
     runs-on: ubuntu-latest
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
@@ -100,7 +100,8 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - uses: ./workflows/.github/shared-actions/start-venv
+      - name: Generate venv files
+        uses: ./workflows/.github/shared-actions/start-venv
         id: venv-actions
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
@@ -111,7 +112,7 @@ jobs:
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
 
   wait:
-    name: wait-for-venv-ready
+    name: waiting for venv readiness
     needs: [start-venv, build-and-publish-docker]
     runs-on: [self-hosted]
     steps:

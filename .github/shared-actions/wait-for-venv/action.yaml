@@ -1,4 +1,4 @@
-name: Start Venv
+name: Wait for venv
 description: This action will start
 inputs:
   argocd_password:
