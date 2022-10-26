@@ -6,6 +6,7 @@ on:
       venvId:
         description: 'Set the venvId to remove'
         required: true
+        type: string
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
