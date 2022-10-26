@@ -78,6 +78,7 @@ jobs:
   notify:
     name: Notify outcome
     needs: [wait, start-venv]
+    runs-on: ubuntu-latest
     steps:
       - name: Assign variable
         id: secret
