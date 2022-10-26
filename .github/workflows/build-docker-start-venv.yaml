@@ -47,7 +47,7 @@ on:
       docker_hub_user:
         description: 'Docker Hub User'
         required: true
-      slack_production_webhook:
+      slack_webhook:
         description: 'Set the slack channel token to enable notification'
         required: false
 
@@ -137,7 +137,7 @@ jobs:
     steps:
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -151,5 +151,5 @@ jobs:
           SLACK_TITLE: |
             Yay, ${{ github.actor }} your venv is ready.
           SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
