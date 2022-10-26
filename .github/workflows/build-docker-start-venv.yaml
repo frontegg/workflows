@@ -47,6 +47,9 @@ on:
       docker_hub_user:
         description: 'Docker Hub User'
         required: true
+      slack_production_webhook:
+        description: 'Set the slack channel token to enable notification'
+        required: false
 
 jobs:
   build-and-publish-docker:
