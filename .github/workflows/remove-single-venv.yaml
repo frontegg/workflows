@@ -1,0 +1,30 @@
+name: Remove a single venv
+
+on:
+  workflow_call:
+    inputs:
+      venvId:
+        description: 'Set the venvId to remove'
+        required: true
+    secrets:
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
+
+jobs:
+  remove-venv:
+    name: Remove Venv
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/remove-single-venv
+        name: Remove venv files
+        id: venv-actions
+        with:
+          admin_github_token: ${{ secrets.admin_github_token }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+          venvId: ${{ inputs.venvId }}

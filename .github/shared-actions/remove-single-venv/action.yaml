@@ -1,0 +1,40 @@
+name: Remove Venv
+description: This action will remove a single venv by id
+inputs:
+  admin_github_token:
+    description: 'Admin github token'
+    required: true
+  venvRepoDirectory:
+    description: "See workflow"
+    required: true
+  venvId:
+    description: "See workflow"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Venv Repository
+      uses: actions/checkout@v3
+      with:
+        repository: 'frontegg/venv'
+        path: venv
+        token: ${{ inputs.admin_github_token }}
+    - name: Checkout Venv Actions
+      uses: actions/checkout@v3
+      with:
+        repository: 'frontegg/venv-actions'
+        path: venv-actions
+        token: ${{ inputs.admin_github_token }}
+    - name: Run venv builder
+      uses: ./venv-actions/actions/single-venv-remover
+      id: venv-actions
+      with:
+        venvRepoDirectory: ${{ inputs.venvRepoDirectory }}
+        venvId: ${{ inputs.venvId }}
+    - name: Add changes and push venv files
+      uses: EndBug/add-and-commit@v9
+      with:
+        author_name: 'Automation'
+        message: venv ${{ steps.venv-actions.outputs.environmentId }} removed
+        cwd: './venv'
