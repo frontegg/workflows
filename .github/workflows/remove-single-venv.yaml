@@ -28,3 +28,15 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
+
+  clean-namespace:
+    name: Clean Namespace
+    runs-on: [ self-hosted ]
+    steps:
+      - name: Install kubectl
+        id: install
+        uses: azure/setup-kubectl@v3
+      - name:
+        run: |
+          kubectl delete namespace ${{ inputs.venvId }}
+        shell: bash
