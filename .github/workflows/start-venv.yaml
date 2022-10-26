@@ -61,7 +61,7 @@ jobs:
 
   wait:
     name: waiting for venv readiness
-    needs: [start-venv, build-and-publish-docker]
+    needs: [start-venv]
     runs-on: [self-hosted]
     steps:
       - name: Checkout Workflows
