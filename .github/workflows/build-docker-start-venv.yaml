@@ -90,7 +90,7 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
 
-  start-venv:
+  start-venv-after-image-build:
     name: Start Venv
     runs-on: ubuntu-latest
     outputs:
@@ -116,7 +116,7 @@ jobs:
 
   wait:
     name: waiting for venv readiness
-    needs: [start-venv, build-and-publish-docker]
+    needs: [start-venv-after-image-build, build-and-publish-docker]
     runs-on: [self-hosted]
     steps:
       - name: Checkout Workflows
@@ -133,7 +133,7 @@ jobs:
   notify:
     name: Notify outcome
     runs-on: ubuntu-latest
-    needs: [ wait, start-venv ]
+    needs: [ wait, start-venv-after-image-build ]
     steps:
       - name: Assign variable
         id: secret
