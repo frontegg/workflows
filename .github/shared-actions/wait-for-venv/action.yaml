@@ -1,0 +1,28 @@
+name: Start Venv
+description: This action will start
+inputs:
+  argocd_password:
+    description: 'Admin github token'
+    required: true
+  environmentId:
+    description: 'Set the created venv Ud'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Wait for ArgoCD
+      uses: whatnick/wait-action@master
+      with:
+        time: '3m'
+    - uses: clowdhaus/argo-cd-action/@main
+      name: Login local ArgoCD
+      with:
+        version: 2.4.7
+        command: login
+        options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ inputs.argocd_password }}
+    - uses: clowdhaus/argo-cd-action/@main
+      name: Wait for venv to be ready
+      with:
+        version: 2.4.7
+        command: app wait venv-${{ inputs.environmentId }} --timeout 900

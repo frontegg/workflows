@@ -1,0 +1,73 @@
+name: Start Venv
+description: This action will start
+inputs:
+  admin_github_token:
+    description: 'Admin github token'
+    required: true
+  volatileEnvironment:
+    description: "See workflow"
+    required: true
+  envDomain:
+    description: "See workflow"
+    required: true
+  terminationProtection:
+    description: "See workflow"
+    required: true
+  leaseTime:
+    description: "See workflow"
+    required: true
+  venvRepoDirectory:
+    description: "See workflow"
+    required: true
+  venvRepository:
+    description: "See workflow"
+    required: false
+    default: "venv"
+  venvRepositoryMainBranchName:
+    description: "See workflow"
+    required: false
+    default: "master"
+outputs:
+  environmentId:
+    description: "The created venvId"
+    value: ${{ steps.venv-actions.outputs.environmentId }}
+  portalUrl:
+    description: "The created venv portal url"
+    value: ${{ steps.venv-actions.outputs.portalUrl }}
+  apiUrl:
+    description: "The created venv api gateway url"
+    value: ${{ steps.venv-actions.outputs.apiUrl }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout Venv Repository
+      uses: actions/checkout@v3
+      with:
+        repository: 'frontegg/venv'
+        path: venv
+        token: ${{ inputs.admin_github_token }}
+    - name: Checkout Venv Actions
+      uses: actions/checkout@v3
+      with:
+        repository: 'frontegg/venv-actions'
+        path: venv-actions
+        token: ${{ inputs.admin_github_token }}
+    - name: Run venv builder
+      uses: ./venv-actions/actions/venv-builder
+      id: venv-actions
+      with:
+        githubToken: ${{ inputs.admin_github_token }}
+        volatileEnvironment: ${{ inputs.volatileEnvironment }}
+        envDomain: ${{ inputs.envDomain }}
+        terminationProtection: ${{ inputs.terminationProtection }}
+        leaseTime: ${{ inputs.leaseTime }}
+        venvRepoDirectory: ${{ inputs.venvRepoDirectory }}
+        venvRepository: ${{ inputs.venvRepository }}
+        venvRepositoryMainBranchName: ${{ inputs.venvRepositoryMainBranchName }}
+    - name: Add and push venv files to
+      uses: EndBug/add-and-commit@v9
+      with:
+        author_name: 'Automation'
+        message: venv ${{ steps.venv-actions.outputs.environmentId }} created or updated
+        cwd: './venv'

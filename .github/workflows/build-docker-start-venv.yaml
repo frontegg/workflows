@@ -95,51 +95,33 @@ jobs:
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
     steps:
-      - name: Checkout Venv Repository
+      - name: Checkout Workflows
         uses: actions/checkout@v3
         with:
-          repository: 'frontegg/venv'
-          path: venv
-          token: ${{ secrets.admin_github_token }}
-      - name: Checkout Venv Actions
-        uses: actions/checkout@v3
-        with:
-          repository: 'frontegg/venv-actions'
-          path: venv-actions
-          token: ${{ secrets.admin_github_token }}
-      - uses: ./venv-actions/actions/venv-builder
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/start-venv
         id: venv-actions
         with:
-          githubToken: ${{ secrets.admin_github_token }}
+          admin_github_token: ${{ secrets.admin_github_token }}
           volatileEnvironment: ${{ inputs.volatileEnvironment }}
           envDomain: ${{ inputs.envDomain }}
           terminationProtection: ${{ inputs.terminationProtection }}
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
-          venvRepository: venv-env-poc
-          venvRepositoryMainBranchName: 'master'
-      - name: Add and push Env Files
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: Continuous Integration
-          message: 'Automation Workflow Merge'
-          cwd: './venv'
+
   wait:
     name: wait-for-venv-ready
     needs: [start-venv, build-and-publish-docker]
     runs-on: [self-hosted]
     steps:
-      - name: Wait for ArgoCD
-        uses: whatnick/wait-action@master
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
         with:
-          time: '3m'
-      - uses: clowdhaus/argo-cd-action/@main
+          repository: frontegg/workflows
+          path: workflows
+      - name: Wait for venv
+        uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
-          version: 2.4.7
-          command: login
-          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
-      - uses: clowdhaus/argo-cd-action/@main
-        with:
-          version: 2.4.7
-          command: app wait venv-${{needs.start-venv.outputs.environmentId }} --timeout 900
-
+          argocd_password: ${{ secrets.argocd_password }}
+          environmentId: ${{ needs.start-venv.outputs.environmentId }}
