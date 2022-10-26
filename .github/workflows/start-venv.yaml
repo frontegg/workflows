@@ -1,0 +1,72 @@
+name: Build docker image and Start Frontegg's Virtual Environment
+
+on:
+  workflow_call:
+    inputs:
+      volatileEnvironment:
+        type: boolean
+        required: false
+        description: 'Creates a Volatile environment not related to other branches, ingresses will get the value of x.random.domain'
+        default: false
+      envDomain:
+        type: string
+        required: false
+        description: 'Set the environment domain so for ingress hosts, for example domain xxx.com will set portal.hash.xxx.com'
+        default: "dev.frontegg.com"
+      terminationProtection:
+        type: boolean
+        required: false
+        description: 'Termination protection prevents the environment to be shut down after default time'
+        default: false
+      leaseTime:
+        type: string
+        required: false
+        description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
+        default: "1"
+    secrets:
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
+      argocd_password:
+        description: 'ArgoCD password'
+        required: true
+
+jobs:
+  start-venv:
+    name: start-venv
+    runs-on: ubuntu-latest
+    outputs:
+      environmentId: ${{ steps.venv-actions.outputs.environmentId }}
+      portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
+      apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/start-venv
+        id: venv-actions
+        with:
+          admin_github_token: ${{ secrets.admin_github_token }}
+          volatileEnvironment: ${{ inputs.volatileEnvironment }}
+          envDomain: ${{ inputs.envDomain }}
+          terminationProtection: ${{ inputs.terminationProtection }}
+          leaseTime: ${{ inputs.leaseTime }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+
+  wait:
+    name: wait-for-venv-ready
+    needs: [start-venv, build-and-publish-docker]
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: Wait for venv
+        uses: ./workflows/.github/shared-actions/wait-for-venv
+        with:
+          argocd_password: ${{ secrets.argocd_password }}
+          environmentId: ${{ needs.start-venv.outputs.environmentId }}
