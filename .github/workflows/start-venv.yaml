@@ -77,7 +77,7 @@ jobs:
 
   notify:
     name: Notify outcome
-    needs: [wait]
+    needs: [wait, start-venv]
     steps:
       - name: Assign variable
         id: secret
