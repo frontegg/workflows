@@ -132,6 +132,7 @@ jobs:
 
   notify:
     name: Notify outcome
+    if: always()
     runs-on: ubuntu-latest
     needs: [ wait, start-venv ]
     steps:
@@ -139,17 +140,32 @@ jobs:
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret
+        if: steps.secret.outputs.secret && job.status
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
           SLACK_MESSAGE: |
-            ${{ github.actor }} your venv is ready. :rocket:
+            ${{ github.actor }} your venv is ready. :tada:
             You can access the portal at ${{ needs.start-venv.outputs.portalUrl }}
           SLACK_TITLE: |
             Yay, ${{ github.actor }} your venv is ready.
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          MSG_MINIMAL: actions url
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret && job.status == false
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: |
+            ${{ github.actor }} your venv has failed. :skull:
+            You can access the portal at ${{ needs.start-venv.outputs.portalUrl }}
+          SLACK_TITLE: |
+            Hey, ${{ github.actor }} your venv has failed.
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url

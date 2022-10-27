@@ -29,20 +29,3 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
-
-  clean-namespace:
-    name: Clean Namespace
-    needs: [ remove-venv ]
-    runs-on: [ self-hosted ]
-    steps:
-      - name: Install kubectl
-        id: install
-        uses: azure/setup-kubectl@v3
-      - name: Get Token
-        run: |
-          echo "KUBE_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" >> $GITHUB_ENV
-        shell: bash
-      - name:
-        run: |
-          kubectl "--token=${{ env.KUBE_TOKEN }}" delete namespace ${{ inputs.venvId }}
-        shell: bash
