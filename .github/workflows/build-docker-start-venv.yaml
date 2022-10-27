@@ -91,7 +91,7 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
 
   start-venv:
-    name: Start Venv
+    name: start venv
     runs-on: ubuntu-latest
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
@@ -103,8 +103,8 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Generate venv files
-        uses: ./workflows/.github/shared-actions/start-venv
+      - uses: ./workflows/.github/shared-actions/start-venv
+        name: Generate venv files
         id: venv-actions
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
@@ -124,7 +124,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Wait for venv
+      - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
           argocd_password: ${{ secrets.argocd_password }}
@@ -140,7 +140,7 @@ jobs:
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && job.status
+        if: steps.secret.outputs.secret && success()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -155,7 +155,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && job.status == false
+        if: steps.secret.outputs.secret && failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -169,3 +169,22 @@ jobs:
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
+
+  remove-venv:
+    name: Remove Venv if failed
+    if: failure()
+    runs-on: ubuntu-latest
+    needs: [ notify, start-venv ]
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/remove-single-venv
+        name: Remove venv files
+        id: venv-actions
+        with:
+          admin_github_token: ${{ secrets.admin_github_token }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+          venvId: ${{ needs.start-venv.outputs.environmentId }}
