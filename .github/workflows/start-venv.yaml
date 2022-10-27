@@ -85,7 +85,7 @@ jobs:
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && job.status
+        if: steps.secret.outputs.secret && success()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -100,7 +100,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && job.status == false
+        if: steps.secret.outputs.secret && failure()
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -114,3 +114,14 @@ jobs:
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
+
+  remove-venv:
+    name: Remove Venv if failed
+    if: failure()
+    runs-on: ubuntu-latest
+    needs: [ notify, start-venv ]
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
+    with:
+      environmentId: ${{ needs.start-venv.outputs.portalUrl }}
+    secrets:
+      admin_github_token: ${{ secrets.admin_github_token }}
