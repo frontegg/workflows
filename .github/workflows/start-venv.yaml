@@ -75,9 +75,9 @@ jobs:
           argocd_password: ${{ secrets.argocd_password }}
           environmentId: ${{ needs.start-venv.outputs.environmentId }}
 
-  notify:
-    name: Notify outcome
-    if: always()
+  notify-success:
+    name: Notify success
+    if: success()
     runs-on: ubuntu-latest
     needs: [ wait, start-venv ]
     steps:
@@ -85,7 +85,7 @@ jobs:
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && success()
+        if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -99,8 +99,18 @@ jobs:
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
           MSG_MINIMAL: actions url
+
+  notify-failure:
+    name: Notify failure
+    if: failure()
+    runs-on: ubuntu-latest
+    needs: [ wait, start-venv ]
+    steps:
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret && failure()
+        if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -133,4 +143,3 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ needs.start-venv.outputs.environmentId }}
-
