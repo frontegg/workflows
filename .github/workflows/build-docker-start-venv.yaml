@@ -169,11 +169,11 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
-          SLACK_COLOR: ${{ job.status }}
+          SLACK_COLOR: "FB3105"
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
           SLACK_MESSAGE: |
-            ${{ github.actor }} your venv has failed. :skull:
-            You can access the portal at ${{ needs.start-venv.outputs.portalUrl }}
+            Listen ${{ github.actor }}, your venv has failed. :skull:
+            It's probably becasue you made a mistake or that you are a bad person!
           SLACK_TITLE: |
             Hey, ${{ github.actor }} your venv has failed.
           SLACK_USERNAME: ${{ github.actor }}
