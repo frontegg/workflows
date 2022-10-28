@@ -129,7 +129,7 @@ jobs:
     name: Remove Venv if failed
     if: failure()
     runs-on: ubuntu-latest
-    needs: [ notify, start-venv ]
+    needs: [ notify-failure, start-venv ]
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v3
