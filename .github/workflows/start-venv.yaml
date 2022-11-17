@@ -2,6 +2,16 @@ name: Build docker image and Start Frontegg's Virtual Environment
 
 on:
   workflow_call:
+    outputs:
+      environmentId:
+        description: "The create venv Id"
+        value: ${{ jobs.start-venv.outputs.environmentId }}
+      portalUrl:
+        description: "The create venv portal url"
+        value: ${{ jobs.start-venv.outputs.portalUrl }}
+      apiUrl:
+        description: "The create venv api url"
+        value: ${{ jobs.start-venv.outputs.apiUrl }}
     inputs:
       volatileEnvironment:
         type: boolean
