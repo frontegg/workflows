@@ -50,7 +50,16 @@ on:
       slack_webhook:
         description: 'Set the slack channel token to enable notification'
         required: false
-
+    outputs:
+      apiUrl:
+        value: ${{ jobs.start-venv.outputs.apiUrl }}
+        description: 'Outputs the apiUrl of the newly created venv'
+      environmentId:
+        value: ${{ jobs.start-venv.outputs.environmentId }}
+        description: 'Outputs the environmentId of the newly created venv'
+      portalUrl:
+        value: ${{ jobs.start-venv.outputs.portalUrl }}
+        description: 'Outputs the portalUrl of the newly created venv'
 jobs:
   build-and-publish-docker:
     name: Build and publish docker image
