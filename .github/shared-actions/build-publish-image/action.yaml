@@ -36,6 +36,7 @@ runs:
         script: |
           const inputs = ${{ toJSON(inputs) }};
           console.log(`inputs: ${JSON.stringify(inputs)}`);
+          console.log(inputs.npm_token.length);
           const branchName = context.ref.replace('refs/heads/', '');
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
