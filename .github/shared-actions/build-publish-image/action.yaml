@@ -30,10 +30,11 @@ runs:
       with:
         result-encoding: json
         script: |
+          const inputs = ${{ toJSON(inputs) }};
           const branchName = context.ref.replace('refs/heads/', '');
-          const repositoryName = core.getInput('registry');
-          const imageName = `${repositoryName}/${core.getInput('image')}`;
-          let tag = core.getInput('tag');
+          const repositoryName = inputs.registry;
+          const imageName = `${repositoryName}/${inputs.image)`;
+          let tag = inputs.tag;
           if (!tag) {
             core.info(`Tag was not provided, setting tag as short_sha`);
             tag = context.sha.substring(0, 7);
