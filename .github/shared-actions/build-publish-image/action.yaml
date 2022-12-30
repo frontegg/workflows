@@ -73,6 +73,8 @@ runs:
         file: ${{ inputs.image_file_path }}
         # Set the desired build target here
         push: true
+        build-args: |
+          NPM_TOKEN=${{ inputs.npm_token }}
         secrets: |
           NPM_TOKEN=${{ inputs.npm_token }}
         tags: ${{ fromJSON(steps.params.outputs.result).imageTag }},${{ fromJSON(steps.params.outputs.result).branchImageTag }}
