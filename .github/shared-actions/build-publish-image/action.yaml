@@ -65,6 +65,10 @@ runs:
         key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-multi-buildx
+    - name: Build .npmrc file
+      run: |
+        //registry.npmjs.org/:_authToken=${{ inputs.npm_token }} >> .npmrc
+      shell: bash
     - name: Build production image
       uses: docker/build-push-action@v2
       with:
