@@ -35,8 +35,6 @@ runs:
         result-encoding: json
         script: |
           const inputs = ${{ toJSON(inputs) }};
-          console.log(`inputs: ${JSON.stringify(inputs)}`);
-          console.log(inputs.npm_token.length);
           const branchName = context.ref.replace('refs/heads/', '');
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
@@ -76,8 +74,6 @@ runs:
         # Set the desired build target here
         push: true
         build-args: |
-          NPM_TOKEN=${{ inputs.npm_token }}
-        secrets: |
           NPM_TOKEN=${{ inputs.npm_token }}
         tags: ${{ fromJSON(steps.params.outputs.result).imageTag }},${{ fromJSON(steps.params.outputs.result).branchImageTag }}
         cache-from: type=local,src=/tmp/.buildx-cache
