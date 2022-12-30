@@ -16,7 +16,7 @@ inputs:
   tag:
     description: 'Set the tag of the docker image'
     required: false
-  repository_name:
+  registry:
     description: 'Set the image registry repository name, default is frontegg'
     required: false
     default: 'frontegg'
@@ -31,7 +31,7 @@ runs:
         result-encoding: json
         script: |
           const branchName = context.ref.replace('refs/heads/', '');
-          const repositoryName = core.getInput('repository_name');
+          const repositoryName = core.getInput('registry');
           const imageName = `${repositoryName}/${core.getInput('image')}`;
           let tag = core.getInput('tag');
           if (!tag) {
