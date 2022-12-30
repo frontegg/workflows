@@ -18,7 +18,7 @@ inputs:
     required: false
   registry:
     description: 'Set the image registry repository name, default is frontegg'
-    required: false
+    required: true
     default: 'frontegg'
 
 runs:
