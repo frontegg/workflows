@@ -20,6 +20,10 @@ inputs:
     description: 'Set the image registry repository name, default is frontegg'
     required: true
     default: 'frontegg'
+  image_file_path:
+    description: 'Set the image build file path, for example ./Dockerfile'
+    required: true
+    default: 'Dockerfile'
 
 runs:
   using: "composite"
@@ -66,7 +70,7 @@ runs:
       with:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
-        file: DOCKERFILE
+        file: Dockerfile
         # Set the desired build target here
         target: deploy
         push: false
