@@ -23,7 +23,7 @@ inputs:
   image_file_path:
     description: 'Set the image build file path, for example ./Dockerfile'
     required: true
-    default: 'Dockerfile'
+    default: './Dockerfile'
 
 runs:
   using: "composite"
@@ -70,10 +70,10 @@ runs:
       with:
         context: .
         builder: ${{ steps.buildx.outputs.name }}
-        file: Dockerfile
+        file: ${{ inputs.image_file_path }}
         # Set the desired build target here
         target: deploy
-        push: false
+        push: true
         secrets: |
           NPM_TOKEN=${{ inputs.npm_token }}
         tags: ${{ fromJSON(steps.params.outputs.result).imageTag }},${{ fromJSON(steps.params.outputs.result).branchImageTag }}
