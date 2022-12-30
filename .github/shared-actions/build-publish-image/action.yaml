@@ -1,0 +1,85 @@
+name: Build and publish docker
+description: This action should Build a docker image and publish to docker hub
+inputs:
+  image:
+    description: 'Set the tag of the docker image'
+    required: true
+  npm_token:
+    description: 'Npm Token'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub Password'
+    required: true
+  docker_hub_user:
+    description: 'Docker Hub User'
+    required: true
+  tag:
+    description: 'Set the tag of the docker image'
+    required: false
+  repository_name:
+    description: 'Set the image registry repository name, default is frontegg'
+    required: false
+    default: 'frontegg'
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Prepare parameters"
+      uses: actions/github-script@v6
+      id: 'params'
+      with:
+        result-encoding: json
+        script: |
+          const branchName = context.ref.replace('refs/heads/', '');
+          const repositoryName = core.getInput('repository_name');
+          const imageName = `${repositoryName}/${core.getInput('image')}`;
+          let tag = core.getInput('tag');
+          if (!tag) {
+            core.info(`Tag was not provided, setting tag as short_sha`);
+            tag = context.sha.substring(0, 7);
+          }
+          const imageTag = `${imageName}:${tag}`;
+          const branchImageTag = `${imageName}:${branchName}-latest`;
+          const result = { imageTag, branchImageTag };
+          console.log(`images: ${JSON.stringify(result)}`);
+          return result;
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ inputs.docker_hub_user }}
+        password: ${{ inputs.docker_hub_password }}
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        # Key is named differently to avoid collision
+        key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-multi-buildx
+    - name: Build production image
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        builder: ${{ steps.buildx.outputs.name }}
+        file: DOCKERFILE
+        # Set the desired build target here
+        target: deploy
+        push: false
+        secrets: |
+          NPM_TOKEN=${{ inputs.npm_token }}
+        tags: ${{ fromJSON(steps.params.outputs.result).imageTag }},${{ fromJSON(steps.params.outputs.result).branchImageTag }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        # Note the mode=max here
+        # More: https://github.com/moby/buildkit#--export-cache-options
+        # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
+        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      shell: bash
