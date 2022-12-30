@@ -72,7 +72,6 @@ runs:
         builder: ${{ steps.buildx.outputs.name }}
         file: ${{ inputs.image_file_path }}
         # Set the desired build target here
-        target: deploy
         push: true
         secrets: |
           NPM_TOKEN=${{ inputs.npm_token }}
