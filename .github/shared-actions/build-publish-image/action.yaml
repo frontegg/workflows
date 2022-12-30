@@ -35,6 +35,7 @@ runs:
         result-encoding: json
         script: |
           const inputs = ${{ toJSON(inputs) }};
+          console.log(`inputs: ${JSON.stringify(inputs)}`);
           const branchName = context.ref.replace('refs/heads/', '');
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
@@ -65,6 +66,7 @@ runs:
         key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-multi-buildx
+      shell: bash
     - name: Build production image
       uses: docker/build-push-action@v2
       with:
