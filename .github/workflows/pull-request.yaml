@@ -23,13 +23,13 @@ jobs:
     name: Jira linting and validation
     steps:
       - name: Login
-        uses: atlassian/gajira-login@master
+        uses: atlassian/gajira-login@v3
         env:
           JIRA_BASE_URL: ${{ inputs.frontegg_jira_url }}
           JIRA_USER_EMAIL: ${{ secrets.frontegg_jira_email }}
           JIRA_API_TOKEN: ${{ secrets.frontegg_jira_token }}
       - name: Jira Find issue key
         id: jiraIssueExtractor
-        uses: atlassian/gajira-find-issue-key@v2.0.2
+        uses: atlassian/gajira-find-issue-key@v3
         with:
           string: ${{ inputs.string_to_lint }}
