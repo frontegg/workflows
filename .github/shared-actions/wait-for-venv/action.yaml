@@ -25,4 +25,4 @@ runs:
       name: Wait for venv to be ready
       with:
         version: 2.4.7
-        command: app wait venv-${{ inputs.environmentId }} --timeout 900
+        command: app wait -l venv=${{ inputs.environmentId }} --timeout 900
