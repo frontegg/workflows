@@ -16,7 +16,7 @@ on:
         type: string
         required: false
         description: 'Set the environment domain so for ingress hosts, for example domain xxx.com will set portal.hash.xxx.com'
-        default: "dev.frontegg.com"
+        default: "venv.life"
       terminationProtection:
         type: boolean
         required: false
