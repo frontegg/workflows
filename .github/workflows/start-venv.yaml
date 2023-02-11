@@ -33,6 +33,11 @@ on:
         required: false
         description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
         default: "1"
+      disableDashboard:
+        type: boolean
+        required: false
+        description: 'Set to true in order to disable starting dashboard application'
+        default: false
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
@@ -68,7 +73,7 @@ jobs:
           terminationProtection: ${{ inputs.terminationProtection }}
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
-
+          disableDashboard: ${{ inputs.disableDashboard }}
   wait:
     name: waiting for venv readiness
     needs: [start-venv]

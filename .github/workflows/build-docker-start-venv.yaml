@@ -31,6 +31,11 @@ on:
         required: false
         default: ./ci/build-and-publish-image.sh
         type: string
+      disableDashboard:
+        type: boolean
+        required: false
+        description: 'Set to true in order to disable starting dashboard application'
+        default: false
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
@@ -122,7 +127,7 @@ jobs:
           terminationProtection: ${{ inputs.terminationProtection }}
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
-
+          disableDashboard: ${{ inputs.disableDashboard }}
   wait:
     name: waiting for venv readiness
     needs: [start-venv, build-and-publish-docker]
