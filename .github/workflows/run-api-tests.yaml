@@ -30,7 +30,7 @@ on:
         type: boolean
         required: false
         description: Set to true if to trigger an image build to the current branch
-        default: true
+        default: false
 
 jobs:
   start-venv:
@@ -64,6 +64,7 @@ jobs:
     needs: [ start-venv, start-venv-with-image ]
     outputs:
       apiUrl: ${{ steps.variables.outputs.apiUrl }}
+      environmentId: ${{ steps.variables.outputs.environmentId }}
     if: |
       always() &&
       !contains(needs.*.result, 'failure') &&
@@ -100,12 +101,12 @@ jobs:
 
   remove-venv:
     name: Remove venv
+    needs: [ run-system-test, start-venv, start-venv-with-image, prepare-params ]
     if: |
       always() &&
       (needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId)
     uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
-    needs: [ run-system-test, start-venv, start-venv-with-image ]
     with:
-      venvId: ${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}
+      venvId: ${{ needs.prepare-params.outputs.environmentId }}
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
