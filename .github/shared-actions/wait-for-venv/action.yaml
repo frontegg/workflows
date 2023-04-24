@@ -1,11 +1,14 @@
 name: Wait for venv
-description: This action will start
+description: Wait for venv to be ready
 inputs:
   argocd_password:
     description: 'Admin github token'
     required: true
   environmentId:
     description: 'Set the created venv Ud'
+    required: true
+  apiUrl:
+    description: 'Set the created venv api gateway url'
     required: true
 
 runs:
@@ -26,3 +29,7 @@ runs:
       with:
         version: 2.6.1
         command: app wait -l venv=${{ inputs.environmentId }} --timeout 900
+    - name: Check access to the environment
+      uses: mydea/action-wait-for-api@v1
+      with:
+        url: ${{ inputs.apiUrl }}/test

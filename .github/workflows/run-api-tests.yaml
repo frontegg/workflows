@@ -75,10 +75,6 @@ jobs:
         run: |
           echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
           echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
-      - name: Check access to the environment
-        uses: mydea/action-wait-for-api@v1
-        with:
-          url: ${{ steps.variables.outputs.apiUrl }}/test
 
   run-system-test:
     runs-on: ubuntu-latest

@@ -89,6 +89,7 @@ jobs:
         with:
           argocd_password: ${{ secrets.argocd_password }}
           environmentId: ${{ needs.start-venv.outputs.environmentId }}
+          apiUrl: ${{ needs.start-venv.outputs.apiUrl }}
 
   notify-success:
     name: Notify success
