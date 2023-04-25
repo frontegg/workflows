@@ -1,0 +1,111 @@
+name: Run E2E Tests (with venv)
+on:
+  workflow_call:
+    inputs:
+      build_image:
+        type: boolean
+        required: false
+        description: Set to true if to trigger an image build to the current branch
+        default: true
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: 'Github repository admin token'
+        required: true
+      DEV_ARGOCD_PASSWORD:
+        description: 'ArgoCD password'
+        required: true
+      NPM_TOKEN:
+        description: 'Npm token'
+        required: true
+      DOCKER_HUB_ACTION_USER:
+        description: 'Docker hub user'
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
+        description: 'Docker hub password'
+        required: true
+
+  workflow_dispatch:
+    inputs:
+      build_image:
+        type: boolean
+        required: false
+        description: Set to true if to trigger an image build to the current branch
+        default: false
+
+jobs:
+  start-venv:
+    name: Start venv
+    if: ${{ inputs.build_image == false }}
+    uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
+    with:
+      volatileEnvironment: true
+      disableDashboard: true
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+
+  start-venv-with-image:
+    name: Build image and start venv
+    if: ${{ inputs.build_image == true }}
+    uses: frontegg/workflows/.github/workflows/build-docker-start-venv.yaml@master
+    with:
+      volatileEnvironment: true
+      disableDashboard: true
+    secrets:
+      admin_github_token: ${{  secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+      npm_token: ${{ secrets.NPM_TOKEN }}
+      docker_hub_user: ${{ secrets.DOCKER_HUB_ACTION_USER }}
+      docker_hub_password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+
+  prepare-params:
+    name: Prepare environment params
+    runs-on: ubuntu-latest
+    needs: [ start-venv, start-venv-with-image ]
+    outputs:
+      apiUrl: ${{ steps.variables.outputs.apiUrl }}
+      environmentId: ${{ steps.variables.outputs.environmentId }}
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled')
+    steps:
+      - name: prepare output params
+        id: variables
+        run: |
+          echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
+          echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
+
+  run-e2e-test:
+    runs-on: ubuntu-latest
+    needs: [ prepare-params ]
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/e2e-system-tests
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+
+      - name: Run API Tests from E2E-system-tests repo
+        uses: ./.github/actions/e2e-tests
+        with:
+          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          server_url: ${{ needs.prepare-params.outputs.apiUrl }}
+          twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
+          twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+
+  remove-venv:
+    name: Remove venv
+    needs: [ run-system-test, start-venv, start-venv-with-image, prepare-params ]
+    if: |
+      always() &&
+      (needs.prepare-params.outputs.environmentId)
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
+    with:
+      venvId: ${{ needs.prepare-params.outputs.environmentId }}
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
