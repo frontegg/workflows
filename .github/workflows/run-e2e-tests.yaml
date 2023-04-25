@@ -100,7 +100,7 @@ jobs:
 
   remove-venv:
     name: Remove venv
-    needs: [ run-system-test, start-venv, start-venv-with-image, prepare-params ]
+    needs: [ run-e2e-test, start-venv, start-venv-with-image, prepare-params ]
     if: |
       always() &&
       (needs.prepare-params.outputs.environmentId)
