@@ -89,7 +89,7 @@ jobs:
           repository: frontegg/e2e-system-tests
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
 
-      - name: Run API Tests from E2E-system-tests repo
+      - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-tests
         with:
           github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
