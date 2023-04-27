@@ -18,7 +18,7 @@ on:
 jobs:
   remove-venv:
     name: Remove Venv
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted ]
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v3
