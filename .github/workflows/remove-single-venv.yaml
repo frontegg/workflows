@@ -32,10 +32,10 @@ jobs:
         run: |
           #!/bin/bash
           VENV=venv-"${{ inputs.venvId }}"
-          argocd app get "${{VENV}}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${{VENV}}"
+          argocd app get "${VENV}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${VENV}"
 
           # Check if the file exists
-          if [[ ! -f "${{VENV}}" ]]; then
+          if [[ ! -f "${VENV}" ]]; then
             echo "Error: VENV file not found." >&2
             exit 1
           fi
@@ -43,7 +43,7 @@ jobs:
           #while read -r item; do
           #  echo "Terminating ${item}"
           #  argocd app terminate-op "$item"
-          #done < "${{VENV}}"
+          #done < "${VENV}"
 
           # Iterate over each line in the venv file
           while read -r item; do
@@ -62,7 +62,7 @@ jobs:
               echo "Error: Failed to terminate '${item}'. It probably doesnt need to be terminated"
             fi
             # Terminate the item (example command)
-          done < "${{VENV}}"
+          done < "${VENV}"
 
           # Print a success message if the loop completes without errors
           echo "All VENV applications that were stuck have been terminated successfully."
