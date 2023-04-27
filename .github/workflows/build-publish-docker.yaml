@@ -1,0 +1,68 @@
+name: Build and publish docker
+description: This action should Build a docker image and publish to docker hub
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Set the tag of the docker image'
+        required: true
+      build_image_script:
+        description: 'The shell script that builds the docker image'
+        required: true
+        default: ./ci/build-and-publish-image.sh
+      tag_name:
+        description: 'Set the tag of the docker image'
+        required: false
+    secrets:
+      NPM_TOKEN:
+        description: 'Npm Token'
+        required: true
+      DOCKER_HUB_PASSWORD:
+        description: 'Docker Hub Password'
+        required: true
+      DOCKER_HUB_USER:
+        description: 'Docker Hub User'
+        required: true
+
+jobs:
+  build-and-publish-docker:
+    name: Build and publish docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Prepare parameters"
+        uses: actions/github-script@v6
+        id: 'params'
+        with:
+          result-encoding: json
+          script: |
+            let tag = core.getInput('tag');
+            if(!tag) {
+              core.info(`Tag was not provided, setting tag as short_sha`);
+              tag = context.sha.substring(0, 7);
+            }
+            const branchName = context.ref.replace('refs/heads/', '');
+            core.info(`Branch name is ${branchName}`);
+            const hashedBranch = Buffer.from(branchName)
+                                       .toString('base64')
+                                       .toLowerCase()
+                                       .replace(/[^A-Za-z0-9]/g, '');
+            const result = { hashedBranch, tag };
+            console.log(`result: ${JSON.stringify(result)}`);
+            return result;
+      - name: Checkout Current Repository
+        uses: actions/checkout@v3
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: build and publish docker image
+        uses: ./workflows/.github/shared-actions/build-and-publish-docker
+        with:
+          tag: ${{ fromJSON(steps.params.outputs.result).tag }}
+          tag_name: ${{ fromJSON(steps.params.outputs.result).hashedBranch }}
+          build_image_script: ${{ inputs.build_image_script }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
