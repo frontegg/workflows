@@ -76,4 +76,5 @@ jobs:
       - name: Abort Sync Operations Parent Application
         run: |
           #!/bin/bash
+          VENV="venv-${{ inputs.venvId }}"
           argocd app terminate-op "${{VENV}}"
