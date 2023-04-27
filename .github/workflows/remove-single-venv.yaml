@@ -11,9 +11,6 @@ on:
       admin_github_token:
         description: 'Github repository admin token'
         required: true
-      argocd_password:
-        description: 'ArgoCD password'
-        required: true
 
 jobs:
   remove-venv:
