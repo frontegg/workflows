@@ -51,6 +51,7 @@ on:
 
 jobs:
   start-venv:
+    concurrency: start-venv
     name: start venv
     runs-on: ubuntu-latest
     outputs:

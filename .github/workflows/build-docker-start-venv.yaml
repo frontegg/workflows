@@ -107,6 +107,7 @@ jobs:
   start-venv:
     name: start venv
     runs-on: ubuntu-latest
+    concurrency: start-venv
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
