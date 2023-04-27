@@ -30,7 +30,7 @@ jobs:
         with:
           version: 2.6.1
           command: login
-          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
+          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password  ${{ inputs.argocd_password }}
 
       - name: Abort Sync Operations Child Applications
         run: |
