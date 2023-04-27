@@ -5,7 +5,7 @@ on:
     inputs:
       tag:
         description: 'Set the tag of the docker image'
-        required: true
+        required: false
         type: string
       build_image_script:
         description: 'The shell script that builds the docker image'
