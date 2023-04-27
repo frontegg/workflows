@@ -22,6 +22,43 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+      - name: Abort Sync Operations Child Applications
+        run: |
+          #!/bin/bash
+          argocd app get "${{ inputs.venvId }}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${{ inputs.venvId }}"
+
+          # Check if the file exists
+          if [[ ! -f "${{ inputs.venvId }}" ]]; then
+            echo "Error: VENV file not found." >&2
+            exit 1
+          fi
+          #
+          #while read -r item; do
+          #  echo "Terminating ${item}"
+          #  argocd app terminate-op "$item"
+          #done < "${{ inputs.venvId }}"
+
+          # Iterate over each line in the venv file
+          while read -r item; do
+            # Check if the item is empty or a comment line
+            if [[ -z "$item" || "${item:0:1}" == "#" ]]; then
+              continue  # skip to next iteration
+            fi
+
+            # Print debugging information
+            echo "Terminating ${item}"
+            argocd app terminate-op "$item"
+            # Terminate the item (example command)
+            if [[ $? == 0 ]]; then
+              echo "Successfully terminated '${item}'."
+            else
+              echo "Error: Failed to terminate '${item}'. It probably doesnt need to be terminated"
+            fi
+            # Terminate the item (example command)
+          done < "${{ inputs.venvId }}"
+
+          # Print a success message if the loop completes without errors
+          echo "All VENV applications that were stuck have been terminated successfully."
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
         id: venv-actions
@@ -29,3 +66,7 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
+      - name: Abort Sync Operations Parent Application
+        run: |
+          #!/bin/bash
+          argocd app terminate-op "${{ inputs.venvId }}"
