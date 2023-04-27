@@ -9,7 +9,7 @@ on:
         type: string
       build_image_script:
         description: 'The shell script that builds the docker image'
-        required: true
+        required: false
         default: ./ci/build-and-publish-image.sh
         type: string
       tag_name:
