@@ -31,7 +31,7 @@ jobs:
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
-          VENV=venv-${{ inputs.venvId }}
+          VENV="venv-${{ inputs.venvId }}"
           argocd app get "${{VENV}}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${{VENV}}"
 
           # Check if the file exists
