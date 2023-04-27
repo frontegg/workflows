@@ -6,13 +6,16 @@ on:
       tag:
         description: 'Set the tag of the docker image'
         required: true
+        type: string
       build_image_script:
         description: 'The shell script that builds the docker image'
         required: true
         default: ./ci/build-and-publish-image.sh
+        type: string
       tag_name:
         description: 'Set the tag of the docker image'
         required: false
+        type: string
     secrets:
       NPM_TOKEN:
         description: 'Npm Token'
