@@ -19,6 +19,8 @@ jobs:
   remove-venv:
     name: Remove Venv
     runs-on: [ self-hosted ]
+    env:
+      DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v3
@@ -30,8 +32,6 @@ jobs:
         with:
           time: '3m'
       - name: Abort Sync Operations Child Applications
-        env:
-          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
         run: |
           #!/bin/bash
           sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
@@ -70,10 +70,7 @@ jobs:
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
       - name: Abort Sync Operations Parent Application
-        env:
-          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
         run: |
           #!/bin/bash
           argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${DEV_ARGOCD_PASSWORD}
           argocd app terminate-op venv-"${{ inputs.venvId }}"
-
