@@ -72,7 +72,7 @@ jobs:
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
-          venvId: ${{VENV}}
+          venvId: ${{ inputs.venvId }}
       - name: Abort Sync Operations Parent Application
         run: |
           #!/bin/bash
