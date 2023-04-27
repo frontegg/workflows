@@ -25,20 +25,10 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: Wait for ArgoCD
-        uses: whatnick/wait-action@master
-        with:
-          time: '3m'
-      - uses: clowdhaus/argo-cd-action/@main
-        name: Login local ArgoCD
-        with:
-          version: 2.6.1
-          command: login
-          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
-
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
           VENV=venv-"${{ inputs.venvId }}"
           argocd app get "${VENV}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${VENV}"
 
@@ -84,4 +74,5 @@ jobs:
       - name: Abort Sync Operations Parent Application
         run: |
           #!/bin/bash
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.argocd_password }}
           argocd app terminate-op venv-"${{ inputs.venvId }}"
