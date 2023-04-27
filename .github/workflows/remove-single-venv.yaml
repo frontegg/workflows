@@ -38,6 +38,11 @@ jobs:
           #!/bin/bash
           sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           sudo chmod +x /usr/local/bin/argocd               
+          env
+          path
+          ls -alh
+          pwd
+          echo "argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${DEV_ARGOCD_PASSWORD}"
           argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${DEV_ARGOCD_PASSWORD}
           VENV=venv-"${{ inputs.venvId }}"
           argocd app get "${VENV}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${VENV}"
