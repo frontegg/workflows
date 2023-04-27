@@ -25,10 +25,11 @@ jobs:
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
-          argocd app get "${{ inputs.venvId }}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${{ inputs.venvId }}"
+          VENV=venv-${{ inputs.venvId }}
+          argocd app get "${{VENV}}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${{VENV}}"
 
           # Check if the file exists
-          if [[ ! -f "${{ inputs.venvId }}" ]]; then
+          if [[ ! -f "${{VENV}}" ]]; then
             echo "Error: VENV file not found." >&2
             exit 1
           fi
@@ -36,7 +37,7 @@ jobs:
           #while read -r item; do
           #  echo "Terminating ${item}"
           #  argocd app terminate-op "$item"
-          #done < "${{ inputs.venvId }}"
+          #done < "${{VENV}}"
 
           # Iterate over each line in the venv file
           while read -r item; do
@@ -55,7 +56,7 @@ jobs:
               echo "Error: Failed to terminate '${item}'. It probably doesnt need to be terminated"
             fi
             # Terminate the item (example command)
-          done < "${{ inputs.venvId }}"
+          done < "${{VENV}}"
 
           # Print a success message if the loop completes without errors
           echo "All VENV applications that were stuck have been terminated successfully."
@@ -65,8 +66,8 @@ jobs:
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
-          venvId: ${{ inputs.venvId }}
+          venvId: ${{VENV}}
       - name: Abort Sync Operations Parent Application
         run: |
           #!/bin/bash
-          argocd app terminate-op "${{ inputs.venvId }}"
+          argocd app terminate-op "${{VENV}}"
