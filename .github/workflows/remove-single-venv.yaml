@@ -25,6 +25,10 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+      - name: Wait for ArgoCD
+        uses: whatnick/wait-action@master
+        with:
+          time: '3m'
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
