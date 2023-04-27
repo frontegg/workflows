@@ -43,11 +43,6 @@ jobs:
             echo "Error: VENV file not found." >&2
             exit 1
           fi
-          #
-          #while read -r item; do
-          #  echo "Terminating ${item}"
-          #  argocd app terminate-op "$item"
-          #done < "${VENV}"
 
           # Iterate over each line in the venv file
           while read -r item; do
@@ -55,20 +50,15 @@ jobs:
             if [[ -z "$item" || "${item:0:1}" == "#" ]]; then
               continue  # skip to next iteration
             fi
-
-            # Print debugging information
             echo "Terminating ${item}"
             argocd app terminate-op "$item"
-            # Terminate the item (example command)
             if [[ $? == 0 ]]; then
               echo "Successfully terminated '${item}'."
             else
               echo "Error: Failed to terminate '${item}'. It probably doesnt need to be terminated"
             fi
-            # Terminate the item (example command)
           done < "${VENV}"
 
-          # Print a success message if the loop completes without errors
           echo "All VENV applications that were stuck have been terminated successfully."
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
