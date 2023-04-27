@@ -31,12 +31,12 @@ jobs:
           time: '3m'
       - name: Abort Sync Operations Child Applications
         env:
-          argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
         run: |
           #!/bin/bash
           sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
           sudo chmod +x /usr/local/bin/argocd               
-          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password $argocd_password
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${DEV_ARGOCD_PASSWORD}
           VENV=venv-"${{ inputs.venvId }}"
           argocd app get "${VENV}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${VENV}"
 
@@ -71,9 +71,9 @@ jobs:
           venvId: ${{ inputs.venvId }}
       - name: Abort Sync Operations Parent Application
         env:
-          argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
         run: |
           #!/bin/bash
-          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password $argocd_password
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${DEV_ARGOCD_PASSWORD}
           argocd app terminate-op venv-"${{ inputs.venvId }}"
 
