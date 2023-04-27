@@ -11,6 +11,7 @@ on:
       admin_github_token:
         description: 'Github repository admin token'
         required: true
+      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
 
 jobs:
   remove-venv:
@@ -27,7 +28,7 @@ jobs:
         with:
           version: 2.6.1
           command: login
-          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ inputs.argocd_password }}
+          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ inputs.DEV_ARGOCD_PASSWORD }}
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
