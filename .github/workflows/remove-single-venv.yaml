@@ -22,6 +22,12 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+      - uses: clowdhaus/argo-cd-action/@main
+        name: Login local ArgoCD
+        with:
+          version: 2.6.1
+          command: login
+          options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ inputs.argocd_password }}
       - name: Abort Sync Operations Child Applications
         run: |
           #!/bin/bash
