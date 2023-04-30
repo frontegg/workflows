@@ -1,36 +1,28 @@
 name: Pull Request Check and Api Tests
 on:
   workflow_call:
-  inputs:
-    build_image:
-      type: boolean
-      required: false
-      description: Set to true if to trigger an image build to the current branch
-      default: true
-  secrets:
-    GH_REPOSITORY_ADMIN_TOKEN:
-      description: 'Github repository admin token'
-      required: true
-    DEV_ARGOCD_PASSWORD:
-      description: 'ArgoCD password'
-      required: true
-    NPM_TOKEN:
-      description: 'Npm token'
-      required: true
-    DOCKER_HUB_ACTION_USER:
-      description: 'Docker hub user'
-      required: true
-    DOCKER_HUB_ACTION_PASSWORD:
-      description: 'Docker hub password'
-      required: true
-
-  workflow_dispatch:
     inputs:
       build_image:
         type: boolean
         required: false
         description: Set to true if to trigger an image build to the current branch
         default: true
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: 'Github repository admin token'
+        required: true
+      DEV_ARGOCD_PASSWORD:
+        description: 'ArgoCD password'
+        required: true
+      NPM_TOKEN:
+        description: 'Npm token'
+        required: true
+      DOCKER_HUB_ACTION_USER:
+        description: 'Docker hub user'
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
+        description: 'Docker hub password'
+        required: true
 
 jobs:
   build-and-publish-version-image:
