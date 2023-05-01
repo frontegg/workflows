@@ -7,11 +7,11 @@ on:
         required: false
         description: Set to true if to trigger an image build to the current branch
         default: true
-    tests_tag:
-      type: string
-      required: false
-      description: Set the e2e-api tests branch tag
-      default: master
+      tests_tag:
+        type: string
+        required: false
+        description: Set the e2e-api tests branch tag
+        default: master
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
