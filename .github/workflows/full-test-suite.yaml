@@ -30,6 +30,13 @@ on:
         required: true
 
 jobs:
+  dummy:
+    name: Dummy Job for dependecy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dummy Step
+        run: echo "Dummy Step"
+
   build-and-publish-version-image:
     name: Build and publish version image
     if: ${{ inputs.build_image == true }}
@@ -38,7 +45,7 @@ jobs:
 
   run-e2e-test:
     name: Run E2E Tests (venv)
-    needs: [ build-and-publish-version-image ]
+    needs: [build-and-publish-version-image, dummy]
     uses: frontegg/workflows/.github/workflows/run-e2e-tests.yaml@master
     with:
       build_image: false
@@ -47,7 +54,7 @@ jobs:
 
   run-api-test:
     name: Run Api Tests (venv)
-    needs: [ build-and-publish-version-image ]
+    needs: [ build-and-publish-version-image, dummy]
     uses: frontegg/workflows/.github/workflows/run-api-tests.yaml@master
     with:
       build_image: false
