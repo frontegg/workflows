@@ -30,7 +30,6 @@ on:
         required: true
 
 jobs:
-
   build-and-publish-version-image:
     name: Build and publish version image
     if: ${{ inputs.build_image == true }}
