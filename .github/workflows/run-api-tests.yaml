@@ -86,7 +86,7 @@ jobs:
           echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
           echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
 
-  run-system-test:
+  run-api-test:
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
     if: |
@@ -111,7 +111,7 @@ jobs:
 
   remove-venv:
     name: Remove venv
-    needs: [ run-system-test, start-venv, start-venv-with-image, prepare-params ]
+    needs: [ run-api-test, start-venv, start-venv-with-image, prepare-params ]
     if: |
       always() &&
       (needs.prepare-params.outputs.environmentId)
