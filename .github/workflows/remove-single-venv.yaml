@@ -15,13 +15,55 @@ on:
 jobs:
   remove-venv:
     name: Remove Venv
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted ]
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
           path: workflows
+      - name: Wait for ArgoCD
+        uses: whatnick/wait-action@master
+        with:
+          time: '3m'
+      - name: Abort Sync Operations Child Applications
+        env:
+          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+        run: |
+          #!/bin/bash
+          sudo curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+          sudo chmod +x /usr/local/bin/argocd               
+          env
+          path
+          ls -alh
+          pwd
+          echo "argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          VENV=venv-"${{ inputs.venvId }}"
+          argocd app get "${VENV}" --output json | jq -r '.[] .operationState | .syncResult | .resources | select(. != null) | .[] | select( .hookPhase | contains("Running")) | .name' > "${VENV}"
+
+          # Check if the file exists
+          if [[ ! -f "${VENV}" ]]; then
+            echo "Error: VENV file not found." >&2
+            exit 1
+          fi
+
+          # Iterate over each line in the venv file
+          while read -r item; do
+            # Check if the item is empty or a comment line
+            if [[ -z "$item" || "${item:0:1}" == "#" ]]; then
+              continue  # skip to next iteration
+            fi
+            echo "Terminating ${item}"
+            argocd app terminate-op "$item"
+            if [[ $? == 0 ]]; then
+              echo "Successfully terminated '${item}'."
+            else
+              echo "Error: Failed to terminate '${item}'. It probably doesnt need to be terminated"
+            fi
+          done < "${VENV}"
+
+          echo "All VENV applications that were stuck have been terminated successfully."
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
         id: venv-actions
@@ -29,3 +71,10 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
+      - name: Abort Sync Operations Parent Application
+        env:
+          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+        run: |
+          #!/bin/bash
+          argocd login argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          argocd app terminate-op venv-"${{ inputs.venvId }}"
