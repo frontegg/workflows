@@ -13,7 +13,7 @@ inputs:
   waitTimeout:
     description: 'Set the wait timeout'
     required: false
-    default: "1020"
+    default: "900"
 
 runs:
   using: "composite"
