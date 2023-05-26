@@ -144,6 +144,7 @@ jobs:
 
   remove-venv:
     name: Remove Venv if failed
+    concurrency: start-venv
     if: failure()
     runs-on: ubuntu-latest
     needs: [ notify-failure, start-venv ]

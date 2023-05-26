@@ -1,0 +1,57 @@
+name: Full Suite Test (API + E2E -> Venv)
+on:
+  workflow_call:
+    inputs:
+      build_image:
+        type: boolean
+        required: false
+        description: Set to true if to trigger an image build to the current branch
+        default: true
+      tests_tag:
+        type: string
+        required: false
+        description: Set the e2e-api tests branch tag
+        default: master
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: 'Github repository admin token'
+        required: true
+      DEV_ARGOCD_PASSWORD:
+        description: 'ArgoCD password'
+        required: true
+      NPM_TOKEN:
+        description: 'Npm token'
+        required: true
+      DOCKER_HUB_ACTION_USER:
+        description: 'Docker hub user'
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
+        description: 'Docker hub password'
+        required: true
+
+jobs:
+  build-and-publish-version-image:
+    name: Build and publish version image
+    if: ${{ inputs.build_image == true }}
+    uses: frontegg/workflows/.github/workflows/build-publish-docker.yaml@master
+    secrets: inherit
+
+  run-e2e-test:
+    name: Run E2E Tests (venv)
+    needs: [build-and-publish-version-image]
+    if: ${{ always() && (needs.build-and-publish-version-image.result == 'success' || needs.build-and-publish-version-image.result == 'skipped') }}
+    uses: frontegg/workflows/.github/workflows/run-e2e-tests.yaml@master
+    with:
+      build_image: false
+      tests_tag: ${{ inputs.tests_tag }}
+    secrets: inherit
+
+  run-api-test:
+    name: Run Api Tests (venv)
+    needs: [ build-and-publish-version-image]
+    if: ${{ always() && (needs.build-and-publish-version-image.result == 'success' || needs.build-and-publish-version-image.result == 'skipped') }}
+    uses: frontegg/workflows/.github/workflows/run-api-tests.yaml@master
+    with:
+      build_image: false
+      tests_tag: ${{ inputs.tests_tag }}
+    secrets: inherit
