@@ -28,6 +28,15 @@ on:
       DOCKER_HUB_ACTION_PASSWORD:
         description: 'Docker hub password'
         required: true
+      MAILOSAUR_API_KEY:
+        description: 'MAILOSAUR API KEY'
+        required: true
+      MAILOSAUR_SERVER_ID:
+        description: 'MAILOSAUR SERVER ID'
+        required: true
+      MAILOSAUR_SERVER_DOMAIN:
+        description: 'MAILOSAUR SERVER DOMAIN'
+        required: true
 
 jobs:
   start-venv:
@@ -96,6 +105,9 @@ jobs:
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
           twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
 
   run-api-test:
     runs-on: ubuntu-latest
@@ -119,6 +131,9 @@ jobs:
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
           twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
 
   remove-venv:
     name: Remove venv

@@ -28,6 +28,15 @@ on:
       DOCKER_HUB_ACTION_PASSWORD:
         description: 'Docker hub password'
         required: true
+      MAILOSAUR_API_KEY:
+        description: 'MAILOSAUR API KEY'
+        required: true
+      MAILOSAUR_SERVER_ID:
+        description: 'MAILOSAUR SERVER ID'
+        required: true
+      MAILOSAUR_SERVER_DOMAIN:
+        description: 'MAILOSAUR SERVER DOMAIN'
+        required: true
 
 jobs:
   build-and-publish-version-image:
