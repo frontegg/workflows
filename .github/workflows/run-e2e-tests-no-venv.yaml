@@ -85,6 +85,7 @@ jobs:
         run: |
           echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
           echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
+          echo "::set-output name=portalUrl::${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}"
 
   run-e2e-test:
     runs-on: ubuntu-latest
@@ -106,6 +107,7 @@ jobs:
           github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
+          portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
           twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
           twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
 
