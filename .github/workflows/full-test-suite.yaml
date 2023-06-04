@@ -70,6 +70,7 @@ jobs:
     needs: [ start-venv, start-venv-with-image ]
     outputs:
       apiUrl: ${{ steps.variables.outputs.apiUrl }}
+      portalUrl: ${{ steps.variables.outputs.portalUrl }}
       environmentId: ${{ steps.variables.outputs.environmentId }}
     if: |
       always() &&
