@@ -45,7 +45,6 @@ jobs:
     uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
     with:
       volatileEnvironment: true
-      disableDashboard: true
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
