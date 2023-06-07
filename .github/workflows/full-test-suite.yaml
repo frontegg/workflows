@@ -7,7 +7,7 @@ on:
         required: false
         description: Set to true if to trigger an image build to the current branch
         default: true
-      tests_tag:
+      test_tag:
         type: string
         required: false
         description: Set the e2e-api tests branch tag
@@ -87,7 +87,7 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: frontegg/e2e-system-tests/.github/workflows/shared-run-e2e-tests.yaml@parallel
+    uses: frontegg/e2e-system-tests/.github/workflows/shared-run-e2e-tests.yaml@${{ inputs.test_tag }}
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
@@ -98,7 +98,7 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    uses: frontegg/e2e-system-tests/.github/workflows/shared-run-api-tests.yaml@parallel
+    uses: frontegg/e2e-system-tests/.github/workflows/shared-run-api-tests.yaml@${{ inputs.test_tag }}
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
