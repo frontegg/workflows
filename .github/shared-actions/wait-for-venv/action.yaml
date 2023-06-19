@@ -32,7 +32,7 @@ runs:
       name: Wait for venv to be ready
       with:
         version: 2.7.3
-        command: app wait -l venv=${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }}
+        command: app wait -l app.kubernetes.io/instance=venv-${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }}
     - name: Check access to the environment
       uses: mydea/action-wait-for-api@v1
       with:
