@@ -21,7 +21,7 @@ runs:
     - name: Wait for ArgoCD
       uses: whatnick/wait-action@master
       with:
-        time: '3m'
+        time: '4m'
     - uses: clowdhaus/argo-cd-action/@main
       name: Login local ArgoCD
       with:
@@ -32,7 +32,7 @@ runs:
       name: Wait for venv to be ready
       with:
         version: 2.7.3
-        command: app wait -l venv=${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }} --health
+        command: app wait -l venv=${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }}
     - name: Check access to the environment
       uses: mydea/action-wait-for-api@v1
       with:
