@@ -7,6 +7,10 @@ on:
         description: 'Set the venvId to remove'
         required: true
         type: string
+      gracePeriodInMinutes:
+        description: 'Set the grace period before removing venv, default is 0'
+        required: false
+        type: string
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
@@ -29,3 +33,4 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ inputs.venvId }}
+          gracePeriodInMinutes: ${{ inputs.gracePeriodInMinutes }}
