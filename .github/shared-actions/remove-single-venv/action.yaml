@@ -10,6 +10,10 @@ inputs:
   venvId:
     description: "See workflow"
     required: true
+  gracePeriodInMinutes:
+    description: "Set grace period before removing venv, default is 0"
+    required: false
+    default: "0"
 
 runs:
   using: "composite"
@@ -32,6 +36,7 @@ runs:
       with:
         venvRepoDirectory: ${{ inputs.venvRepoDirectory }}
         venvId: ${{ inputs.venvId }}
+        gracePeriodInMinutes: ${{ inputs.gracePeriodInMinutes }}
     - name: Add changes and push venv files
       uses: EndBug/add-and-commit@v9
       with:
