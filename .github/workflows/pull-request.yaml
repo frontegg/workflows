@@ -7,7 +7,7 @@ on:
         type: string
       string_to_lint:
         required: false
-        default: ${{ startsWith(github.event.pull_request.title ,'[Snyk]') && 'FR-9580' || github.event.pull_request.title}}
+        default: ${{ startsWith(github.event.pull_request.title ,'[Snyk]', 'Update Routes Config') && 'FR-9580' || github.event.pull_request.title}}
         type: string
     secrets:
       frontegg_jira_email:
