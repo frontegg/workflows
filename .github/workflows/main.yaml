@@ -17,7 +17,11 @@ on:
         required: false
         default: staging
         type: string
-      first_environment_name:
+      au_environment_name:
+        required: false
+        default: production-au
+        type: string
+      us_environment_name:
         required: false
         default: production-us
         type: string
@@ -179,14 +183,57 @@ jobs:
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
 
+  deploy-to-australia:
+    name: Deploy to Australia Region (Sydney)
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.au_environment_name }}
+    needs:
+      - params
+      - deploy-to-staging
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production AU'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: ${{ inputs.au_environment_name }}
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ needs.params.outputs.short_sha }}
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:'
+          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }}
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+          MSG_MINIMAL: Commit,actions url
+
   deploy-to-us:
     name: Deploy to US East 1
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.first_environment_name }}
+      name: ${{ inputs.us_environment_name }}
     needs:
       - params
-      - deploy-to-staging
+      - deploy-to-australia
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
@@ -202,7 +249,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
-          environment: ${{ inputs.first_environment_name }}
+          environment: ${{ inputs.us_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
@@ -216,8 +263,8 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.first_environment_name }} :rocket:'
-          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.first_environment_name }}
+          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:'
+          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
           MSG_MINIMAL: Commit,actions url
@@ -229,7 +276,7 @@ jobs:
       name: ${{ inputs.global_environment_name }}
     needs:
       - params
-      - deploy-to-staging
+      - deploy-to-us
     steps:
       - name: Checkout codes
         uses: actions/checkout@v3
