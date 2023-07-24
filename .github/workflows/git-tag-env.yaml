@@ -9,7 +9,6 @@ on:
         default: staging
 env: 
   ENV_NAME: ${{ inputs.environment }}
-# permissions: write-all
 jobs:
   deploy-env:
     environment: ${{ inputs.environment }}
