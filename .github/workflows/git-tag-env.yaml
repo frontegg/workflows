@@ -1,4 +1,4 @@
-name: Deploy ENV
+name: Git tag ENV
 concurrency: ${{ inputs.environment }}
 on:
   workflow_call:
