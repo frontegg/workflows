@@ -1,0 +1,29 @@
+name: Git tag ENV
+description: perform a git tag operation
+inputs:
+  environment:
+    description: 'Environment'
+    required: true
+  github_token:
+    description: 'The github token'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set variables
+      id: variables
+      run: |
+        echo ::set-output name=env-name::"${{ inputs.environment }}"
+      shell: bash
+    - name: Git Tag
+      id: git-tag-step
+      working-directory: code
+      run: |
+        echo tagging ${{ steps.variables.outputs.env-name }}
+        timestamp=$(date +'%Y%m%d.%H%M%S')
+        audit_tag=${{ steps.variables.outputs.env-name }}-$timestamp
+        actual_tag=${{ steps.variables.outputs.env-name }}
+        git tag $audit_tag --force && git push origin refs/tags/$audit_tag --force
+        git tag $actual_tag --force && git push origin refs/tags/$actual_tag --force
+      shell: bash
