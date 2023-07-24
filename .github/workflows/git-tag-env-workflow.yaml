@@ -1,0 +1,116 @@
+name: Git Tag Env Workflow
+
+on:
+  workflow_call:
+    inputs:
+      staging_environment_name:
+        required: false
+        default: staging
+        type: string
+      au_environment_name:
+        required: false
+        default: production-au
+        type: string
+      us_environment_name:
+        required: false
+        default: production-us
+        type: string
+      global_environment_name:
+        required: false
+        default: production-global
+        type: string
+    secrets:
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
+
+jobs:
+  deploy-to-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.staging_environment_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.staging_environment_name }}
+
+  deploy-to-australia:
+    name: Deploy to Australia Region (Sydney)
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.au_environment_name }}
+    needs:
+      - deploy-to-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production AU'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.au_environment_name }}
+
+  deploy-to-us:
+    name: Deploy to US East 1
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.us_environment_name }}
+    needs:
+      - deploy-to-australia
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production US'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.us_environment_name }}
+
+  deploy-to-global:
+    name: Deploy to All Global Environments
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.global_environment_name }}
+    needs:
+      - deploy-to-us
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production Global'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.global_environment_name }}
