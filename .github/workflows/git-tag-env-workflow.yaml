@@ -1,8 +1,13 @@
+# used by config center allows deployment without build steps
 name: Git Tag Env Workflow
 
 on:
   workflow_call:
     inputs:
+      dev_environment_name:
+        required: false
+        default: dev
+        type: string
       staging_environment_name:
         required: false
         default: staging
@@ -25,6 +30,27 @@ on:
         required: true
 
 jobs:
+  deploy-dev:
+    name: Deploy dev
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.dev_environment_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.dev_environment_name }}
+
   deploy-to-staging:
     name: Deploy to staging
     runs-on: ubuntu-latest
