@@ -10,7 +10,7 @@ on:
 env: 
   ENV_NAME: ${{ inputs.environment }}
 jobs:
-  deploy-env:
+  git-tag-env:
     environment: ${{ inputs.environment }}
     runs-on: ubuntu-latest
     steps:
@@ -23,4 +23,4 @@ jobs:
           audit_tag=$ENV_NAME-$timestamp
           actual_tag=$ENV_NAME
           git tag $audit_tag --force && git push origin refs/tags/$audit_tag --force
-          git tag $actual_tag --force && git push origin refs/tags/$actual_tag --force 
+          git tag $actual_tag --force && git push origin refs/tags/$actual_tag --force
