@@ -1,0 +1,27 @@
+name: Deploy ENV
+concurrency: ${{ inputs.environment }}
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        default: staging
+env: 
+  ENV_NAME: ${{ inputs.environment }}
+# permissions: write-all
+jobs:
+  deploy-env:
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Tag ENV
+        run: |
+          echo tagging $ENV_NAME
+          timestamp=$(date +'%Y%m%d.%H%M%S')
+          audit_tag=$ENV_NAME-$timestamp
+          actual_tag=$ENV_NAME
+          git tag $audit_tag --force && git push origin refs/tags/$audit_tag --force
+          git tag $actual_tag --force && git push origin refs/tags/$actual_tag --force 
