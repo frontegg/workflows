@@ -4,6 +4,10 @@ name: Git Tag Env Workflow
 on:
   workflow_call:
     inputs:
+      dev_ci_environment_name:
+        required: false
+        default: dev-ci
+        type: string
       dev_environment_name:
         required: false
         default: dev
@@ -30,6 +34,27 @@ on:
         required: true
 
 jobs:
+  deploy-dev-ci:
+    name: Deploy dev ci
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.dev_ci_environment_name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to dev ci'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.dev_ci_environment_name }}
+
   deploy-dev:
     name: Deploy dev
     runs-on: ubuntu-latest
@@ -45,7 +70,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to staging'
+      - name: 'Deploy to dev'
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
