@@ -78,7 +78,7 @@ jobs:
   wait:
     name: waiting for venv readiness
     needs: [start-venv]
-    runs-on: [self-hosted]
+    runs-on: [self-hosted, dev]
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v3
