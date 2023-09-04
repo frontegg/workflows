@@ -1,0 +1,63 @@
+name: Post Merge Suite Test (API + E2E On existing env)
+on:
+  workflow_call:
+    inputs:
+      tests_tag:
+        type: string
+        required: false
+        description: Set the e2e-api tests branch tag
+        default: master
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: 'Github repository admin token'
+        required: true
+      NPM_TOKEN:
+        description: 'Npm token'
+        required: true
+      MAILOSAUR_API_KEY:
+        description: 'MAILOSAUR API KEY'
+        required: true
+      MAILOSAUR_SERVER_ID:
+        description: 'MAILOSAUR SERVER ID'
+        required: true
+      MAILOSAUR_SERVER_DOMAIN:
+        description: 'MAILOSAUR SERVER DOMAIN'
+        required: true
+      ZEPHYR_TOKEN:
+        description: ''
+        required: true
+      apiUrl: 
+        description: 'Frontegg api url'
+        required: true
+      portalUrl:
+        description: 'Frontegg portal url'
+        required: true
+
+jobs:
+  run-e2e-test:
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+
+      - name: Run E2E Tests from E2E-system-tests repo
+        uses: ./.github/actions/e2e-test
+        with:
+          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          server_url: ${{ inputs.apiUrl }}
+          portal_url: ${{ inputs.portalUrl }}
+          twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
+          twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          test_script: 'npm run test:e2e:social-logins'
