@@ -39,19 +39,14 @@ jobs:
     name: Build and Push Image
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
       - name: Checkout Workflows
         uses: actions/checkout@v3
         with:
           repository: frontegg/workflows
           path: workflows
-      - run: |
-          ls -1
-          cd workflows
-          ls -1
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
+          clean: false
       - run: |
           ls -1
           cd workflows
