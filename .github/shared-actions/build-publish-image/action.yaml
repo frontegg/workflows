@@ -37,14 +37,13 @@ runs:
           const inputs = ${{ toJSON(inputs) }};
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
-          console.log(`tags: ${inputs.tags}`);
           const tags = core.getInput('tags')
                             .split("\n")
                             .map(s => s.replace(/^!\s+/, "!").trim())
                             .filter(x => x !== "")
                             .map(s => `${imageName}:${s}`);
           const result = { tags };
-          console.log(`tags: ${JSON.stringify(tags)}`);
+          console.log(`tags: ${tags}`);
           return result;
 
     - name: Set up QEMU
