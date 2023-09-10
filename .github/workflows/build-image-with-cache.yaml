@@ -49,7 +49,7 @@ jobs:
         with:
           depth: 0
       - name: Run build and push docker image action
-        uses: workflows/.github/shared-actions/build-publish-image
+        uses: ./workflows/.github/shared-actions/build-publish-image
         with:
           image: ${{ inputs.image }}
           tags: ${{ inputs.tag }}
