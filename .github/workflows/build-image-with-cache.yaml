@@ -1,0 +1,60 @@
+name: Build container image with cache
+run-name: Build container image with cache ${{ github.ref_name }}
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: 'Set the tag of the docker image'
+        required: true
+        type: string
+      tags:
+        description: 'Set the tag of the docker image'
+        required: false
+        type: string
+      registry:
+        description: 'Set the image registry repository name, default is frontegg'
+        required: false
+        default: 'frontegg'
+        type: string
+      image_file_path:
+        description: 'Set the image build file path, for example ./Dockerfile'
+        required: false
+        default: './Dockerfile'
+        type: string
+    secrets:
+      npm_token:
+        description: 'Npm Token'
+        required: true
+      docker_hub_password:
+        description: 'Docker Hub Password'
+        required: true
+      docker_hub_user:
+        description: 'Docker Hub User'
+        required: true
+
+
+jobs:
+  build-and-push-docker:
+    name: Build and Push Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v3
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          depth: 0
+      - name: Run build and push docker image action
+        uses: ./workflows/.github/shared-actions/build-publish-image
+        with:
+          image: ${{ inputs.image }}
+          tags: ${{ inputs.tag }}
+          registry: ${{ inputs.registry }}
+          image_file_path: ${{ inputs.image_file_path }}
+          npm_token: ${{ secrets.npm_token }}
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}

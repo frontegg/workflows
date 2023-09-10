@@ -13,16 +13,16 @@ inputs:
   docker_hub_user:
     description: 'Docker Hub User'
     required: true
-  tag:
-    description: 'Set the tag of the docker image'
-    required: false
+  tags:
+    description: 'Set the tags of the docker image'
+    required: true
   registry:
     description: 'Set the image registry repository name, default is frontegg'
-    required: true
+    required: false
     default: 'frontegg'
   image_file_path:
     description: 'Set the image build file path, for example ./Dockerfile'
-    required: true
+    required: false
     default: './Dockerfile'
 
 runs:
@@ -35,19 +35,16 @@ runs:
         result-encoding: json
         script: |
           const inputs = ${{ toJSON(inputs) }};
-          const branchName = context.ref.replace('refs/heads/', '');
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
-          let tag = inputs.tag;
-          if (!tag) {
-            core.info(`Tag was not provided, setting tag as short_sha`);
-            tag = context.sha.substring(0, 7);
-          }
-          const imageTag = `${imageName}:${tag}`;
-          const branchImageTag = `${imageName}:${branchName}-latest`;
-          const result = { imageTag, branchImageTag };
-          console.log(`images: ${JSON.stringify(result)}`);
+          const tags = core.getInput(name, { required: true })
+                            .split("\n")
+                            .map(s => s.replace(/^!\s+/, "!").trim())
+                            .filter(x => x !== "");
+          const result = { tags };
+          console.log(`images: ${JSON.stringify(tags)}`);
           return result;
+
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -58,7 +55,7 @@ runs:
         username: ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
     - name: Cache Docker layers
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /tmp/.buildx-cache
         # Key is named differently to avoid collision
@@ -79,7 +76,7 @@ runs:
         push: true
         build-args: |
           NPM_TOKEN=${{ inputs.npm_token }}
-        tags: ${{ fromJSON(steps.params.outputs.result).imageTag }},${{ fromJSON(steps.params.outputs.result).branchImageTag }}
+        tags: ${{ join( fromJSON(steps.params.outputs.result).tags, ',' ) }}
         cache-from: type=local,src=/tmp/.buildx-cache
         # Note the mode=max here
         # More: https://github.com/moby/buildkit#--export-cache-options
