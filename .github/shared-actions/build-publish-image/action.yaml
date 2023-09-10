@@ -67,6 +67,8 @@ runs:
       run: |
         echo //registry.npmjs.org/:_authToken=${{ inputs.npm_token }} >> .npmrc
       shell: bash
+    - run: echo ${{ join( fromJSON(steps.params.outputs.result).tags, ',' ) }}
+      shell: bash
     - name: Build production image
       uses: docker/build-push-action@v4
       with:
