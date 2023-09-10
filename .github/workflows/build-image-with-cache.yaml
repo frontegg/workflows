@@ -40,22 +40,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout Workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
           clean: false
-      - run: |
-          ls -1
-          cd workflows
-          ls -1
       - name: Run build and push docker image action
         uses: ./workflows/.github/shared-actions/build-publish-image
         with:
           image: ${{ inputs.image }}
-          tags: ${{ inputs.tag }}
+          tags: ${{ inputs.tags }}
           registry: ${{ inputs.registry }}
           image_file_path: ${{ inputs.image_file_path }}
           npm_token: ${{ secrets.npm_token }}
