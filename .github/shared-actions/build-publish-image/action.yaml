@@ -37,8 +37,9 @@ runs:
           const inputs = ${{ toJSON(inputs) }};
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
-          const tags = core.getInput('tags')
-                            .split("\n")
+          const rawTags = core.getInput('tags', { required: true });
+          console.log(`rawTags: ${rawTags}`);
+          const tags = rawTags.split("\n")
                             .map(s => s.replace(/^!\s+/, "!").trim())
                             .filter(x => x !== "")
                             .map(s => `${imageName}:${s}`);
