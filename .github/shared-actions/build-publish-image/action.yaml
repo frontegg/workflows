@@ -37,11 +37,12 @@ runs:
           const inputs = ${{ toJSON(inputs) }};
           const repositoryName = inputs.registry;
           const imageName = `${repositoryName}/${inputs.image}`;
-          const tagArray = core.getInput(tags, { required: true })
+          const tags = core.getInput(inputs.tags, { required: true })
                             .split("\n")
                             .map(s => s.replace(/^!\s+/, "!").trim())
-                            .filter(x => x !== "");
-          const result = { tagArray };
+                            .filter(x => x !== "")
+                            .map(s => `${imageName}:${s}`);
+          const result = { tags };
           console.log(`images: ${JSON.stringify(tags)}`);
           return result;
 
