@@ -47,8 +47,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          depth: 0
+          fetch-depth: 0
           clean: false
+      - run: |
+          ls -1
+          cd workflows
+          ls -1
       - name: Run build and push docker image action
         uses: ./workflows/.github/shared-actions/build-publish-image
         with:
