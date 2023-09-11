@@ -45,6 +45,8 @@ runs:
           console.log(`tags: ${tags}`);
           return result;
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
     - name: Login to Docker Hub
@@ -52,19 +54,39 @@ runs:
       with:
         username: ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
+    - name: Cache Docker layers
+      uses: actions/cache@v3
+      with:
+        path: /tmp/.buildx-cache
+        # Key is named differently to avoid collision
+        key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-multi-buildx
     - name: Build .npmrc file
       run: |
         echo //registry.npmjs.org/:_authToken=${{ inputs.npm_token }} >> .npmrc
+      shell: bash
+    - run: echo ${{ join( fromJSON(steps.params.outputs.result).tags, ',' ) }}
       shell: bash
     - name: Build production image
       uses: docker/build-push-action@v4
       with:
         context: .
+        builder: ${{ steps.buildx.outputs.name }}
         file: ${{ inputs.image_file_path }}
         # Set the desired build target here
         push: true
         build-args: |
           NPM_TOKEN=${{ inputs.npm_token }}
         tags: ${{ join( fromJSON(steps.params.outputs.result).tags, ',' ) }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: type=local,src=/tmp/.buildx-cache
+        # Note the mode=max here
+        # More: https://github.com/moby/buildkit#--export-cache-options
+        # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
+        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      shell: bash
