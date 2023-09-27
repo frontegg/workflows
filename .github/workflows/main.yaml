@@ -176,7 +176,7 @@ jobs:
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.admin_github_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.staging_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
