@@ -151,6 +151,6 @@ jobs:
     uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
     with:
       venvId: ${{ needs.prepare-params.outputs.environmentId }}
-      gracePeriodInMinutes: "${{ contains(needs.*.result, 'failure') && '10' || '0' }}"
+      gracePeriodInMinutes: "${{ (needs.start-venv.result == 'success' || needs.start-venv-with-image.result == 'success') && '15' || '0' }}"
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
