@@ -83,7 +83,11 @@ jobs:
             }
             const branchName = context.ref.replace('refs/heads/', '');
             core.info(`Branch name is ${branchName}`);
-            const hashedBranch = Buffer.from(branchName).toString('base64').toLowerCase().replace(/[^A-Za-z0-9]/g, '');
+            const hashedBranch = Buffer.from(branchName)
+                                       .toString('base64')
+                                       .toLowerCase()
+                                       .replace(/[^A-Za-z0-9]/g, '')
+                                       .slice(0, 10);
             const result = { hashedBranch, tag };
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
