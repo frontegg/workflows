@@ -37,10 +37,6 @@ on:
         required: false
         default: ./ci/build-and-publish-hybrid-image.sh
         type: string
-      contains_code_changes:
-        required: false
-        default: true
-        type: boolean
     secrets:
       npm_token:
         description: 'Npm Token'

@@ -73,7 +73,6 @@ jobs:
       global_environment_name: ${{ github.event.inputs.global_environment_name }}
       build_image_script: ${{ github.event.inputs.build_image_script }}
       build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
-      should_tag_image: true
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -95,7 +94,6 @@ jobs:
       global_environment_name: ${{ github.event.inputs.global_environment_name }}
       build_image_script: ${{ github.event.inputs.build_image_script }}
       build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
-      should_tag_image: false
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
