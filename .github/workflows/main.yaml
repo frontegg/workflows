@@ -37,6 +37,10 @@ on:
         required: false
         default: ./ci/build-and-publish-hybrid-image.sh
         type: string
+      contains_code_changes:
+        required: false
+        default: true
+        type: boolean
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -55,259 +59,46 @@ on:
         required: false
 
 jobs:
-  params:
-    name: Prepare Parmas
-    runs-on: ubuntu-latest
-    outputs:
-      short_sha: ${{ steps.short-sha.outputs.short_sha }}
-    steps:
-      - name: Parse short sha
-        id: short-sha
-        run: |
-          if [ -z "${{ inputs.tag }}" ]
-          then
-            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
-          else
-            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
-          fi
+  main-with-image:
+    name: Build Image and deploy
+    if: ${{ github.event.inputs.contains_code_changes }}
+    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
+    with:
+      tag: ${{ github.event.inputs.tag }}
+      repository_name: ${{ github.event.inputs.repository_name }}
+      has_hybrid: ${{ github.event.inputs.has_hybrid }}
+      staging_environment_name: ${{ github.event.inputs.staging_environment_name }}
+      au_environment_name: ${{ github.event.inputs.au_environment_name }}
+      us_environment_name: ${{ github.event.inputs.us_environment_name }}
+      global_environment_name: ${{ github.event.inputs.global_environment_name }}
+      build_image_script: ${{ github.event.inputs.build_image_script }}
+      build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
+      contains_code_changes: ${{ github.event.inputs.contains_code_changes }}
+    secrets:
+      npm_token: ${{ secrets.NPM_TOKEN }}
+      docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      slack_production_webhook: ${{ secrets.SLACK_PRODUCTION_WEBHOOK }}
 
-  build-and-publish-docker:
-    name: Build and publish docker image
-    runs-on: ubuntu-latest
-    needs: [ params ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: build and publish docker image
-        uses: ./workflows/.github/shared-actions/build-and-publish-docker
-        with:
-          tag: ${{ needs.params.outputs.short_sha }}
-          build_image_script: ${{ inputs.build_image_script }}
-          npm_token: ${{ secrets.npm_token }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-
-  build-and-publish-hybrid-docker:
-    name: Build and publish hybrid docker image
-    needs: [params]
-    runs-on: ubuntu-latest
-    if: inputs.has_hybrid
-    steps:
-      - name: Display Current Tag/SHA
-        run: echo Tag/SHA ${{ needs.params.outputs.short_sha }}
-        shell: bash
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set variables
-        id: variables
-        run: |
-          HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ::set-output name=version::"${HYBRID_VERSION}"
-        shell: bash
-      - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
-        run: |
-          sudo chmod +x ${{ inputs.build_hybrid_image_script }}
-          ${{ inputs.build_hybrid_image_script }}
-        shell: bash
-        env:
-          DOCKER_HUB_USER: ${{ secrets.docker_hub_user }}
-          DOCKER_HUB_PASSWORD: ${{ secrets.docker_hub_password }}
-          HYBRID_VERSION: ${{ steps.variables.outputs.version }}
-          NPM_TOKEN: ${{ secrets.npm_token }}
-          TAG_NAME: ${{ github.ref_name }}
-          COMMIT_HASH: ${{ needs.params.outputs.short_sha }}
-      - name: Tag Hybrid
-        run: |
-          git tag hybrid-${{ steps.variables.outputs.version }}
-          git push origin refs/tags/hybrid-${{ steps.variables.outputs.version }}
-        shell: bash
-
-  publish-hybrid-helm-chart:
-    name: Publish hybrid helm chart changes
-    needs: [ build-and-publish-hybrid-docker ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          working-directory: code
-          filters: |
-            chart:
-              - 'k8s/**'
-      - name: Publish hybrid helm chart
-        if: steps.filter.outputs.chart == 'true'
-        uses: ./workflows/.github/shared-actions/publish-hybrid-helm-chart
-        with:
-          github_token: ${{ secrets.admin_github_token }}
-          repository_name: ${{ inputs.repository_name }}
-
-  deploy-to-staging:
-    name: Deploy to staging
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.staging_environment_name }}
-    needs:
-      - params
-      - build-and-publish-docker
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to staging'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: ${{ inputs.staging_environment_name }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
-
-  deploy-to-australia:
-    name: Deploy to Australia Region (Sydney)
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.au_environment_name }}
-    needs:
-      - params
-      - deploy-to-staging
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to Production AU'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: ${{ inputs.au_environment_name }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
-      - name: Assign variable
-        id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
-      - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: Production
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:'
-          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }}
-          SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
-          MSG_MINIMAL: Commit,actions url
-
-  deploy-to-us:
-    name: Deploy to US East 1
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.us_environment_name }}
-    needs:
-      - params
-      - deploy-to-australia
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to Production US'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: ${{ inputs.us_environment_name }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
-      - name: Assign variable
-        id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
-      - name: Notify Slack on deployment
-        if:  steps.secret.outputs.secret
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: Production
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:'
-          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }}
-          SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
-          MSG_MINIMAL: Commit,actions url
-
-  deploy-to-global:
-    name: Deploy to All Global Environments
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.global_environment_name }}
-    needs:
-      - params
-      - deploy-to-us
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
-        with:
-          path: code
-      - name: Checkout workflows
-        uses: actions/checkout@v3
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: 'Deploy to Production Global'
-        uses: ./workflows/.github/shared-actions/tag-versions
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository_name: ${{ inputs.repository_name }}
-          environment: ${{ inputs.global_environment_name }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-          current_tag: ${{ needs.params.outputs.short_sha }}
-      - name: Assign variable
-        id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
-      - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: Production
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:'
-          SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
-          SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
-          MSG_MINIMAL: Commit,actions url
+  main-without-image:
+    name: Deploy
+    if: ${{ !github.event.inputs.contains_code_changes }}
+    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
+    with:
+      tag: ${{ github.event.inputs.tag }}
+      repository_name: ${{ github.event.inputs.repository_name }}
+      has_hybrid: ${{ github.event.inputs.has_hybrid }}
+      staging_environment_name: ${{ github.event.inputs.staging_environment_name }}
+      au_environment_name: ${{ github.event.inputs.au_environment_name }}
+      us_environment_name: ${{ github.event.inputs.us_environment_name }}
+      global_environment_name: ${{ github.event.inputs.global_environment_name }}
+      build_image_script: ${{ github.event.inputs.build_image_script }}
+      build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
+      contains_code_changes: ${{ github.event.inputs.contains_code_changes }}
+    secrets:
+      npm_token: ${{ secrets.NPM_TOKEN }}
+      docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      slack_production_webhook: ${{ secrets.SLACK_PRODUCTION_WEBHOOK }}
