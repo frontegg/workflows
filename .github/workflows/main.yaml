@@ -61,18 +61,18 @@ on:
 jobs:
   main-with-image:
     name: Build Image and deploy
-    if: ${{ github.event.inputs.contains_code_changes }}
+    if: ${{ inputs.contains_code_changes }}
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
-      tag: ${{ github.event.inputs.tag }}
-      repository_name: ${{ github.event.inputs.repository_name }}
-      has_hybrid: ${{ github.event.inputs.has_hybrid }}
-      staging_environment_name: ${{ github.event.inputs.staging_environment_name }}
-      au_environment_name: ${{ github.event.inputs.au_environment_name }}
-      us_environment_name: ${{ github.event.inputs.us_environment_name }}
-      global_environment_name: ${{ github.event.inputs.global_environment_name }}
-      build_image_script: ${{ github.event.inputs.build_image_script }}
-      build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
+      tag: ${{ inputs.tag }}
+      repository_name: ${{ inputs.repository_name }}
+      has_hybrid: ${{ inputs.has_hybrid }}
+      staging_environment_name: ${{ inputs.staging_environment_name }}
+      au_environment_name: ${{ inputs.au_environment_name }}
+      us_environment_name: ${{ inputs.us_environment_name }}
+      global_environment_name: ${{ inputs.global_environment_name }}
+      build_image_script: ${{ inputs.build_image_script }}
+      build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -82,18 +82,18 @@ jobs:
 
   main-without-image:
     name: Deploy
-    if: ${{ !github.event.inputs.contains_code_changes }}
+    if: ${{ !inputs.contains_code_changes }}
     uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
     with:
-      tag: ${{ github.event.inputs.tag }}
-      repository_name: ${{ github.event.inputs.repository_name }}
-      has_hybrid: ${{ github.event.inputs.has_hybrid }}
-      staging_environment_name: ${{ github.event.inputs.staging_environment_name }}
-      au_environment_name: ${{ github.event.inputs.au_environment_name }}
-      us_environment_name: ${{ github.event.inputs.us_environment_name }}
-      global_environment_name: ${{ github.event.inputs.global_environment_name }}
-      build_image_script: ${{ github.event.inputs.build_image_script }}
-      build_hybrid_image_script: ${{ github.event.inputs.build_hybrid_image_script }}
+      tag: ${{ inputs.tag }}
+      repository_name: ${{ inputs.repository_name }}
+      has_hybrid: ${{ inputs.has_hybrid }}
+      staging_environment_name: ${{ inputs.staging_environment_name }}
+      au_environment_name: ${{ inputs.au_environment_name }}
+      us_environment_name: ${{ inputs.us_environment_name }}
+      global_environment_name: ${{ inputs.global_environment_name }}
+      build_image_script: ${{ inputs.build_image_script }}
+      build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
