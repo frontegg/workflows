@@ -41,6 +41,10 @@ on:
         required: false
         default: true
         type: boolean
+      ref:
+        required: false
+        default: master
+        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -73,6 +77,7 @@ jobs:
       global_environment_name: ${{ inputs.global_environment_name }}
       build_image_script: ${{ inputs.build_image_script }}
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
+      ref: ${{ inputs.ref }}
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -94,6 +99,7 @@ jobs:
       global_environment_name: ${{ inputs.global_environment_name }}
       build_image_script: ${{ inputs.build_image_script }}
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
+      ref: ${{ inputs.ref }}
     secrets:
       npm_token: ${{ secrets.NPM_TOKEN }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
