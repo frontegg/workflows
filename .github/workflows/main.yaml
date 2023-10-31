@@ -45,10 +45,6 @@ on:
         required: false
         default: master
         type: string
-      xxx:
-        required: false
-        default: master
-        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
