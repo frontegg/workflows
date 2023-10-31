@@ -37,6 +37,10 @@ on:
         required: false
         default: ./ci/build-and-publish-hybrid-image.sh
         type: string
+      ref:
+        required: false
+        default: master
+        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -83,6 +87,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: code
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
@@ -112,6 +118,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: code
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
@@ -156,6 +164,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: code
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
@@ -200,6 +210,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: code
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
       - name: Checkout workflows
         uses: actions/checkout@v3
         with:
