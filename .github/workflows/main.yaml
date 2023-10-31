@@ -48,7 +48,7 @@ on:
       xxx:
         required: false
         default: master
-        type: stringq
+        type: string
     secrets:
       npm_token:
         description: 'Npm Token'
