@@ -45,6 +45,10 @@ on:
         required: false
         default: master
         type: string
+      xxx:
+        required: false
+        default: master
+        type: stringq
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -66,7 +70,7 @@ jobs:
   main-with-image:
     name: Build Image and deploy
     if: ${{ inputs.contains_code_changes }}
-    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
+    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@${{ inputs.xxx }}
     with:
       tag: ${{ inputs.tag }}
       repository_name: ${{ inputs.repository_name }}
