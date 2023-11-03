@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Jira linting and validation
     steps:
+      - name: Echo
+        run: echo ${{ inputs.string_to_lint }}
       - name: Login
         uses: atlassian/gajira-login@v3
         env:
