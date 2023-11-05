@@ -1,0 +1,24 @@
+name: Ref Test
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: false
+        default: ${{ github.sha }}
+        description: ''
+        type: string
+
+jobs:
+  print:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Print
+        run: |
+          echo "ref: ${{ inputs.ref }}"
+          echo "github.sha: ${{ github.sha }}"
+          echo "github.ref: ${{ github.ref }}"
