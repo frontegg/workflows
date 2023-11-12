@@ -60,7 +60,7 @@ jobs:
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
     steps:
       - name: Checkout Workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
@@ -81,7 +81,7 @@ jobs:
     runs-on: [self-hosted, dev]
     steps:
       - name: Checkout Workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
