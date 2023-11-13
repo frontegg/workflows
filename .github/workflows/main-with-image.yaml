@@ -68,15 +68,30 @@ jobs:
     outputs:
       short_sha: ${{ steps.short-sha.outputs.short_sha }}
     steps:
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
+      - uses: matheusraz/ref-sha@v1
+        id: get-sha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          ref: my_branch
       - name: Parse short sha
         id: short-sha
         run: |
           if [ -z "${{ inputs.tag }}" ]
           then
-            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+            echo "::set-output name=short_sha::${{ steps.get-sha.outputs.sha }}"
           else
             echo "::set-output name=short_sha::$(${{ inputs.tag }})"
           fi
+      - run: echo $SHA
+        env:
+          SHA: ${{ steps.short-sha.outputs.short_sha }}
 
   build-and-publish-docker:
     name: Build and publish docker image
