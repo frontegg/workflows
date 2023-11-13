@@ -90,6 +90,13 @@ jobs:
           fi
       - run: echo ${{ steps.short-sha.outputs.short_sha }}
 
+  print-sha:
+    name: Print SHA
+    runs-on: ubuntu-latest
+    needs: [ params ]
+    steps:
+      - run: echo ${{ needs.params.outputs.short_sha }}
+
   build-and-publish-docker:
     name: Build and publish docker image
     runs-on: ubuntu-latest
