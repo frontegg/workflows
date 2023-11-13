@@ -76,10 +76,8 @@ jobs:
           token: ${{ secrets.admin_github_token }}
       - uses: matheusraz/ref-sha@v1
         id: get-sha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          ref: my_branch
+          ref: ${{ inputs.ref }}
       - name: Parse short sha
         id: short-sha
         run: |
