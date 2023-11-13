@@ -82,12 +82,13 @@ jobs:
     needs:
       - params
     steps:
-      - name: Checkout codes
+      - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
@@ -96,7 +97,7 @@ jobs:
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.staging_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -113,12 +114,13 @@ jobs:
       - params
       - deploy-to-staging
     steps:
-      - name: Checkout codes
+      - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
@@ -127,7 +129,7 @@ jobs:
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.au_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -159,12 +161,13 @@ jobs:
       - params
       - deploy-to-australia
     steps:
-      - name: Checkout codes
+      - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
@@ -173,7 +176,7 @@ jobs:
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.us_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -205,12 +208,13 @@ jobs:
       - params
       - deploy-to-us
     steps:
-      - name: Checkout codes
+      - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
@@ -219,7 +223,7 @@ jobs:
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.global_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
