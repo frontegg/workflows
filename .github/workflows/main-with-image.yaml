@@ -74,18 +74,18 @@ jobs:
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.admin_github_token }}
-      - uses: matheusraz/ref-sha@v1
-        id: get-sha
-        with:
-          ref: ${{ inputs.ref }}
+      - name: Wait for approval
+        id: get-code-sha
+        run: |
+          echo $(git rev-parse --short HEAD)
       - name: Parse short sha
         id: short-sha
         run: |
           if [ -z "${{ inputs.tag }}" ]
           then
-            echo "::set-output name=short_sha::${{ steps.get-sha.outputs.sha }}"
+            echo "short_sha=${{ steps.get-code-sha.outputs.sha }}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
+            echo "short_sha=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           fi
       - run: echo $SHA
         env:
