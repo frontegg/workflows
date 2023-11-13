@@ -88,9 +88,7 @@ jobs:
           else
             echo "short_sha=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           fi
-      - run: echo $SHA
-        env:
-          SHA: ${{ steps.short-sha.outputs.short_sha }}
+      - run: echo ${{ steps.short-sha.outputs.short_sha }}
 
   build-and-publish-docker:
     name: Build and publish docker image
