@@ -78,7 +78,7 @@ jobs:
         id: get-code-sha
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
       - name: Parse short sha
         id: short-sha
         run: |
