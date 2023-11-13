@@ -40,6 +40,10 @@ on:
       ref:
         required: true
         type: string
+      workflows_version:
+        required: false
+        type: string
+        default: ""
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -90,6 +94,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
@@ -155,6 +160,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -190,6 +196,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -221,6 +228,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -267,6 +275,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -313,6 +322,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:

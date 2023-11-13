@@ -40,6 +40,10 @@ on:
       ref:
         required: true
         type: string
+      workflows_version:
+        required: false
+        type: string
+        default: ""
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -94,6 +98,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -126,6 +131,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -173,6 +179,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -220,6 +227,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
