@@ -70,7 +70,7 @@ jobs:
   main-with-image:
     name: Build Image and deploy
     if: ${{ inputs.contains_code_changes }}
-    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
+    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@${{ inputs.workflows_version }}
     with:
       tag: ${{ inputs.tag }}
       repository_name: ${{ inputs.repository_name }}
@@ -93,7 +93,7 @@ jobs:
   main-without-image:
     name: Deploy
     if: ${{ !inputs.contains_code_changes }}
-    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
+    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@${{ inputs.workflows_version }}
     with:
       tag: ${{ inputs.tag }}
       repository_name: ${{ inputs.repository_name }}
