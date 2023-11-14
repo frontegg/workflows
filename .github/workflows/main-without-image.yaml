@@ -63,20 +63,32 @@ on:
 
 jobs:
   params:
-    name: Prepare Parmas
+    name: Generate deployment params
     runs-on: ubuntu-latest
     outputs:
       short_sha: ${{ steps.short-sha.outputs.short_sha }}
     steps:
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
+      - name: Get short SHA from tag or commit
+        id: get-code-sha
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
       - name: Parse short sha
         id: short-sha
         run: |
           if [ -z "${{ inputs.tag }}" ]
           then
-            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+            echo "short_sha=${{ steps.get-code-sha.outputs.sha }}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
+            echo "short_sha=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           fi
+      - run: echo short sha - ${{ steps.short-sha.outputs.short_sha }}
 
   deploy-to-staging:
     name: Deploy to staging
