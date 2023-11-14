@@ -1,4 +1,4 @@
-name: Main Service Deployment Workflow
+name: Main Service Deployment Workflow Without Docker
 
 on:
   workflow_call:
