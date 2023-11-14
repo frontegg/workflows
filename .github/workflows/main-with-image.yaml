@@ -63,7 +63,7 @@ on:
 
 jobs:
   params:
-    name: Prepare Parmas
+    name: Generate deployment params
     runs-on: ubuntu-latest
     outputs:
       short_sha: ${{ steps.short-sha.outputs.short_sha }}
@@ -74,7 +74,7 @@ jobs:
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.admin_github_token }}
-      - name: Wait for approval
+      - name: Get short SHA from tag or commit
         id: get-code-sha
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
@@ -88,14 +88,7 @@ jobs:
           else
             echo "short_sha=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           fi
-      - run: echo ${{ steps.short-sha.outputs.short_sha }}
-
-  print-sha:
-    name: Print SHA
-    runs-on: ubuntu-latest
-    needs: [ params ]
-    steps:
-      - run: echo ${{ needs.params.outputs.short_sha }}
+      - run: echo short sha - ${{ steps.short-sha.outputs.short_sha }}
 
   build-and-publish-docker:
     name: Build and publish docker image
