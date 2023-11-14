@@ -54,9 +54,9 @@ jobs:
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
       - name: Checkout Current Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout Workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows

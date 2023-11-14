@@ -43,7 +43,11 @@ on:
         type: boolean
       ref:
         required: false
-        default: master
+        default: ""
+        type: string
+      workflows_version:
+        required: false
+        default: ""
         type: string
     secrets:
       npm_token:
@@ -77,13 +81,14 @@ jobs:
       global_environment_name: ${{ inputs.global_environment_name }}
       build_image_script: ${{ inputs.build_image_script }}
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
-      #ref: ${{ inputs.ref }}
+      ref: ${{ inputs.ref }}
+      workflows_version: ${{ inputs.workflows_version }}
     secrets:
-      npm_token: ${{ secrets.NPM_TOKEN }}
-      docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      slack_production_webhook: ${{ secrets.SLACK_PRODUCTION_WEBHOOK }}
+      npm_token: ${{ secrets.npm_token }}
+      docker_hub_password: ${{ secrets.docker_hub_password }}
+      docker_hub_user: ${{ secrets.docker_hub_user }}
+      admin_github_token: ${{ secrets.admin_github_token }}
+      slack_production_webhook: ${{ secrets.slack_production_webhook }}
 
   main-without-image:
     name: Deploy
@@ -99,10 +104,11 @@ jobs:
       global_environment_name: ${{ inputs.global_environment_name }}
       build_image_script: ${{ inputs.build_image_script }}
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
-      #ref: ${{ inputs.ref }}
+      ref: ${{ inputs.ref }}
+      workflows_version: ${{ inputs.workflows_version }}
     secrets:
-      npm_token: ${{ secrets.NPM_TOKEN }}
-      docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      slack_production_webhook: ${{ secrets.SLACK_PRODUCTION_WEBHOOK }}
+      npm_token: ${{ secrets.npm_token }}
+      docker_hub_password: ${{ secrets.docker_hub_password }}
+      docker_hub_user: ${{ secrets.docker_hub_user }}
+      admin_github_token: ${{ secrets.admin_github_token }}
+      slack_production_webhook: ${{ secrets.slack_production_webhook }}

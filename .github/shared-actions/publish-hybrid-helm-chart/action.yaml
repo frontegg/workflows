@@ -12,7 +12,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout Helm Charts
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: helm-charts
         repository: 'frontegg/helm-charts'

@@ -46,13 +46,13 @@ runs:
   using: "composite"
   steps:
     - name: Checkout Venv Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: 'frontegg/venv'
         path: venv
         token: ${{ inputs.admin_github_token }}
     - name: Checkout Venv Actions
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: 'frontegg/venv-actions'
         path: venv-actions

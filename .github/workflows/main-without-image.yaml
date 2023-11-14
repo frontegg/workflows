@@ -1,4 +1,4 @@
-name: Main Service Deployment Workflow
+name: Main Service Deployment Workflow Without Docker
 
 on:
   workflow_call:
@@ -37,10 +37,13 @@ on:
         required: false
         default: ./ci/build-and-publish-hybrid-image.sh
         type: string
-#      ref:
-#        required: false
-#        default: master
-#        type: string
+      ref:
+        required: true
+        type: string
+      workflows_version:
+        required: false
+        type: string
+        default: ""
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -60,20 +63,32 @@ on:
 
 jobs:
   params:
-    name: Prepare Parmas
+    name: Generate deployment params
     runs-on: ubuntu-latest
     outputs:
       short_sha: ${{ steps.short-sha.outputs.short_sha }}
     steps:
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/${{ inputs.repository_name }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
+      - name: Get short SHA from tag or commit
+        id: get-code-sha
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
       - name: Parse short sha
         id: short-sha
         run: |
           if [ -z "${{ inputs.tag }}" ]
           then
-            echo "::set-output name=short_sha::${GITHUB_SHA::7}"
+            echo "short_sha=${{ steps.get-code-sha.outputs.sha }}" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=short_sha::$(${{ inputs.tag }})"
+            echo "short_sha=${{ inputs.tag }}" >> $GITHUB_OUTPUT
           fi
+      - run: echo short sha - ${{ steps.short-sha.outputs.short_sha }}
 
   deploy-to-staging:
     name: Deploy to staging
@@ -83,21 +98,23 @@ jobs:
     needs:
       - params
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
-          #ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.staging_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -114,21 +131,23 @@ jobs:
       - params
       - deploy-to-staging
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
-          #ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.au_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -160,21 +179,23 @@ jobs:
       - params
       - deploy-to-australia
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
-          #ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.us_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
@@ -206,21 +227,23 @@ jobs:
       - params
       - deploy-to-us
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v3
+      - name: Checkout ${{ inputs.repository_name }}
+        uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
-          #ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: ${{ inputs.workflows_version }}
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
           environment: ${{ inputs.global_environment_name }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
