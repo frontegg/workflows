@@ -1,0 +1,164 @@
+name: Build docker image and Start Frontegg's Virtual Environment
+
+on:
+  workflow_call:
+    outputs:
+      environmentId:
+        description: "The create venv Id"
+        value: ${{ jobs.start-venv.outputs.environmentId }}
+      portalUrl:
+        description: "The create venv portal url"
+        value: ${{ jobs.start-venv.outputs.portalUrl }}
+      apiUrl:
+        description: "The create venv api url"
+        value: ${{ jobs.start-venv.outputs.apiUrl }}
+    inputs:
+      volatileEnvironment:
+        type: boolean
+        required: false
+        description: 'Creates a Volatile environment not related to other branches, ingresses will get the value of x.random.domain'
+        default: false
+      envDomain:
+        type: string
+        required: false
+        description: 'Set the environment domain so for ingress hosts, for example domain xxx.com will set portal.hash.xxx.com'
+        default: "venv.life"
+      terminationProtection:
+        type: boolean
+        required: false
+        description: 'Termination protection prevents the environment to be shut down after default time'
+        default: false
+      leaseTime:
+        type: string
+        required: false
+        description: 'Lease Time is the amount of hours the venv should be running, minimum is one hour and maximum is 6, default is 1 hour'
+        default: "1"
+      disableDashboard:
+        type: boolean
+        required: false
+        description: 'Set to true in order to disable starting dashboard application'
+        default: false
+    secrets:
+      admin_github_token:
+        description: 'Github repository admin token'
+        required: true
+      argocd_password:
+        description: 'ArgoCD password'
+        required: true
+      slack_webhook:
+        description: 'Set the slack channel token to enable notification'
+        required: false
+
+jobs:
+  start-venv:
+    concurrency: start-venv
+    name: start venv
+    runs-on: ubuntu-latest
+    outputs:
+      environmentId: ${{ steps.venv-actions.outputs.environmentId }}
+      portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
+      apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/start-venv-2
+        name: Generate venv files
+        id: venv-actions
+        with:
+          admin_github_token: ${{ secrets.admin_github_token }}
+          volatileEnvironment: ${{ inputs.volatileEnvironment }}
+          envDomain: ${{ inputs.envDomain }}
+          terminationProtection: ${{ inputs.terminationProtection }}
+          leaseTime: ${{ inputs.leaseTime }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+          disableDashboard: ${{ inputs.disableDashboard }}
+  wait:
+    name: waiting for venv readiness
+    needs: [start-venv]
+    runs-on: [self-hosted, dev]
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: wait for venv readiness
+        uses: ./workflows/.github/shared-actions/wait-for-venv
+        with:
+          argocd_password: ${{ secrets.argocd_password }}
+          environmentId: ${{ needs.start-venv.outputs.environmentId }}
+          apiUrl: ${{ needs.start-venv.outputs.apiUrl }}
+
+  notify-success:
+    name: Notify success
+    if: success()
+    runs-on: ubuntu-latest
+    needs: [ wait, start-venv ]
+    steps:
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: |
+            ${{ github.actor }} your venv is ready. :tada:
+            You can access the portal at ${{ needs.start-venv.outputs.portalUrl }}
+          SLACK_TITLE: |
+            Yay, ${{ github.actor }} your venv is ready.
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          MSG_MINIMAL: actions url
+
+  notify-failure:
+    name: Notify failure
+    if: failure()
+    runs-on: ubuntu-latest
+    needs: [ wait, start-venv ]
+    steps:
+      - name: Assign variable
+        id: secret
+        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: "FB3105"
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: |
+            Listen ${{ github.actor }}, your venv has failed. :skull:
+            It's probably becasue you made a mistake or that you are a bad person!
+          SLACK_TITLE: |
+            Hey, ${{ github.actor }} your venv has failed.
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          MSG_MINIMAL: actions url
+
+  remove-venv:
+    name: Remove Venv if failed
+    concurrency: start-venv
+    if: failure() && inputs.terminationProtection == false
+    runs-on: ubuntu-latest
+    needs: [ notify-failure, start-venv ]
+    steps:
+      - name: Checkout Workflows
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - uses: ./workflows/.github/shared-actions/remove-single-venv
+        name: Remove venv files
+        id: venv-actions
+        with:
+          admin_github_token: ${{ secrets.admin_github_token }}
+          venvRepoDirectory: ${{ github.workspace }}/venv/environments
+          venvId: ${{ needs.start-venv.outputs.environmentId }}
+          gracePeriodInMinutes: "10"
