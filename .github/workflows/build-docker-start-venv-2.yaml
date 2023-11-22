@@ -131,7 +131,7 @@ jobs:
         with:
           result-encoding: json
           script: |
-            const value = ${{ matrix.commit }};
+            const value = "${{ matrix.commit }}";
             const splitString = value.split(':');
             const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].substring(0, 7)}` };
             console.log(`result: ${JSON.stringify(result)}`);
