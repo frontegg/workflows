@@ -100,7 +100,7 @@ jobs:
           script: |
             const value = ${{ steps.venv-actions.outputs.commits }};
             const splitString = value.split(',');
-            const result = { commits: splitString.map(x => x.toString) };
+            const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
 #      - name: Set up matrix for docker build
