@@ -141,8 +141,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          repository: ${{ fromJSON(steps.params.outputs.result).repository }}
+          repository: frontegg/${{ fromJSON(steps.params.outputs.result).repository }}
           ref: ${{ fromJSON(steps.params.outputs.result).hash }}
+          token: ${{ secrets.admin_github_token }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
