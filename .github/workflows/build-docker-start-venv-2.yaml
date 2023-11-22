@@ -102,7 +102,7 @@ jobs:
     needs: [ start-venv ]
     strategy:
       fail-fast: true
-      matrix: ${{fromJSON(needs.job1.outputs.commits)}}
+      matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
     runs-on: ubuntu-latest
     steps:
       - name: Split repository name and commit hash
