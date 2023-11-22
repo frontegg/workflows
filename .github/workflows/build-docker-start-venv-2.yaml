@@ -115,7 +115,7 @@ jobs:
     steps:
       - name: xxx
         run: |
-          echo ${{ steps.venv-actions.outputs.commits }}
+          echo ${{ needs.start-venv.outputs.commits }}
 
   build-docker:
     name: Build services docker images for venv
