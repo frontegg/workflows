@@ -98,6 +98,7 @@ jobs:
     needs: [ start-venv ]
     strategy:
       matrix:
+        fail-fast: true
         commits: ${{ needs.start-venv.outputs.commits }}
     runs-on: ubuntu-latest
     steps:
