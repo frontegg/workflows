@@ -96,13 +96,13 @@ jobs:
         uses: actions/github-script@v7
         id: 'params'
         with:
-          result-encoding: json
+          result-encoding: string
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
             const splitString = value.split(',');
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
-            return result;
+            return JSON.stringify(result);
 #      - name: Set up matrix for docker build
 #        id: matrix-setup
 #        run: |
