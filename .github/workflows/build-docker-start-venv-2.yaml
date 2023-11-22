@@ -74,7 +74,7 @@ jobs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
-      commits: ${{ steps.matrix-setup.outputs.commits }}
+      commits: ${{ steps.params.outputs.commits }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -92,10 +92,21 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
-      - name: Set up matrix for docker build
-        id: matrix-setup
-        run: |
-          echo "::set-output name=commits::{\"commits\":[${{ steps.venv-actions.outputs.commits }}]}"
+      - name: xxx
+        uses: actions/github-script@v7
+        id: 'params'
+        with:
+          result-encoding: json
+          script: |
+            const value = ${{ steps.venv-actions.outputs.commits }};
+            const splitString = value.split(',');
+            const result = { commits: splitString.map(x => x.toString) };
+            console.log(`result: ${JSON.stringify(result)}`);
+            return result;
+#      - name: Set up matrix for docker build
+#        id: matrix-setup
+#        run: |
+#          echo "::set-output name=commits::{\"commits\":[${{ steps.venv-actions.outputs.commits }}]}"
 
   build-docker:
     name: Build services docker images for venv
