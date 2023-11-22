@@ -58,6 +58,7 @@ jobs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
+      commits: ${{ steps.venv-actions.outputs.commits }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
