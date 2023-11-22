@@ -74,7 +74,7 @@ jobs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
-      commits: ${{ steps.venv-actions.outputs.commits }}
+      commits: ${{ steps.matrix-setup.outputs.commits }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -92,13 +92,17 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
+      - name: Set up matrix for docker build
+        id: matrix-setup
+        run: |
+          echo "::set-output name=commits::{\"commits\":[${{ steps.venv-actions.outputs.commits }}]}"
 
   build-docker:
     name: Build services docker images for venv
     needs: [ start-venv ]
     strategy:
       fail-fast: true
-      matrix: ${{ needs.start-venv.outputs.commits }}
+      matrix: ${{fromJSON(needs.job1.outputs.commits)}}
     runs-on: ubuntu-latest
     steps:
       - name: Split repository name and commit hash
@@ -107,7 +111,7 @@ jobs:
         with:
           result-encoding: json
           script: |
-            const value = ${{ matrix }};
+            const value = ${{ matrix.commit }};
             const splitString = value.split(':');
             const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].substring(0, 7)}` };
             console.log(`result: ${JSON.stringify(result)}`);
