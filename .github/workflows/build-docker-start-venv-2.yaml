@@ -67,21 +67,20 @@ on:
         description: 'Outputs the portalUrl of the newly created venv'
 jobs:
   start-venv:
+    concurrency: start-venv
     name: start venv
     runs-on: ubuntu-latest
-    concurrency: start-venv
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
-      commits: ${{ steps.venv-actions.outputs.commits }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
-      - uses: ./workflows/.github/shared-actions/start-venv
+      - uses: ./workflows/.github/shared-actions/start-venv-2
         name: Generate venv files
         id: venv-actions
         with:
