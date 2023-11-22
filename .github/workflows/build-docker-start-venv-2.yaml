@@ -99,7 +99,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        commits: ${{ needs.start-venv.outputs.commits }}
+        commits: [${{ needs.start-venv.outputs.commits }}]
     runs-on: ubuntu-latest
     steps:
       - name: Split repository name and commit hash
