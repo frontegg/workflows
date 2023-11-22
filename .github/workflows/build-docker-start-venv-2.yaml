@@ -98,8 +98,7 @@ jobs:
     needs: [ start-venv ]
     strategy:
       fail-fast: true
-      matrix:
-        commits: [${{ needs.start-venv.outputs.commits }}]
+      matrix: ${{ needs.start-venv.outputs.commits }}
     runs-on: ubuntu-latest
     steps:
       - name: Split repository name and commit hash
@@ -108,7 +107,7 @@ jobs:
         with:
           result-encoding: json
           script: |
-            const value = ${{ matrix.commits }};
+            const value = ${{ matrix }};
             const splitString = value.split(':');
             const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].substring(0, 7)}` };
             console.log(`result: ${JSON.stringify(result)}`);
