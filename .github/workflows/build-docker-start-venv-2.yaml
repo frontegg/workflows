@@ -98,7 +98,7 @@ jobs:
         with:
           result-encoding: json
           script: |
-            const value = ${{ steps.venv-actions.outputs.commits }};
+            const value = "${{ steps.venv-actions.outputs.commits }}";
             const splitString = value.split(',');
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
