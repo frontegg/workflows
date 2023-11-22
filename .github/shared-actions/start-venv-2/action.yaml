@@ -41,6 +41,9 @@ outputs:
   apiUrl:
     description: "The created venv api gateway url"
     value: ${{ steps.venv-actions.outputs.apiUrl }}
+  commits:
+    description: "The commits that were pushed to the venv repository"
+    value: ${{ steps.venv-actions.outputs.commits }}
 
 runs:
   using: "composite"
