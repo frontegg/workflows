@@ -108,6 +108,15 @@ jobs:
 #        run: |
 #          echo "::set-output name=commits::{\"commits\":[${{ steps.venv-actions.outputs.commits }}]}"
 
+  xxx:
+    name: xxx
+    runs-on: ubuntu-latest
+    needs: [ start-venv ]
+    steps:
+      - name: xxx
+        run: |
+          echo ${{ steps.venv-actions.outputs.commits }}
+
   build-docker:
     name: Build services docker images for venv
     needs: [ start-venv ]
