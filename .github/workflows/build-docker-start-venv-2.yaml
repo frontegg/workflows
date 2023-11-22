@@ -97,8 +97,8 @@ jobs:
     name: Build services docker images for venv
     needs: [ start-venv ]
     strategy:
+      fail-fast: true
       matrix:
-        fail-fast: true
         commits: ${{ needs.start-venv.outputs.commits }}
     runs-on: ubuntu-latest
     steps:
