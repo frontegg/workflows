@@ -135,7 +135,7 @@ jobs:
             console.log(value);
             const splitString = value.split(':');
             console.log(splitString);
-            const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].substring(0, 7)}` };
+            const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].subString(0, 7)}` };
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
       - name: Checkout Repository
