@@ -114,15 +114,6 @@ jobs:
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
 
-  xxx:
-    name: print vars
-    needs: [ start-venv ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print vars
-        run: |
-          echo "commits: ${{ needs.start-venv.outputs.commits }}"
-
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
@@ -176,7 +167,7 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
       - name: Build and push
         uses: docker/build-push-action@v5
-        if: ${{ steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
+        if: ${{ steps.check-image.outputs.image-exist && steps.check-image.outputs.image-exist == 'false' }}
         with:
           context: .
           push: true
