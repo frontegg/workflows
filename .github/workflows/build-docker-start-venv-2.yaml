@@ -129,7 +129,7 @@ jobs:
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ needs.start-venv.outputs.commits != "" }}
+    if: ${{ needs.start-venv.outputs.commits != '' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
