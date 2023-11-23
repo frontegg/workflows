@@ -80,7 +80,7 @@ jobs:
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
       commits: ${{ steps.params.outputs.result }}
-      shouldBuildDocker: ${{ steps.should-skip.outputs.should-skip || true }}
+      shouldBuildDocker: ${{ steps.params.outputs.result != '' }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -107,8 +107,6 @@ jobs:
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
             if( value === "" ) {
-              const skipResult = { commits: ['skip'] };
-              console.log(`result: ${JSON.stringify(skipResult)}`);
               return JSON.stringify('');
             }
             const splitString = value.split(',');          
@@ -117,7 +115,7 @@ jobs:
             return JSON.stringify(result);
       - name: Should Build Docker Images
         id: should-build
-        if: ${{ steps.params.outputs.result == '{"commits":["skip"]}' }}
+        if: ${{ steps.params.outputs.result == '' }}
         run: |
           echo "should_build=false" >> $GITHUB_OUTPUT
 
@@ -129,12 +127,12 @@ jobs:
       - name: xxx
         run: |
           echo ${{ needs.start-venv.outputs.commits }}
-          echo ${{ needs.start-venv.outputs.shouldSkipDocker }}
+          echo ${{ needs.start-venv.outputs.shouldBuildDocker }}
 
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ needs.start-venv.outputs.shouldBuildDocker == 'true' }}
+    if: ${{ needs.start-venv.outputs.commits != '' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
@@ -188,21 +186,13 @@ jobs:
         if: ${{ matrix.commits != 'skip' }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
-      - name: print
-        run: |
-          echo ${{ steps.check-image.outputs.image-exist == 'false' }}
-          echo ${{ matrix.commits != 'skip' }}
-          echo ${{ matrix.commits }}
-          echo ${{ steps.check-image.outputs.image-exist }}
-          echo ${{ needs.start-venv.outputs.commits }}
-          echo ${{ fromJSON(needs.start-venv.outputs.commits)[0] }}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
         with:
           context: .
           push: true
-          tags: "test" #${{fromJSON(steps.params.outputs.result).image}}
+          tags: ${{fromJSON(steps.params.outputs.result).image}}
 
   wait:
     name: waiting for venv readiness
