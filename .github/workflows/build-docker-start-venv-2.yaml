@@ -80,7 +80,7 @@ jobs:
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
       commits: ${{ steps.params.outputs.result }}
-      shouldSkipDocker: ${{ steps.should-skip.outputs.should-skip }}
+      shouldSkipDocker: ${{ steps.should-skip.outputs.should-skip || false }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
