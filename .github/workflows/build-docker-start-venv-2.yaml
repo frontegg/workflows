@@ -185,6 +185,9 @@ jobs:
         run: |
           echo ${{ steps.check-image.outputs.image-exist == 'false' }}
           echo ${{ matrix.commits != 'skip' }}
+          echo ${{ matrix.commits }}
+          echo ${{ steps.check-image.outputs.image-exist }}
+          echo ${{ fromJSON(needs.start-venv.outputs.commits) }}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ false && steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
