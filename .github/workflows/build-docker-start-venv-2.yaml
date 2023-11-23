@@ -80,7 +80,7 @@ jobs:
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
       commits: ${{ steps.params.outputs.result }}
-      shouldSkipDocker: ${{ steps.should-skip.outputs.should-skip || false }}
+      shouldBuildDocker: ${{ steps.should-skip.outputs.should-skip || true }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -115,11 +115,12 @@ jobs:
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
-      - name: Should Skip
-        id: should-skip
+      - name: Should Build Docker Images
+        id: should-build
         if: ${{ steps.params.outputs.result == '{"commits":["skip"]}' }}
         run: |
-          echo "should_skip=true" >> $GITHUB_OUTPUT
+          echo "should_build=false" >> $GITHUB_OUTPUT
+
   xxx:
     name: xxx
     runs-on: ubuntu-latest
@@ -133,7 +134,7 @@ jobs:
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ needs.start-venv.outputs.shouldSkipDocker && needs.start-venv.outputs.shouldSkipDocker == 'true' }}
+    if: ${{ needs.start-venv.outputs.shouldBuildDocker == 'true' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
