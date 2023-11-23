@@ -80,7 +80,6 @@ jobs:
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
       commits: ${{ steps.params.outputs.result }}
-      shouldBuildDocker: ${{ steps.params.outputs.result != '' }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -108,7 +107,7 @@ jobs:
             const value = "${{ steps.venv-actions.outputs.commits }}";
             if( value === "" ) {
               console.log('no commits found');
-              return '';
+              return 'skip';
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
@@ -123,13 +122,11 @@ jobs:
       - name: Print vars
         run: |
           echo "commits: ${{ needs.start-venv.outputs.commits }}"
-          echo "shouldBuildDocker: ${{ needs.start-venv.outputs.shouldBuildDocker }}"
-          
 
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ needs.start-venv.outputs.commits != '' }}
+    if: ${{ needs.start-venv.outputs.commits != 'skip' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
