@@ -97,6 +97,7 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
+          ref: ${{ inputs.ref }}
       - name: xxx
         uses: actions/github-script@v7
         id: 'params'
