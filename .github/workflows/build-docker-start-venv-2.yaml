@@ -109,7 +109,7 @@ jobs:
             if( value === "" ) {
               const skipResult = { commits: ['skip'] };
               console.log(`result: ${JSON.stringify(skipResult)}`);
-              return JSON.stringify(skipResult);
+              return JSON.stringify('');
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
