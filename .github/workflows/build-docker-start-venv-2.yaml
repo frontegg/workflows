@@ -120,12 +120,11 @@ jobs:
     if: ${{ needs.start-venv.outputs.commits != 'skip' }}
     strategy:
       fail-fast: true
-      matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
+      matrix: ${{ fromJSON(needs.start-venv.outputs.commits) }}
     runs-on: ubuntu-latest
     steps:
       - name: Split repository name and commit hash
         uses: actions/github-script@v7
-        if: ${{ matrix.commits != 'skip' }}
         id: 'params'
         with:
           result-encoding: json
@@ -167,7 +166,7 @@ jobs:
           echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
       - name: Build and push
         uses: docker/build-push-action@v5
-        if: ${{ steps.check-image.outputs.image-exist && steps.check-image.outputs.image-exist == 'false' }}
+        if: ${{ steps.check-image.outputs.image-exist == 'false' }}
         with:
           context: .
           push: true
