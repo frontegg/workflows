@@ -127,7 +127,8 @@ jobs:
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ fromJSON(needs.start-venv.outputs.commits)[0] != 'skip' }}
+    #if: ${{ fromJSON(needs.start-venv.outputs.commits)[0] != 'skip' }}
+    if: ${{ matrix.commits != 'skip' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
