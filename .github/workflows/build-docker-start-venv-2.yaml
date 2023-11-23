@@ -108,7 +108,7 @@ jobs:
             if(value === "") {
               const skipResult = { commits: ["skip"] };
               console.log(`result: ${JSON.stringify(skipResult)}`);
-              return JSON.stringify(skipResult);
+              return JSON.stringify("");
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
@@ -182,6 +182,7 @@ jobs:
   wait:
     name: waiting for venv readiness
     needs: [start-venv, build-docker]
+    if: always() && (needs.build-docker.result == 'success' || needs.build-docker.result == 'skipped')
     runs-on: [self-hosted, dev]
     steps:
       - name: Checkout Workflows
