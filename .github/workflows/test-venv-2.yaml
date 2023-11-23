@@ -44,7 +44,7 @@ jobs:
       volatileEnvironment: ${{ inputs.volatileEnvironment }}
       terminationProtection: ${{ inputs.terminationProtection }}
       leaseTime: ${{ inputs.leaseTime }}
-      branchName: ${{ inputs.ref }}
+      ref: ${{ inputs.ref }}
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}

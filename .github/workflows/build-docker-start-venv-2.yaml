@@ -36,6 +36,11 @@ on:
         required: false
         description: 'Set to true in order to disable starting dashboard application'
         default: false
+      ref:
+        type: string
+        required: false
+        description: 'Set the branch name to start the venv from, leave empty to get current branch name'
+        default: ''
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
