@@ -108,7 +108,7 @@ jobs:
             if(value === "") {
               const skipResult = { commits: [""] };
               console.log(`result: ${JSON.stringify(skipResult)}`);
-              return JSON.stringify(skipResult);
+              return JSON.stringify('skip');
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
@@ -118,6 +118,7 @@ jobs:
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
+    if: ${{ needs.start-venv.outputs.commits != 'skip' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
