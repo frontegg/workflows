@@ -116,7 +116,7 @@ jobs:
             return JSON.stringify(result);
 
   build-docker:
-    name: Build services docker images for venv
+    name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
     strategy:
       fail-fast: true
