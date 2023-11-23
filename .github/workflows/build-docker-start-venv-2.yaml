@@ -161,6 +161,9 @@ jobs:
           else
             echo "Docker image does not exist, starting to build the image"
           fi
+      - name: Generate npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
