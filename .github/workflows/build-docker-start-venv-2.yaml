@@ -181,6 +181,14 @@ jobs:
         if: ${{ matrix.commits != 'skip' }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
+      - name: print
+        run: |
+          echo ${{ steps.check-image.outputs.image-exist == 'false' }}
+          echo ${{ matrix.commits != 'skip' }}
+        with:
+          context: .
+          push: true
+          tags: "test" #${{fromJSON(steps.params.outputs.result).image}}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ false && steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
