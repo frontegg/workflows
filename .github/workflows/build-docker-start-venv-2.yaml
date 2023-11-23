@@ -187,7 +187,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: "test" "#${{fromJSON(steps.params.outputs.result).image}}
+          tags: "test" #${{fromJSON(steps.params.outputs.result).image}}
 
   wait:
     name: waiting for venv readiness
