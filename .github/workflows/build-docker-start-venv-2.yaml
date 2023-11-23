@@ -98,7 +98,7 @@ jobs:
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
           ref: ${{ inputs.ref }}
-      - name: xxx
+      - name: Generate matrix
         uses: actions/github-script@v7
         id: 'params'
         with:
@@ -106,6 +106,11 @@ jobs:
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
             const splitString = value.split(',');
+            if(splitString.length === 0) {
+              const skipResult = { commits: "skip" };
+              console.log(`result: ${JSON.stringify(skipResult)}`);
+              return JSON.stringify(skipResult);
+            }
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
@@ -120,6 +125,7 @@ jobs:
     steps:
       - name: Split repository name and commit hash
         uses: actions/github-script@v7
+        if: ${{ matrix.commits != 'skip' }}
         id: 'params'
         with:
           result-encoding: json
@@ -132,21 +138,26 @@ jobs:
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
       - name: Checkout Repository
+        if: ${{ matrix.commits != 'skip' }}
         uses: actions/checkout@v4
         with:
           repository: frontegg/${{ fromJSON(steps.params.outputs.result).repository }}
           ref: ${{ fromJSON(steps.params.outputs.result).hash }}
           token: ${{ secrets.admin_github_token }}
       - name: Set up QEMU
+        if: ${{ matrix.commits != 'skip' }}
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
+        if: ${{ matrix.commits != 'skip' }}
         uses: docker/setup-buildx-action@v2
       - name: Login to Docker Hub
+        if: ${{ matrix.commits != 'skip' }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.docker_hub_user }}
           password: ${{ secrets.docker_hub_password }}
       - name: Check Docker Image
+        if: ${{ matrix.commits != 'skip' }}
         id: check-image
         run: |
           if docker manifest inspect ${{fromJSON(steps.params.outputs.result).image}} > /dev/null 2>&1; then
@@ -157,11 +168,12 @@ jobs:
             echo "image-exist=false" >> $GITHUB_OUTPUT
           fi
       - name: Generate npmrc
+        if: ${{ matrix.commits != 'skip' }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
       - name: Build and push
         uses: docker/build-push-action@v5
-        if: ${{ steps.check-image.outputs.image-exist == 'false' }}
+        if: ${{ steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
         with:
           context: .
           push: true
