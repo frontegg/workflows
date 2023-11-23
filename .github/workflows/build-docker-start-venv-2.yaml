@@ -128,11 +128,11 @@ jobs:
       - name: xxx
         run: |
           echo ${{ needs.start-venv.outputs.commits }}
+          echo ${{ needs.start-venv.outputs.shouldSkip }}
 
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    #if: ${{ fromJSON(needs.start-venv.outputs.commits)[0] != 'skip' }}
     if: ${{ needs.start-venv.outputs.shouldSkip == 'true' }}
     strategy:
       fail-fast: true
