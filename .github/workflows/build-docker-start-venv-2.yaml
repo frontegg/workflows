@@ -105,12 +105,12 @@ jobs:
           result-encoding: string
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
-            const splitString = value.split(',');
-            if(splitString.length === 0) {
+            if(value === "") {
               const skipResult = { commits: "skip" };
               console.log(`result: ${JSON.stringify(skipResult)}`);
               return JSON.stringify(skipResult);
             }
+            const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
