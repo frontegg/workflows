@@ -106,8 +106,9 @@ jobs:
           result-encoding: string
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
-            if( value === "" ) {
-              return JSON.stringify('');
+            if( value === '' ) {
+              console.log('no commits found');
+              return '';
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
