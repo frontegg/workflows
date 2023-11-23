@@ -127,7 +127,7 @@ jobs:
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ fromJSON(needs.start-venv.outputs.commits) != 'skip' }}
+    if: ${{ fromJSON(needs.start-venv.outputs.commits)[0] != 'skip' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
@@ -188,6 +188,7 @@ jobs:
           echo ${{ matrix.commits }}
           echo ${{ steps.check-image.outputs.image-exist }}
           echo ${{ needs.start-venv.outputs.commits }}
+          echo ${{ fromJSON(needs.start-venv.outputs.commits)[0] }}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ steps.check-image.outputs.image-exist == 'false' }} && ${{ matrix.commits != 'skip' }}
