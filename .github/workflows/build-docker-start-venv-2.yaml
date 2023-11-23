@@ -106,7 +106,7 @@ jobs:
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
             if(value === "") {
-              const skipResult = { commits: "skip" };
+              const skipResult = { commits: ["skip"] };
               console.log(`result: ${JSON.stringify(skipResult)}`);
               return JSON.stringify(skipResult);
             }
