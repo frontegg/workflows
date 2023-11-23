@@ -1,0 +1,55 @@
+name: Start Test Venv V2
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: |
+          The branch name to start the venv from
+      volatileEnvironment:
+        type: boolean
+        required: false
+        description: |
+          Creates a Volatile environment not related to other branches, ingresses will get the value of x.random.domain'
+        default: false
+      terminationProtection:
+        type: boolean
+        required: false
+        description: |
+          Termination protection prevents the environment to be shut down after lease time ended.
+          It will be shut down end of day.
+        default: false
+      leaseTime:
+        type: choice
+        required: false
+        description: |
+          Lease Time is the amount of hours the venv should be running.
+          Minimum is one hour and maximum is six, default is one hour.
+        default: "1"
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+          - "5"
+          - "6"
+
+jobs:
+  start-venv-with-image:
+    name: Build image and start venv
+    uses: frontegg/workflows/.github/workflows/build-docker-start-venv-2.yaml@master
+    with:
+      volatileEnvironment: ${{ inputs.volatileEnvironment }}
+      terminationProtection: ${{ inputs.terminationProtection }}
+      leaseTime: ${{ inputs.leaseTime }}
+      branchName: ${{ inputs.ref }}
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+      npm_token : ${{ secrets.NPM_TOKEN }}
+      docker_hub_user : ${{ secrets.DOCKER_HUB_ACTION_USER }}
+      docker_hub_password : ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+      slack_webhook: ${{ secrets.SLACK_PRODUCTION_TOKEN }}
+

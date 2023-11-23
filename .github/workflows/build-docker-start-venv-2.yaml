@@ -103,19 +103,6 @@ jobs:
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
-#      - name: Set up matrix for docker build
-#        id: matrix-setup
-#        run: |
-#          echo "::set-output name=commits::{\"commits\":[${{ steps.venv-actions.outputs.commits }}]}"
-
-  xxx:
-    name: xxx
-    runs-on: ubuntu-latest
-    needs: [ start-venv ]
-    steps:
-      - name: xxx
-        run: |
-          echo ${{ needs.start-venv.outputs.commits }}
 
   build-docker:
     name: Build services docker images for venv
