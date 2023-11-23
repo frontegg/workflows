@@ -106,9 +106,9 @@ jobs:
           script: |
             const value = "${{ steps.venv-actions.outputs.commits }}";
             if(value === "") {
-              const skipResult = { commits: ["skip"] };
+              const skipResult = { commits: [""] };
               console.log(`result: ${JSON.stringify(skipResult)}`);
-              return JSON.stringify("");
+              return JSON.stringify(skipResult);
             }
             const splitString = value.split(',');          
             const result = { commits: splitString.map(x => x.toString()) };
