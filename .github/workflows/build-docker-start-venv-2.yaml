@@ -115,10 +115,19 @@ jobs:
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
 
+  xxx:
+    name: xxx
+    runs-on: ubuntu-latest
+    needs: [ start-venv ]
+    steps:
+      - name: xxx
+        run: |
+          echo ${{ needs.start-venv.outputs.commits }}
+
   build-docker:
     name: Build services docker images for venv ${{ matrix.commits }}
     needs: [ start-venv ]
-    if: ${{ fromJSON(needs.start-venv.outputs.commits)[0] != 'skip' }}
+    if: ${{ fromJSON(needs.start-venv.outputs.commits) != 'skip' }}
     strategy:
       fail-fast: true
       matrix: ${{fromJSON(needs.start-venv.outputs.commits)}}
