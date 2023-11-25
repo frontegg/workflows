@@ -212,7 +212,7 @@ jobs:
           SLACK_TITLE: |
             Yay, ${{ github.actor }} your venv is ready.
           SLACK_USERNAME: ${{ github.actor }}
-          SLACK_VENV_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
           MSG_MINIMAL: actions url
 
   notify-failure:
@@ -237,7 +237,7 @@ jobs:
           SLACK_TITLE: |
             Hey, ${{ github.actor }} your venv has failed.
           SLACK_USERNAME: ${{ github.actor }}
-          SLACK_VENV_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
           MSG_MINIMAL: actions url
 
   remove-venv:
