@@ -90,7 +90,7 @@ jobs:
         name: Compose venv files
         id: venv-actions
         with:
-          GH_REPOSITORY_ADMIN_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           volatileEnvironment: ${{ inputs.volatileEnvironment }}
           envDomain: ${{ inputs.envDomain }}
           terminationProtection: ${{ inputs.terminationProtection }}
@@ -186,7 +186,7 @@ jobs:
       - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
-          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+          argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
           environmentId: ${{ needs.start-venv.outputs.environmentId }}
           apiUrl: ${{ needs.start-venv.outputs.apiUrl }}
 
@@ -255,7 +255,7 @@ jobs:
         name: Remove venv files
         id: venv-actions
         with:
-          GH_REPOSITORY_ADMIN_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ needs.start-venv.outputs.environmentId }}
           gracePeriodInMinutes: "10"
