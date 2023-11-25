@@ -120,7 +120,7 @@ jobs:
 
   remove-venv:
     name: Remove venv
-    needs: [ run-api-test, run-e2e-test, start-venv, start-venv-with-image, prepare-params ]
+    needs: [ run-api-test, run-e2e-test, start-venv, prepare-params ]
     if: |
       always() &&
       (needs.prepare-params.outputs.environmentId) &&
@@ -128,6 +128,6 @@ jobs:
     uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
     with:
       venvId: ${{ needs.prepare-params.outputs.environmentId }}
-      gracePeriodInMinutes: "${{ (needs.start-venv.result == 'failure' || needs.start-venv-with-image.result == 'failure') && '15' || '0' }}"
+      gracePeriodInMinutes: "${{ (needs.start-venv.result == 'failure') && '15' || '0' }}"
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
