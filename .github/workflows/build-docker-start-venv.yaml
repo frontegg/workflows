@@ -1,5 +1,5 @@
 name: Build docker image and Start Frontegg's Virtual Environment
-
+run-name: Start/Update frontegg virtual environment on dev cluster ${ inputs.ref || github.ref }}}
 on:
   workflow_call:
     inputs:
@@ -36,6 +36,11 @@ on:
         required: false
         description: 'Set to true in order to disable starting dashboard application'
         default: false
+      ref:
+        type: string
+        required: false
+        description: 'Set the branch name to start the venv from, leave empty to get current branch name'
+        default: ''
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
@@ -66,56 +71,15 @@ on:
         value: ${{ jobs.start-venv.outputs.portalUrl }}
         description: 'Outputs the portalUrl of the newly created venv'
 jobs:
-  build-and-publish-docker:
-    name: Build and publish docker image
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Prepare parameters"
-        uses: actions/github-script@v6
-        id: 'params'
-        with:
-          result-encoding: json
-          script: |
-            let tag = core.getInput('tag');
-            if(!tag) {
-              core.info(`Tag was not provided, setting tag as short_sha`);
-              tag = context.sha.substring(0, 7);
-            }
-            const branchName = context.ref.replace('refs/heads/', '');
-            core.info(`Branch name is ${branchName}`);
-            const hashedBranch = Buffer.from(branchName)
-                                       .toString('base64')
-                                       .toLowerCase()
-                                       .replace(/[^A-Za-z0-9]/g, '')
-                                       .slice(0, 10);
-            const result = { hashedBranch, tag };
-            console.log(`result: ${JSON.stringify(result)}`);
-            return result;
-      - name: Checkout Current Repository
-        uses: actions/checkout@v4
-      - name: Checkout Workflows
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/workflows
-          path: workflows
-      - name: build and publish docker image
-        uses: ./workflows/.github/shared-actions/build-and-publish-docker
-        with:
-          tag: ${{ fromJSON(steps.params.outputs.result).tag }}
-          tag_name: ${{ fromJSON(steps.params.outputs.result).hashedBranch }}
-          build_image_script: ${{ inputs.build_image_script }}
-          npm_token: ${{ secrets.npm_token }}
-          docker_hub_user: ${{ secrets.docker_hub_user }}
-          docker_hub_password: ${{ secrets.docker_hub_password }}
-
   start-venv:
-    name: start venv
-    runs-on: ubuntu-latest
     concurrency: start-venv
+    name: Generate venv files in the venv repository
+    runs-on: ubuntu-latest
     outputs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
+      commits: ${{ steps.params.outputs.result }}
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
@@ -123,7 +87,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
       - uses: ./workflows/.github/shared-actions/start-venv
-        name: Generate venv files
+        name: Compose venv files
         id: venv-actions
         with:
           admin_github_token: ${{ secrets.admin_github_token }}
@@ -133,9 +97,85 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
+          ref: ${{ inputs.ref }}
+      - name: Generate matrix for docker build
+        uses: actions/github-script@v7
+        id: 'params'
+        with:
+          result-encoding: string
+          script: |
+            const value = "${{ steps.venv-actions.outputs.commits }}";
+            if( value === "" ) {
+              console.log('no commits found');
+              return 'skip';
+            }
+            const splitString = value.split(',');          
+            const result = { commits: splitString.map(x => x.toString()) };
+            console.log(`result: ${JSON.stringify(result)}`);
+            return JSON.stringify(result);
+
+  build-docker:
+    name: Build services docker images for venv ${{ matrix.commits }}
+    needs: [ start-venv ]
+    if: ${{ needs.start-venv.outputs.commits != 'skip' }}
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.start-venv.outputs.commits) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Split repository name and commit hash
+        uses: actions/github-script@v7
+        id: 'params'
+        with:
+          result-encoding: json
+          script: |
+            const value = "${{ matrix.commits }}";
+            console.log(value);
+            const splitString = value.split(':');
+            console.log(splitString);
+            const result = { repository: splitString[0], hash: splitString[1], image: `frontegg/${splitString[0]}:venv-${splitString[1].substring(0, 7)}` };
+            console.log(`result: ${JSON.stringify(result)}`);
+            return result;
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/${{ fromJSON(steps.params.outputs.result).repository }}
+          ref: ${{ fromJSON(steps.params.outputs.result).hash }}
+          token: ${{ secrets.admin_github_token }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.docker_hub_user }}
+          password: ${{ secrets.docker_hub_password }}
+      - name: Check Docker Image
+        id: check-image
+        run: |
+          if docker manifest inspect ${{fromJSON(steps.params.outputs.result).image}} > /dev/null 2>&1; then
+            echo "Docker image exists, no need to build the image"
+            echo "image-exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "Docker image does not exist, starting to build the image"
+            echo "image-exist=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Generate npmrc
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        if: ${{ steps.check-image.outputs.image-exist == 'false' }}
+        with:
+          context: .
+          push: true
+          tags: ${{fromJSON(steps.params.outputs.result).image}}
+
   wait:
     name: waiting for venv readiness
-    needs: [start-venv, build-and-publish-docker]
+    needs: [start-venv, build-docker]
+    if: always() && (needs.start-venv.result == 'success') && (needs.build-docker.result == 'success' || needs.build-docker.result == 'skipped')
     runs-on: [self-hosted, dev]
     steps:
       - name: Checkout Workflows
@@ -218,3 +258,4 @@ jobs:
           admin_github_token: ${{ secrets.admin_github_token }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ needs.start-venv.outputs.environmentId }}
+          gracePeriodInMinutes: "10"

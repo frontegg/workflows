@@ -1,5 +1,5 @@
-name: Start Venv
-description: This action will start
+name: Start Venv using venv-builder via venv-actions
+description: Starting or updating frontegg virtual environment on dev cluster
 inputs:
   admin_github_token:
     description: 'Admin github token'
@@ -31,6 +31,14 @@ inputs:
     description: "Should the venv disable dashboard"
     required: false
     default: "false"
+  ref:
+    description: "The branch name to start the venv from"
+    required: false
+    default: ''
+  venv-actions-ref:
+    description: "The branch name to start the venv-actions from"
+    required: false
+    default: ''
 outputs:
   environmentId:
     description: "The created venvId"
@@ -41,6 +49,9 @@ outputs:
   apiUrl:
     description: "The created venv api gateway url"
     value: ${{ steps.venv-actions.outputs.apiUrl }}
+  commits:
+    description: "The commits that were pushed to the venv repository"
+    value: ${{ steps.venv-actions.outputs.commits }}
 
 runs:
   using: "composite"
@@ -57,6 +68,7 @@ runs:
         repository: 'frontegg/venv-actions'
         path: venv-actions
         token: ${{ inputs.admin_github_token }}
+        ref: ${{ inputs.venv-actions-ref }}
     - name: Run venv builder
       uses: ./venv-actions/actions/venv-builder
       id: venv-actions
@@ -70,6 +82,7 @@ runs:
         venvRepository: ${{ inputs.venvRepository }}
         venvRepositoryMainBranchName: ${{ inputs.venvRepositoryMainBranchName }}
         disableDashboard: ${{ inputs.disableDashboard }}
+        branchName: ${{ inputs.ref }}
     - name: Add and push venv files to
       uses: EndBug/add-and-commit@v9
       with:
