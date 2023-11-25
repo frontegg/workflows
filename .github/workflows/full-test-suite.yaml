@@ -5,8 +5,8 @@ on:
       build_image:
         type: boolean
         required: false
-        description: Set to true if to trigger an image build to the current branch
-        default: true
+        description: This has no effect on this workflow any more, should be remoeved when all services will remove it
+        default: false
       tests_tag:
         type: string
         required: false
@@ -44,53 +44,30 @@ on:
 jobs:
   start-venv:
     name: Start venv
-    if: ${{ inputs.build_image == false }}
     uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
     with:
       volatileEnvironment: true
-    secrets:
-      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
-
-  start-venv-with-image:
-    name: Build image and start venv
-    if: ${{ inputs.build_image == true }}
-    uses: frontegg/workflows/.github/workflows/build-docker-start-venv.yaml@master
-    with:
-      volatileEnvironment: true
-    secrets:
-      admin_github_token: ${{  secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
-      npm_token: ${{ secrets.NPM_TOKEN }}
-      docker_hub_user: ${{ secrets.DOCKER_HUB_ACTION_USER }}
-      docker_hub_password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+    secrets: inherit
 
   prepare-params:
     name: Prepare environment params
     runs-on: ubuntu-latest
-    needs: [ start-venv, start-venv-with-image ]
+    needs: [ start-venv ]
     outputs:
       apiUrl: ${{ steps.variables.outputs.apiUrl }}
       portalUrl: ${{ steps.variables.outputs.portalUrl }}
       environmentId: ${{ steps.variables.outputs.environmentId }}
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled')
     steps:
       - name: prepare output params
         id: variables
         run: |
-          echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
-          echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
-          echo "::set-output name=portalUrl::${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}"
+          echo "environmentId=${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
+          echo "apiUrl=${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
+          echo "portalUrl=${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
 
   run-e2e-test:
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
-    if: |
-      always() &&
-      !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
