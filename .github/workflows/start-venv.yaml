@@ -50,13 +50,13 @@ on:
         required: true
       npm_token:
         description: 'Npm Token'
-        required: true
+        required: false # this is false for migration purposes from venv 1 to 1.1
       docker_hub_password:
         description: 'Docker Hub Password'
-        required: true
+        required: false # this is false for migration purposes from venv 1 to 1.1
       docker_hub_user:
         description: 'Docker Hub User'
-        required: true
+        required: false # this is false for migration purposes from venv 1 to 1.1
       slack_webhook:
         description: 'Set the slack channel token to enable notification'
         required: false
