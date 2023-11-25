@@ -47,13 +47,7 @@ jobs:
     uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
     with:
       volatileEnvironment: true
-    secrets:
-      GH_REPOSITORY_ADMIN_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
-      NPM_TOKEN : ${{ secrets.NPM_TOKEN }}
-      DOCKER_HUB_ACTION_USER : ${{ secrets.DOCKER_HUB_ACTION_USER }}
-      DOCKER_HUB_ACTION_PASSWORD : ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
-      SLACK_VENV_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
+    secrets: inherit
 
   prepare-params:
     name: Prepare environment params
