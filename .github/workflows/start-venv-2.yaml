@@ -101,7 +101,7 @@ jobs:
     steps:
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
+        run: echo "secret=${{ secrets.slack_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -126,7 +126,7 @@ jobs:
     steps:
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_webhook }}'
+        run: echo "secret=${{ secrets.slack_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
