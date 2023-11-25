@@ -47,6 +47,7 @@ jobs:
     uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
     with:
       volatileEnvironment: true
+      triggerSlack: false
     secrets: inherit
 
   prepare-params:

@@ -41,6 +41,11 @@ on:
         required: false
         description: 'Set the branch name to start the venv from, leave empty to get current branch name'
         default: ''
+      triggerSlack:
+        type: boolean
+        required: false
+        description: 'Set to true in order to trigger slack notification'
+        default: true
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -197,10 +202,10 @@ jobs:
     needs: [ wait, start-venv ]
     steps:
       - name: Assign variable
-        id: secret
-        run: echo 'secret=${{ secrets.SLACK_VENV_WEBHOOK }}' >> $GITHUB_OUTPUT
+        run: |
+          echo Prepare slack webhook
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret
+        if: inputs.triggerSlack
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
@@ -222,10 +227,10 @@ jobs:
     needs: [ wait, start-venv ]
     steps:
       - name: Assign variable
-        id: secret
-        run: echo 'secret=${{ secrets.SLACK_VENV_WEBHOOK }}' >> $GITHUB_OUTPUT
+        run: |
+          echo Prepare slack webhook
       - name: Notify Slack on deployment
-        if: steps.secret.outputs.secret
+        if: inputs.triggerSlack
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: Production
