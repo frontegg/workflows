@@ -61,9 +61,9 @@ jobs:
       - name: prepare output params
         id: variables
         run: |
-          echo "environmentId=${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
-          echo "apiUrl=${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
-          echo "portalUrl=${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
+          echo "environmentId=${{ needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
+          echo "apiUrl=${{ needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
+          echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
 
   run-e2e-test:
     runs-on: ubuntu-latest

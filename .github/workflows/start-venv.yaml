@@ -42,22 +42,22 @@ on:
         description: 'Set the branch name to start the venv from, leave empty to get current branch name'
         default: ''
     secrets:
-      admin_github_token:
+      GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
         required: true
-      argocd_password:
+      DEV_ARGOCD_PASSWORD:
         description: 'ArgoCD password'
         required: true
-      npm_token:
+      NPM_TOKEN:
         description: 'Npm Token'
-        required: false # this is false for migration purposes from venv 1 to 1.1
-      docker_hub_password:
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
         description: 'Docker Hub Password'
-        required: false # this is false for migration purposes from venv 1 to 1.1
-      docker_hub_user:
+        required: true
+      DOCKER_HUB_ACTION_USER:
         description: 'Docker Hub User'
-        required: false # this is false for migration purposes from venv 1 to 1.1
-      slack_webhook:
+        required: true
+      SLACK_VENV_WEBHOOK:
         description: 'Set the slack channel token to enable notification'
         required: false
     outputs:
@@ -90,7 +90,7 @@ jobs:
         name: Compose venv files
         id: venv-actions
         with:
-          admin_github_token: ${{ secrets.admin_github_token }}
+          GH_REPOSITORY_ADMIN_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           volatileEnvironment: ${{ inputs.volatileEnvironment }}
           envDomain: ${{ inputs.envDomain }}
           terminationProtection: ${{ inputs.terminationProtection }}
@@ -141,7 +141,7 @@ jobs:
         with:
           repository: frontegg/${{ fromJSON(steps.params.outputs.result).repository }}
           ref: ${{ fromJSON(steps.params.outputs.result).hash }}
-          token: ${{ secrets.admin_github_token }}
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -149,8 +149,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.docker_hub_user }}
-          password: ${{ secrets.docker_hub_password }}
+          username: ${{ secrets.DOCKER_HUB_ACTION_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
       - name: Check Docker Image
         id: check-image
         run: |
@@ -163,7 +163,7 @@ jobs:
           fi
       - name: Generate npmrc
         run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.npm_token }}" > .npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
@@ -186,7 +186,7 @@ jobs:
       - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
-          argocd_password: ${{ secrets.argocd_password }}
+          DEV_ARGOCD_PASSWORD: ${{ secrets.DEV_ARGOCD_PASSWORD }}
           environmentId: ${{ needs.start-venv.outputs.environmentId }}
           apiUrl: ${{ needs.start-venv.outputs.apiUrl }}
 
@@ -198,7 +198,7 @@ jobs:
     steps:
       - name: Assign variable
         id: secret
-        run: echo 'secret=${{ secrets.slack_webhook }}' >> $GITHUB_OUTPUT
+        run: echo '::set-output name=secret::${{ secrets.SLACK_VENV_WEBHOOK }}'
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -212,7 +212,7 @@ jobs:
           SLACK_TITLE: |
             Yay, ${{ github.actor }} your venv is ready.
           SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          SLACK_VENV_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
           MSG_MINIMAL: actions url
 
   notify-failure:
@@ -223,7 +223,7 @@ jobs:
     steps:
       - name: Assign variable
         id: secret
-        run: echo 'secret=${{ secrets.slack_webhook }}' >> $GITHUB_OUTPUT
+        run: echo '::set-output name=secret::${{ secrets.SLACK_VENV_WEBHOOK }}'
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -233,11 +233,11 @@ jobs:
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
           SLACK_MESSAGE: |
             Listen ${{ github.actor }}, your venv has failed. :skull:
-            It's probably because you made a mistake or that you are a bad person!
+            It's probably becasue you made a mistake or that you are a bad person!
           SLACK_TITLE: |
             Hey, ${{ github.actor }} your venv has failed.
           SLACK_USERNAME: ${{ github.actor }}
-          SLACK_WEBHOOK: ${{ secrets.slack_webhook }}
+          SLACK_VENV_WEBHOOK: ${{ secrets.SLACK_VENV_WEBHOOK }}
           MSG_MINIMAL: actions url
 
   remove-venv:
@@ -255,7 +255,7 @@ jobs:
         name: Remove venv files
         id: venv-actions
         with:
-          admin_github_token: ${{ secrets.admin_github_token }}
+          GH_REPOSITORY_ADMIN_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           venvId: ${{ needs.start-venv.outputs.environmentId }}
           gracePeriodInMinutes: "10"
