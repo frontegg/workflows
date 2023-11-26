@@ -197,7 +197,7 @@ jobs:
 
   notify-success:
     name: Notify outcome
-    if: success()
+    if: always() && (needs.wait.result == 'success')
     runs-on: ubuntu-latest
     needs: [ wait, start-venv ]
     steps:

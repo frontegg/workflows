@@ -12,6 +12,11 @@ on:
         required: false
         description: Set the e2e-api tests branch tag
         default: master
+      ref:
+        type: string
+        required: false
+        description: Set the venv branch
+        default: ''
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -48,6 +53,7 @@ jobs:
     with:
       volatileEnvironment: true
       triggerSlack: false
+      ref: ${{ inputs.ref }}
     secrets: inherit
 
   prepare-params:
