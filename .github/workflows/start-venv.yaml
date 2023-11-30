@@ -181,7 +181,7 @@ jobs:
           push: true
           tags: ${{fromJSON(steps.params.outputs.result).image}}
           build-args: |
-            COMMIT_HASH: ${{fromJSON(steps.params.outputs.result).shortSha}}
+            COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
 
   wait:
     name: waiting for venv readiness
