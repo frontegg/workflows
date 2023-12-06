@@ -164,7 +164,7 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:'
+          SLACK_MESSAGE: '${{ github.event.deployment.creator }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:'
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
@@ -212,7 +212,7 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:'
+          SLACK_MESSAGE: '${{ github.event.deployment.creator }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:'
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
@@ -260,7 +260,7 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:'
+          SLACK_MESSAGE: '${{ github.event.deployment.creator }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:'
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
