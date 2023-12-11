@@ -45,6 +45,12 @@ on:
       ZEPHYR_TOKEN:
         description: ''
         required: true
+      AZURE_APP_CLIENT_ID:
+        description: ''
+        required: true
+      AZURE_APP_SECRET:
+        description: ''
+        required: true
 
 jobs:
   start-venv:
@@ -96,6 +102,8 @@ jobs:
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
+          AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
 
   run-api-test:
     runs-on: ubuntu-latest
