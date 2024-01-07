@@ -17,6 +17,14 @@ on:
         required: false
         description: Set the venv branch
         default: ''
+      react_version:
+        type: string
+        required: false
+        description: Set the react version
+      dispatch_id:
+        type: string
+        required: false
+        description: Dispatch id to update status (repo/sha)
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -78,6 +86,14 @@ jobs:
           echo "apiUrl=${{ needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
           echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
 
+      - name: "Update trigger status"
+        uses: frontegg/workflows/.github/shared-actions/update-status
+        if: ${{ inputs.dispatch_id }}
+        with:
+          dispatch_id: ${{ inputs.dispatch_id }}
+          description: 'Start tests environment ${{ needs.prepare-params.outputs.apiUrl }}'
+
+
   run-e2e-test:
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
@@ -104,6 +120,8 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          react_version: ${{ inputs.react_version }}
 
   run-api-test:
     runs-on: ubuntu-latest
@@ -132,6 +150,36 @@ jobs:
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
+          AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          react_version: ${{ inputs.react_version }}
+
+  update-failure-status:
+    name: Update trigger status
+    runs-on: ubuntu-latest
+    needs: [ run-api-test, run-e2e-test, start-venv, prepare-params ]
+    if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure')}}
+    steps:
+      - name: "Update trigger status"
+        uses: frontegg/workflows/.github/shared-actions/update-status
+        with:
+          dispatch_id: ${{ inputs.dispatch_id }}
+          status: "failure"
+          description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
+
+  update-success-status:
+    name: Update trigger status
+    runs-on: ubuntu-latest
+    needs: [ run-api-test, run-e2e-test, start-venv, prepare-params ]
+    if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure') }}
+    steps:
+      - name: "Update trigger status"
+        uses: frontegg/workflows/.github/shared-actions/update-status
+        with:
+          dispatch_id: ${{ inputs.dispatch_id }}
+          status: "success"
+          description: 'E2E passed'
 
   remove-venv:
     name: Remove venv
