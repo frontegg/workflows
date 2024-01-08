@@ -98,7 +98,7 @@ jobs:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
       - name: "Update trigger status"
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
         if: ${{ inputs.dispatch_id }}
         with:
           token: ${{ env.BOT_TOKEN }}
@@ -189,7 +189,7 @@ jobs:
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
       - name: "trigger failure status"
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
@@ -197,7 +197,7 @@ jobs:
           description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
       - name: "trigger success status"
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
