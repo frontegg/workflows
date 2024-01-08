@@ -87,12 +87,11 @@ jobs:
           echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
 
       - name: "Update trigger status"
-        uses: frontegg/workflows/.github/shared-actions/update-status
+        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         if: ${{ inputs.dispatch_id }}
         with:
           dispatch_id: ${{ inputs.dispatch_id }}
           description: 'Start tests environment ${{ needs.prepare-params.outputs.apiUrl }}'
-
 
   run-e2e-test:
     runs-on: ubuntu-latest
@@ -162,7 +161,7 @@ jobs:
     if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure')}}
     steps:
       - name: "Update trigger status"
-        uses: frontegg/workflows/.github/shared-actions/update-status
+        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "failure"
@@ -175,7 +174,7 @@ jobs:
     if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure') }}
     steps:
       - name: "Update trigger status"
-        uses: frontegg/workflows/.github/shared-actions/update-status
+        uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "success"
