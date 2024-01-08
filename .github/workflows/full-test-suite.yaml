@@ -196,7 +196,7 @@ jobs:
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
-          status: "failure"
+          state: "failure"
           description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
       - name: "trigger success status"
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
@@ -204,7 +204,7 @@ jobs:
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
-          status: "success"
+          state: "success"
           description: 'E2E tests passed'
 
   remove-venv:
