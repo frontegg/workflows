@@ -125,6 +125,8 @@ jobs:
           react_version: ${{ inputs.react_version }}
           bot_token: ${{ env.BOT_TOKEN }}
           environment: "staging"
+          frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
+          frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
 
 
   update-trigger-status:
