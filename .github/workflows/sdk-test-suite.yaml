@@ -12,11 +12,6 @@ on:
         required: false
         description: Set the e2e-api tests branch tag
         default: master
-      ref:
-        type: string
-        required: false
-        description: Set the venv branch
-        default: ''
       react_version:
         type: string
         required: false
