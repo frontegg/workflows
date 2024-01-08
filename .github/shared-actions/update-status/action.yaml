@@ -4,12 +4,9 @@ inputs:
   token:
     description: "Github token"
     required: true
-  repo:
-    description: "Commit Repository"
-    required: true
   dispatch_id:
     description: 'Dispatch Id (repo/sha)'
-    required: false
+    required: true
   state:
     description: "Check State"
     default: "pending"
@@ -29,7 +26,6 @@ runs:
   using: "composite"
   steps:
     - name: Update PR Status
-      if: ${{ env.BOT_TOKEN == '' }}
       uses: actions/github-script@v5
       env:
         dispatch_id: ${{ inputs.dispatch_id }}

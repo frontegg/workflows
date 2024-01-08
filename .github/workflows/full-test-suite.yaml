@@ -166,33 +166,34 @@ jobs:
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }}
 
-  update-failure-status:
+  update-trigger-status:
     name: Update trigger status
     runs-on: ubuntu-latest
     needs: [ run-api-test, run-e2e-test, start-venv, prepare-params ]
-    if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure')}}
+    if: ${{ always() && inputs.dispatch_id }}
     steps:
-      - name: "Update trigger status"
+      - id: create_bot_token
+        name: Create bot token
+        uses: wow-actions/use-app-token@v2
+        with:
+          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+      - name: "trigger failure status"
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "failure"
           description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
-
-  update-success-status:
-    name: Update trigger status
-    runs-on: ubuntu-latest
-    needs: [ run-api-test, run-e2e-test, start-venv, prepare-params ]
-    if: ${{ always() && inputs.dispatch_id && contains(needs.*.result, 'failure') }}
-    steps:
-      - name: "Update trigger status"
+      - name: "trigger success status"
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "success"
-          description: 'E2E passed'
+          description: 'E2E tests passed'
 
   remove-venv:
     name: Remove venv
