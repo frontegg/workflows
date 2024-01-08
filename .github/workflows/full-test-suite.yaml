@@ -59,6 +59,12 @@ on:
       AZURE_APP_SECRET:
         description: ''
         required: true
+      GH_FRONTEGG_BOT_APP_ID:
+        description: 'Frontegg Bot Creds'
+        required: true
+      GH_FRONTEGG_BOT_APP_SECRET:
+        description: 'Frontegg Bot Creds'
+        required: true
 
 jobs:
   start-venv:
