@@ -101,6 +101,7 @@ jobs:
         uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         if: ${{ inputs.dispatch_id }}
         with:
+          token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
           description: 'Start tests environment ${{ needs.prepare-params.outputs.apiUrl }}'
 
@@ -174,6 +175,7 @@ jobs:
       - name: "Update trigger status"
         uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
+          token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "failure"
           description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
@@ -187,6 +189,7 @@ jobs:
       - name: "Update trigger status"
         uses: frontegg/workflows/.github/shared-actions/update-status@FR-13416-trigger-e2e
         with:
+          token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
           status: "success"
           description: 'E2E passed'

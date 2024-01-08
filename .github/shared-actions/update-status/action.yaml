@@ -1,6 +1,9 @@
 name: Build and Tests
 description: Build and tests
 inputs:
+  token:
+    description: "Github token"
+    required: true
   repo:
     description: "Commit Repository"
     required: true
@@ -25,14 +28,8 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - id: create_bot_token
-      name: Create bot token
-      if: ${{ env.BOT_TOKEN == '' }}
-      uses: wow-actions/use-app-token@v2
-      with:
-        app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-        private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
     - name: Update PR Status
+      if: ${{ env.BOT_TOKEN == '' }}
       uses: actions/github-script@v5
       env:
         dispatch_id: ${{ inputs.dispatch_id }}
@@ -41,7 +38,7 @@ runs:
         owner: ${{ inputs.owner }}
         run_context: ${{ inputs.run_context }}
       with:
-        github-token: ${{ env.BOT_TOKEN }}
+        github-token: ${{ inputs.token }}
         script: |
           const {dispatch_id,state, description, owner, run_context} = process.env
           if(dispatch_id){
