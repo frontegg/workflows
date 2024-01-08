@@ -174,9 +174,6 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
-          dispatch_id: ${{ inputs.dispatch_id }}
-          react_version: ${{ inputs.react_version }}
-          bot_token: ${{ env.BOT_TOKEN }}
 
   update-trigger-status:
     name: Update trigger status
