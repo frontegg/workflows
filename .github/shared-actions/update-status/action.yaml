@@ -1,0 +1,53 @@
+name: Build and Tests
+description: Build and tests
+inputs:
+  token:
+    description: "Github token"
+    required: true
+  dispatch_id:
+    description: 'Dispatch Id (repo/sha)'
+    required: true
+  state:
+    description: "Check State"
+    default: "pending"
+  description:
+    description: "Check description"
+    required: true
+  owner:
+    description: "Repo Owner"
+    default: "frontegg"
+    required: false
+  run_context:
+    description: "Run Context"
+    default: "frontegg/e2e-system-tests"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Update PR Status
+      uses: actions/github-script@v7
+      env:
+        dispatch_id: ${{ inputs.dispatch_id }}
+        state: ${{ inputs.state }}
+        description: ${{ inputs.description }}
+        owner: ${{ inputs.owner }}
+        run_context: ${{ inputs.run_context }}
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const {dispatch_id,state, description, owner, run_context} = process.env;
+          
+          if(dispatch_id){
+            const [repo, sha] = dispatch_id.split('/')
+            const res = await github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha,
+              state,
+              description,
+              context: run_context
+            });
+          } else {
+            core.info("skip update, dispatch id not found");
+          }
