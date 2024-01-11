@@ -36,7 +36,8 @@ runs:
       with:
         github-token: ${{ inputs.token }}
         script: |
-          const {dispatch_id,state, description, owner, run_context} = process.env
+          const {dispatch_id,state, description, owner, run_context} = process.env;
+          
           if(dispatch_id){
             const [repo, sha] = dispatch_id.split('/')
             const res = await github.rest.repos.createCommitStatus({
@@ -48,5 +49,5 @@ runs:
               context: run_context
             });
           } else {
-            console.log("skip update, dispatch id not found")
+            core.info("skip update, dispatch id not found");
           }
