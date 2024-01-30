@@ -170,9 +170,15 @@ jobs:
             echo "Docker image does not exist, starting to build the image"
             echo "image-exist=false" >> $GITHUB_OUTPUT
           fi
-      - name: Generate npmrc
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+      - name: Detect package manager
+        uses: ./.github/actions/detect-package-manager@master
+        id: detect-package-manager
+      - name: Generate npm token
+        uses: ./.github/shared-actions/setup-npm-repository@master
+        with:
+          npm_token: ${{ inputs.npm_token }}
+          package_manager: ${{ steps.detect-package-manager.outputs.manager }}
+          package_manager_version: ${{ steps.detect-package-manager.outputs.version }}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
