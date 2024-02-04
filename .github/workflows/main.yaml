@@ -67,8 +67,8 @@ jobs:
     name: Check Changes
     runs-on: ubuntu-latest
     outputs:
-      code_change: ${{ steps.changes.outputs.code-change }}
-      chart_change: ${{ steps.changes.outputs.chart-change }}
+      code_change: ${{ steps.changes.outputs.code-change == 'true' }}
+      chart_change: ${{ steps.changes.outputs.chart-change == 'true' }}
     steps:
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
 
   main-with-image:
     name: Build Image and deploy
-    if: ${{ needs.check-changes.outputs.code_change }}
+    if: ${{ needs.check-changes.outputs.code_change == 'true' }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
@@ -115,7 +115,7 @@ jobs:
 
   main-without-image:
     name: Deploy
-    if: ${{ needs.check-changes.outputs.code_change == false && needs.check-changes.outputs.chart_change }}
+    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
     with:
