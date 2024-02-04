@@ -89,7 +89,7 @@ jobs:
 
   main-with-image:
     name: Build Image and deploy
-    if: ${{ needs.check-changes.outputs.code_change && needs.check-changes.outputs.chart_change }}
+    if: ${{ needs.check-changes.outputs.code_change }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
@@ -115,7 +115,7 @@ jobs:
 
   main-without-image:
     name: Deploy
-    if: ${{ needs.check-changes.outputs.code_change && needs.check-changes.outputs.chart_change }}
+    if: ${{ needs.check-changes.outputs.code_change == false && needs.check-changes.outputs.chart_change }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
     with:
