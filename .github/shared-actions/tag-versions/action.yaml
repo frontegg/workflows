@@ -26,8 +26,10 @@ inputs:
     default: ${GITHUB_SHA::7}
   should_tag_image:
     description: 'Should tag the image with the new version'
-    required: false
-    default: true
+    required: true
+  should_tag_repository:
+    description: 'Should tag the repository with environment with new version'
+    required: true
 
 runs:
   using: "composite"
@@ -80,6 +82,7 @@ runs:
 
   - name: Tag github repository with latest environment Tag
     working-directory: code
+    if: ${{ inputs.should_tag_repository }}
     run: |
       git tag ${{ inputs.environment}} --force
       git push origin refs/tags/${{ inputs.environment }} --force
