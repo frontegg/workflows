@@ -89,7 +89,7 @@ jobs:
 
   main-with-image:
     name: Build Image and deploy
-    if: ${{ needs.check-changes.outputs.code_change }}
+    if: ${{ needs.check-changes.outputs.code_change == 'true' }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
@@ -104,8 +104,8 @@ jobs:
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
       ref: ${{ inputs.ref }}
       workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change }}
+      code_changed: ${{ needs.check-changes.outputs.code_change == 'true' }}
+      chart_changed: ${{ needs.check-changes.outputs.chart_change == 'true' }}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
@@ -115,7 +115,7 @@ jobs:
 
   main-without-image:
     name: Deploy
-    if: ${{ needs.check-changes.outputs.code_change == false && needs.check-changes.outputs.chart_change }}
+    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
     needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
     with:
@@ -130,8 +130,8 @@ jobs:
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
       ref: ${{ inputs.ref }}
       workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change }}
+      code_changed: ${{ needs.check-changes.outputs.code_change == 'true' }}
+      chart_changed: ${{ needs.check-changes.outputs.chart_change == 'true' }}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
