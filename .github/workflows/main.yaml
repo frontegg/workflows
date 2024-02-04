@@ -104,8 +104,8 @@ jobs:
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
       ref: ${{ inputs.ref }}
       workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change }}
+      code_changed: ${{ needs.check-changes.outputs.code_change == "true" }}
+      chart_changed: ${{ needs.check-changes.outputs.chart_change == "true"}}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
@@ -130,8 +130,8 @@ jobs:
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
       ref: ${{ inputs.ref }}
       workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change }}
+      code_changed: ${{ needs.check-changes.outputs.code_change == "true" }}
+      chart_changed: ${{ needs.check-changes.outputs.chart_change == "true"}}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
