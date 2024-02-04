@@ -44,6 +44,12 @@ on:
         required: false
         type: string
         default: ""
+      code_changed:
+        required: true
+        type: boolean
+      chart_changed:
+        required: true
+        type: boolean
     secrets:
       npm_token:
         description: 'Npm Token'
@@ -218,6 +224,8 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+          should_tag_image: true
+          should_tag_repository: ${{ inputs.chart_changed }}
 
   deploy-to-australia:
     name: Deploy to Australia Region (Sydney)
@@ -250,6 +258,8 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+          should_tag_image: true
+          should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
@@ -297,6 +307,8 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+          should_tag_image: true
+          should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
@@ -344,6 +356,8 @@ jobs:
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
           current_tag: ${{ needs.params.outputs.short_sha }}
+          should_tag_image: true
+          should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
         run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
