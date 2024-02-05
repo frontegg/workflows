@@ -26,8 +26,10 @@ inputs:
     default: ${GITHUB_SHA::7}
   should_tag_image:
     description: 'Should tag the image with the new version'
-    required: false
-    default: true
+    required: true
+  should_tag_repository:
+    description: 'Should tag the repository with environment with new version'
+    required: true
 
 runs:
   using: "composite"
@@ -60,7 +62,7 @@ runs:
 
   - name: Tag docker image with versions
     shell: bash
-    if: ${{ inputs.should_tag_image }}
+    if: ${{ inputs.should_tag_image == 'true' }}
     run: |
       docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
       ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
@@ -80,6 +82,7 @@ runs:
 
   - name: Tag github repository with latest environment Tag
     working-directory: code
+    if: ${{ inputs.should_tag_repository == 'true' }}
     run: |
       git tag ${{ inputs.environment}} --force
       git push origin refs/tags/${{ inputs.environment }} --force

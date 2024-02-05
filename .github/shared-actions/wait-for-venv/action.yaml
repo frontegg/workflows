@@ -32,7 +32,7 @@ runs:
     - name: Setup ArgoCD CLI
       uses: imajeetyadav/argocd-cli@v1
       with:
-        version: v2.7.3 # optional
+        version: v2.9.3 # optional
 
     - name: Login to local argocd server
       run: argocd login argocd-server.argocd.svc.cluster.local --username admin --password ${{ inputs.argocd_password }} --insecure --plaintext
