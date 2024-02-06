@@ -28,6 +28,7 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - uses: actions/checkout@v2
     - name: "Prepare parameters"
       uses: actions/github-script@v6
       id: 'params'
