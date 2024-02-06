@@ -53,10 +53,10 @@ runs:
         username: ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
     - name: Detect package manager
-      uses: frontegg/workflows/.github/shared-actions/detect-package-manager@master
+      uses: ./.github/shared-actions/detect-package-manager
       id: detect-package-manager
     - name: Generate npm token
-      uses: frontegg/workflows/.github/shared-actions/setup-npm-repository@master
+      uses: ./.github/shared-actions/setup-npm-repository
       with:
         npm_token: ${{ inputs.npm_token }}
         package_manager: ${{ steps.detect-package-manager.outputs.manager }}
