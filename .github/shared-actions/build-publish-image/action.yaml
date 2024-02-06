@@ -28,7 +28,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v2
     - name: "Prepare parameters"
       uses: actions/github-script@v6
       id: 'params'
@@ -54,10 +53,10 @@ runs:
         username: ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
     - name: Detect package manager
-      uses: ./.github/shared-actions/detect-package-manager
+      uses: ./workflows/.github/shared-actions/detect-package-manager
       id: detect-package-manager
     - name: Generate npm token
-      uses: ./.github/shared-actions/setup-npm-repository
+      uses: ./workflows/.github/shared-actions/setup-npm-repository
       with:
         npm_token: ${{ inputs.npm_token }}
         package_manager: ${{ steps.detect-package-manager.outputs.manager }}
