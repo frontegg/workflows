@@ -52,15 +52,10 @@ runs:
       with:
         username: ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
-    - name: Detect package manager
-      uses: ./.github/actions/detect-package-manager@master
-      id: detect-package-manager
-    - name: Generate npm token
-      uses: ./.github/shared-actions/setup-npm-repository@master
-      with:
-        npm_token: ${{ inputs.npm_token }}
-        package_manager: ${{ steps.detect-package-manager.outputs.manager }}
-        package_manager_version: ${{ steps.detect-package-manager.outputs.version }}
+    - name: Build .npmrc file
+      run: |
+        echo //registry.npmjs.org/:_authToken=${{ inputs.npm_token }} >> .npmrc
+      shell: bash
     - name: Build production image
       uses: docker/build-push-action@v4
       with:
