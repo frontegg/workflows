@@ -45,6 +45,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
+          # TODO: remove that!
+          ref: FR-14531-fixed-reference-in-shared-actions-to-local-ref
           path: workflows
           clean: false
       - name: Run build and push docker image action
