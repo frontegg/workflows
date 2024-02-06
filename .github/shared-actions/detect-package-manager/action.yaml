@@ -15,17 +15,17 @@ runs:
   steps:
     - name: Check if .yarnrc.yml exists
       id: yarnrc_yaml_exists
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       with:
         files: .yarnrc.yml
     - name: Check if yarn.lock exists
       id: yarn_lock_exists
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       with:
         files: yarn.lock
     - name: Check if package-lock.json exists
       id: package_lock_exists
-      uses: andstor/file-existence-action@v2
+      uses: andstor/file-existence-action@v3
       with:
         files: package-lock.json
     - name: Get package-manager from package.json
