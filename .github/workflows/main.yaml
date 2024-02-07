@@ -89,7 +89,7 @@ jobs:
 
   main-with-image:
     name: Build Image and deploy
-    if: ${{ needs.check-changes.outputs.code_change == 'true' }}
+    if: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
     # needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
