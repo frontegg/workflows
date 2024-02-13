@@ -61,7 +61,8 @@ on:
       slack_production_webhook:
         description: 'Slack webhook token'
         required: false
-
+env:
+  DEPLOYMENT_TEST: ${{vars.DEPLOYMENT_TEST}}
 jobs:
 #  check-changes:
 #    name: Check Changes
