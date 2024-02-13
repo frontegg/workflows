@@ -1,0 +1,14 @@
+name: Main Service Deployment Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: stam
+    runs-on: ubuntu-latest
+    steps:
+      - name: pook
+        run: |
+          echo this is $MOSHE
+  
