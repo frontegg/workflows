@@ -1,5 +1,4 @@
-name: Main Service Deployment Workflow
-
+name: VAR BOX
 on:
   workflow_call:
 
