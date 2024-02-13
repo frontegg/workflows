@@ -42,7 +42,7 @@ runs:
     
   - name: POC for github variable 
     run: |
-      echo github var deployment_test: ${{ vars.DEPLOYMENT_TEST }}
+      echo github var deployment_test: ${{ env.DEPLOYMENT_TEST }}
     shell: bash
   
   - name: Set variables
