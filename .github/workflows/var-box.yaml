@@ -11,5 +11,5 @@ jobs:
         run: |
           echo this is ${{ vars.MOSHE}}
           echo and this - ${{ github.vars.MOSHE}}
-          echo maybe ? ${{ GITHUB_ENV.MOSHE }}
+          
   
