@@ -22,18 +22,15 @@ runs:
       uses: whatnick/wait-action@master
       with:
         time: '4m'
-#    - uses: clowdhaus/argo-cd-action/@main
-#      name: Login local ArgoCD
-#      with:
-#        version: 2.7.3
-#        command: login
-#        options: argocd-server.argocd.svc.cluster.local --insecure --plaintext --username admin --password ${{ inputs.argocd_password }}
 
-    - name: Setup ArgoCD CLI
-      uses: imajeetyadav/argocd-cli@v1
-      with:
-        version: v2.9.3 # optional
-
+    - uses: clowdhaus/argo-cd-action/@main
+        with:
+          command: version
+          options: --client
+          version: 2.9.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     - name: Login to local argocd server
       run: argocd login argocd-server.argocd.svc.cluster.local --username admin --password ${{ inputs.argocd_password }} --insecure --plaintext
       shell: bash
