@@ -28,8 +28,6 @@ runs:
         command: version
         options: --client
         version: 2.9.3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Login to local argocd server
       run: argocd login argocd-server.argocd.svc.cluster.local --username admin --password ${{ inputs.argocd_password }} --insecure --plaintext
