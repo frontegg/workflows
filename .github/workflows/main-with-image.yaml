@@ -43,7 +43,7 @@ on:
       workflows_version:
         required: false
         type: string
-        default: "FR-14531-detect-and-use-pkg-manager"
+        default: "yarn37"
       code_changed:
         required: true
         type: boolean

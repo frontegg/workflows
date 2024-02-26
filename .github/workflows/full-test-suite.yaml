@@ -69,7 +69,7 @@ on:
 jobs:
   start-venv:
     name: Start venv
-    uses: frontegg/workflows/.github/workflows/start-venv.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/start-venv.yaml@yarn37
     with:
       volatileEnvironment: true
       triggerSlack: false
@@ -98,7 +98,7 @@ jobs:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
       - name: "Update trigger status"
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-14531-detect-and-use-pkg-manager
+        uses: frontegg/workflows/.github/shared-actions/update-status@yarn37
         if: ${{ inputs.dispatch_id }}
         with:
           token: ${{ env.BOT_TOKEN }}
@@ -189,7 +189,7 @@ jobs:
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
       - name: "trigger failure status"
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-14531-detect-and-use-pkg-manager
+        uses: frontegg/workflows/.github/shared-actions/update-status@yarn37
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
@@ -197,7 +197,7 @@ jobs:
           description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
       - name: "trigger success status"
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
-        uses: frontegg/workflows/.github/shared-actions/update-status@FR-14531-detect-and-use-pkg-manager
+        uses: frontegg/workflows/.github/shared-actions/update-status@yarn37
         with:
           token: ${{ env.BOT_TOKEN }}
           dispatch_id: ${{ inputs.dispatch_id }}
@@ -211,7 +211,7 @@ jobs:
       always() &&
       (needs.prepare-params.outputs.environmentId) &&
       contains(needs.*.result, 'success')
-    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@yarn37
     with:
       venvId: ${{ needs.prepare-params.outputs.environmentId }}
       gracePeriodInMinutes: "${{ (needs.start-venv.result == 'failure') && '15' || '0' }}"

@@ -43,7 +43,7 @@ on:
         type: string
       workflows_version:
         required: false
-        default: "FR-14531-detect-and-use-pkg-manager"
+        default: "yarn37"
         type: string
     secrets:
       npm_token:
@@ -91,7 +91,7 @@ jobs:
     name: Build Image and deploy
     if: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
     # needs: [ check-changes ]
-    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@yarn37
     with:
       tag: ${{ inputs.tag }}
       repository_name: ${{ inputs.repository_name }}
@@ -117,7 +117,7 @@ jobs:
 #    name: Deploy
 #    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
 #    needs: [ check-changes ]
-#    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@FR-14531-detect-and-use-pkg-manager
+#    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@yarn37
 #    with:
 #      tag: ${{ inputs.tag }}
 #      repository_name: ${{ inputs.repository_name }}

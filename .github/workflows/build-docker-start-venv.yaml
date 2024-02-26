@@ -91,7 +91,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
       - uses: ./workflows/.github/shared-actions/start-venv
         name: Compose venv files
         id: venv-actions
@@ -195,7 +195,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
       - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
@@ -264,7 +264,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
         id: venv-actions

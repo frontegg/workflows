@@ -42,14 +42,14 @@ jobs:
   build-and-publish-version-image:
     name: Build and publish version image
     if: ${{ inputs.build_image == true }}
-    uses: frontegg/workflows/.github/workflows/build-publish-docker.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/build-publish-docker.yaml@yarn37
     secrets: inherit
 
   run-e2e-test:
     name: Run E2E Tests (venv)
     needs: [build-and-publish-version-image]
     if: ${{ always() && (needs.build-and-publish-version-image.result == 'success' || needs.build-and-publish-version-image.result == 'skipped') }}
-    uses: frontegg/workflows/.github/workflows/run-e2e-tests.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/run-e2e-tests.yaml@yarn37
     with:
       build_image: false
       tests_tag: ${{ inputs.tests_tag }}
@@ -59,7 +59,7 @@ jobs:
     name: Run Api Tests (venv)
     needs: [ build-and-publish-version-image]
     if: ${{ always() && (needs.build-and-publish-version-image.result == 'success' || needs.build-and-publish-version-image.result == 'skipped') }}
-    uses: frontegg/workflows/.github/workflows/run-api-tests.yaml@FR-14531-detect-and-use-pkg-manager
+    uses: frontegg/workflows/.github/workflows/run-api-tests.yaml@yarn37
     with:
       build_image: false
       tests_tag: ${{ inputs.tests_tag }}

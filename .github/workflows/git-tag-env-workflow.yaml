@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to dev ci'
         uses: ./workflows/.github/shared-actions/git-tag-env
@@ -70,7 +70,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to dev'
         uses: ./workflows/.github/shared-actions/git-tag-env
@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/git-tag-env
@@ -116,7 +116,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/git-tag-env
@@ -140,7 +140,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/git-tag-env
@@ -164,7 +164,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/git-tag-env

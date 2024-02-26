@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
-          ref: FR-14531-detect-and-use-pkg-manager
+          ref: yarn37
           path: workflows
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
