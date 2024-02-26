@@ -46,6 +46,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: FR-14531-detect-and-use-pkg-manager
           clean: false
       - name: Run build and push docker image action
         uses: ./workflows/.github/shared-actions/build-publish-image

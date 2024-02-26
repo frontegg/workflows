@@ -43,7 +43,7 @@ on:
       workflows_version:
         required: false
         type: string
-        default: ""
+        default: "FR-14531-detect-and-use-pkg-manager"
       code_changed:
         required: true
         type: boolean

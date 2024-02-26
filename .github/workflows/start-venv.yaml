@@ -90,6 +90,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
+          ref: FR-14531-detect-and-use-pkg-manager
           path: workflows
       - uses: ./workflows/.github/shared-actions/start-venv
         name: Compose venv files
@@ -171,10 +172,10 @@ jobs:
             echo "image-exist=false" >> $GITHUB_OUTPUT
           fi
       - name: Detect package manager
-        uses: ./workflows/.github/shared-actions/detect-package-manager@master
+        uses: frontegg/workflows/.github/shared-actions/detect-package-manager@FR-14531-detect-and-use-pkg-manager
         id: detect-package-manager
       - name: Generate npm token
-        uses: ./workflows/.github/shared-actions/setup-npm-repository@master
+        uses: frontegg/workflows/.github/shared-actions/setup-npm-repository@FR-14531-detect-and-use-pkg-manager
         with:
           npm_token: ${{ inputs.npm_token }}
           package_manager: ${{ steps.detect-package-manager.outputs.manager }}
@@ -200,6 +201,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: FR-14531-detect-and-use-pkg-manager
       - name: wait for venv readiness
         uses: ./workflows/.github/shared-actions/wait-for-venv
         with:
@@ -268,6 +270,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: FR-14531-detect-and-use-pkg-manager
       - uses: ./workflows/.github/shared-actions/remove-single-venv
         name: Remove venv files
         id: venv-actions

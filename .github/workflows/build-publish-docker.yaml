@@ -60,6 +60,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
+          ref: FR-14531-detect-and-use-pkg-manager
       - name: build and publish docker image
         uses: ./workflows/.github/shared-actions/build-and-publish-docker
         with:
