@@ -167,10 +167,10 @@ jobs:
             echo "image-exist=false" >> $GITHUB_OUTPUT
           fi
       - name: Detect package manager
-        uses: ./.github/actions/detect-package-manager@master
+        uses: ./workflows/.github/shared-actions/detect-package-manager@master
         id: detect-package-manager
       - name: Generate npm token
-        uses: ./.github/shared-actions/setup-npm-repository@master
+        uses: ./workflows/.github/shared-actions/setup-npm-repository@master
         with:
           npm_token: ${{ inputs.npm_token }}
           package_manager: ${{ steps.detect-package-manager.outputs.manager }}
