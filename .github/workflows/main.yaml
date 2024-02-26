@@ -63,34 +63,34 @@ on:
         required: false
 
 jobs:
-  check-changes:
-    name: Check Changes
-    runs-on: ubuntu-latest
-    outputs:
-      code_change: ${{ steps.changes.outputs.code-change }}
-      chart_change: ${{ steps.changes.outputs.chart-change }}
-    steps:
-      - name: Checkout ${{ inputs.repository_name }}
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/${{ inputs.repository_name }}
-          ref: ${{ inputs.ref }}
-          token: ${{ secrets.admin_github_token }}
-      - uses: AurorNZ/paths-filter@v3
-        id: changes
-        with:
-          filters: |
-            code-change:
-              - '**'
-              - '!k8s/**'
-            chart-change:
-              - '!**'
-              - 'k8s/**'
+#  check-changes:
+#    name: Check Changes
+#    runs-on: ubuntu-latest
+#    outputs:
+#      code_change: ${{ steps.changes.outputs.code-change }}
+#      chart_change: ${{ steps.changes.outputs.chart-change }}
+#    steps:
+#      - name: Checkout ${{ inputs.repository_name }}
+#        uses: actions/checkout@v4
+#        with:
+#          repository: frontegg/${{ inputs.repository_name }}
+#          ref: ${{ inputs.ref }}
+#          token: ${{ secrets.admin_github_token }}
+#      - uses: AurorNZ/paths-filter@v3
+#        id: changes
+#        with:
+#          filters: |
+#            code-change:
+#              - '**'
+#              - '!k8s/**'
+#            chart-change:
+#              - '!**'
+#              - 'k8s/**'
 
   main-with-image:
     name: Build Image and deploy
-    if: ${{ needs.check-changes.outputs.code_change == 'true' }}
-    needs: [ check-changes ]
+    if: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
+    # needs: [ check-changes ]
     uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
     with:
       tag: ${{ inputs.tag }}
@@ -104,8 +104,8 @@ jobs:
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
       ref: ${{ inputs.ref }}
       workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change == 'true' }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change == 'true' }}
+      code_changed: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
+      chart_changed: true # ${{ needs.check-changes.outputs.chart_change == 'true' }}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
@@ -113,28 +113,28 @@ jobs:
       admin_github_token: ${{ secrets.admin_github_token }}
       slack_production_webhook: ${{ secrets.slack_production_webhook }}
 
-  main-without-image:
-    name: Deploy
-    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
-    needs: [ check-changes ]
-    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
-    with:
-      tag: ${{ inputs.tag }}
-      repository_name: ${{ inputs.repository_name }}
-      has_hybrid: ${{ inputs.has_hybrid }}
-      staging_environment_name: ${{ inputs.staging_environment_name }}
-      au_environment_name: ${{ inputs.au_environment_name }}
-      us_environment_name: ${{ inputs.us_environment_name }}
-      global_environment_name: ${{ inputs.global_environment_name }}
-      build_image_script: ${{ inputs.build_image_script }}
-      build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
-      ref: ${{ inputs.ref }}
-      workflows_version: ${{ inputs.workflows_version }}
-      code_changed: ${{ needs.check-changes.outputs.code_change == 'true' }}
-      chart_changed: ${{ needs.check-changes.outputs.chart_change == 'true' }}
-    secrets:
-      npm_token: ${{ secrets.npm_token }}
-      docker_hub_password: ${{ secrets.docker_hub_password }}
-      docker_hub_user: ${{ secrets.docker_hub_user }}
-      admin_github_token: ${{ secrets.admin_github_token }}
-      slack_production_webhook: ${{ secrets.slack_production_webhook }}
+#  main-without-image:
+#    name: Deploy
+#    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
+#    needs: [ check-changes ]
+#    uses: frontegg/workflows/.github/workflows/main-without-image.yaml@master
+#    with:
+#      tag: ${{ inputs.tag }}
+#      repository_name: ${{ inputs.repository_name }}
+#      has_hybrid: ${{ inputs.has_hybrid }}
+#      staging_environment_name: ${{ inputs.staging_environment_name }}
+#      au_environment_name: ${{ inputs.au_environment_name }}
+#      us_environment_name: ${{ inputs.us_environment_name }}
+#      global_environment_name: ${{ inputs.global_environment_name }}
+#      build_image_script: ${{ inputs.build_image_script }}
+#      build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
+#      ref: ${{ inputs.ref }}
+#      workflows_version: ${{ inputs.workflows_version }}
+#      code_changed: ${{ needs.check-changes.outputs.code_change == 'true' }}
+#      chart_changed: ${{ needs.check-changes.outputs.chart_change == 'true' }}
+#    secrets:
+#      npm_token: ${{ secrets.npm_token }}
+#      docker_hub_password: ${{ secrets.docker_hub_password }}
+#      docker_hub_user: ${{ secrets.docker_hub_user }}
+#      admin_github_token: ${{ secrets.admin_github_token }}
+#      slack_production_webhook: ${{ secrets.slack_production_webhook }}

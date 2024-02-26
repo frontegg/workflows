@@ -39,7 +39,7 @@ runs:
     run: |
       echo Working in repository: ${{ github.repository }} on SHA/Tag: ${{ inputs.current_tag }} for
     shell: bash
-
+  
   - name: Set variables
     id: variables
     run: |

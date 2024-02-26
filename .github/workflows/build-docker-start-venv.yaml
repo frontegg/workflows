@@ -187,7 +187,7 @@ jobs:
     name: waiting for venv readiness
     needs: [start-venv, build-docker]
     if: always() && (needs.start-venv.result == 'success') && (needs.build-docker.result == 'success' || needs.build-docker.result == 'skipped')
-    runs-on: [self-hosted, dev]
+    runs-on: [dev]
     steps:
       - name: Checkout Workflows
         uses: actions/checkout@v4
