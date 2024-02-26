@@ -1,14 +1,14 @@
 name: 'Setup NPM RC files'
 description: 'Sets up .npmrc or .yarnrc or .yarnrc.yml, depending on provided package manager info'
 inputs:
-  npm_token:
+  npm-token:
     description: 'NPM Token - read-only is enough'
     required: true
-  package_manager:
+  package-manager:
     description: 'Package manager to use'
     required: true
     default: 'npm'
-  package_manager_version:
+  package-manager-version:
     description: 'Package manager version to use'
     required: true
     default: 'latest'
@@ -16,7 +16,7 @@ inputs:
     description: 'NPM Registry address to use'
     required: true
     default: 'https://registry.npmjs.org'
-  working_directory:
+  working-directory:
     description: The base path of the service code
     required: false
     default: "."
@@ -25,14 +25,14 @@ runs:
   using: composite
   steps:
     - name: Setup .npmrc
-      if: inputs.package_manager == 'npm' || (inputs.package_manager == 'yarn' && startsWith(inputs.package_manager_version, '1.'))
+      if: inputs.package-manager == 'npm' || (inputs.package-manager == 'yarn' && startsWith(inputs.package-manager-version, '1.'))
       shell: bash
-      working-directory: ${{ inputs.working_directory }}
-      run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npm_token }}" > .npmrc
+      working-directory: ${{ inputs.working-directory }}
+      run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npm-token }}" > .npmrc
     - name: Setup .yarnrc.yml
-      if: inputs.package_manager == 'yarn' && !startsWith(inputs.package_manager_version, '1.')
+      if: inputs.package-manager == 'yarn' && !startsWith(inputs.package-manager-version, '1.')
       shell: bash
-      working-directory: ${{ inputs.working_directory }}
+      working-directory: ${{ inputs.working-directory }}
       run: |
         yq -i '.npmRegistryServer="${{ inputs.registry }}"' .yarnrc.yml
-        yq -i '.npmAuthToken="${{ inputs.npm_token }}"' .yarnrc.yml
+        yq -i '.npmAuthToken="${{ inputs.npm-token }}"' .yarnrc.yml
