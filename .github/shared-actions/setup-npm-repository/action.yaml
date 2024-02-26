@@ -16,6 +16,10 @@ inputs:
     description: 'NPM Registry address to use'
     required: true
     default: 'https://registry.npmjs.org'
+  working_directory:
+    description: The base path of the service code
+    required: false
+    default: "."
 
 runs:
   using: composite
@@ -23,10 +27,12 @@ runs:
     - name: Setup .npmrc
       if: inputs.package_manager == 'npm' || (inputs.package_manager == 'yarn' && startsWith(inputs.package_manager_version, '1.'))
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       run: echo "//registry.npmjs.org/:_authToken=${{ inputs.npm_token }}" > .npmrc
     - name: Setup .yarnrc.yml
       if: inputs.package_manager == 'yarn' && !startsWith(inputs.package_manager_version, '1.')
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       run: |
         yq -i '.npmRegistryServer="${{ inputs.registry }}"' .yarnrc.yml
         yq -i '.npmAuthToken="${{ inputs.npm_token }}"' .yarnrc.yml

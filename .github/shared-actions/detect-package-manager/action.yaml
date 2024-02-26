@@ -2,6 +2,12 @@ name: Detect Package Manager
 author: artur.wolny@frontegg.com
 description: Detect package manager and version using footprints like package-lock.json, yarn.lock, .yarnrc.yml or package.json
 
+inputs:
+  working-directory:
+    description: The base path of the service code
+    required: false
+    default: "."
+
 outputs:
   manager:
     description: Detected package manager
@@ -17,20 +23,21 @@ runs:
       id: yarnrc_yaml_exists
       uses: andstor/file-existence-action@v3
       with:
-        files: .yarnrc.yml
+        files: "${{ inputs.working-directory }}/.yarnrc.yml"
     - name: Check if yarn.lock exists
       id: yarn_lock_exists
       uses: andstor/file-existence-action@v3
       with:
-        files: yarn.lock
+        files: "${{ inputs.working-directory }}/yarn.lock"
     - name: Check if package-lock.json exists
       id: package_lock_exists
       uses: andstor/file-existence-action@v3
       with:
-        files: package-lock.json
+        files: "${{ inputs.working-directory }}/package-lock.json"
     - name: Get package-manager from package.json
       id: package_json_versions
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         ACTION_OUTPUT=$(cat package.json | jq '.packageManager')
         echo $ACTION_OUTPUT | sed -rn 's/^"([^@]*)@(.*)"$/manager=\1/p' >> $GITHUB_OUTPUT
@@ -39,9 +46,11 @@ runs:
       id: yarnrc_yaml_version
       if: ${{ steps.yarnrc_yaml_exists.outputs.files_exists == 'true' }}
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: echo "version=$(cat .yarnrc.yml | yq '.yarnPath' | sed -nr 's/^.*\/yarn-(.+)\.c?js$/\1/p')" >> $GITHUB_OUTPUT
     - name: Show results
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         echo "package_manager(package.json)=${{ steps.package_json_versions.outputs.manager }}"
         echo "version(package.json)=${{ steps.package_json_versions.outputs.version }}"
@@ -52,6 +61,7 @@ runs:
     - name: Conclude package manager
       id: pm_detection_results
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       env:
         YARN_FILES_EXISTS: ${{ steps.yarnrc_yaml_exists.outputs.files_exists == 'true' || steps.yarn_lock_exists.outputs.files_exists == 'true' }}
         PKG_JSON_PM: ${{ steps.package_json_versions.outputs.manager }}
