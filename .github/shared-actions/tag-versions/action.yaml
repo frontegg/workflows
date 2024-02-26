@@ -2,89 +2,87 @@ name: Deploy to environment
 description: This action should deploy the current branch to staging.
 inputs:
   organization:
-    description: 'Set the organization name both in docker and github'
+    description: "Set the organization name both in docker and github"
     required: false
     default: frontegg
   github_token:
-    description: 'The github token'
+    description: "The github token"
     required: true
   repository_name:
-    description: 'The repository name'
+    description: "The repository name"
     required: true
   environment:
-    description: 'Environment'
+    description: "Environment"
     required: true
   docker_hub_user:
-    description: 'Docker Hub User'
+    description: "Docker Hub User"
     required: true
   docker_hub_password:
-    description: 'Docker Hub Password'
+    description: "Docker Hub Password"
     required: true
   current_tag:
-    description: 'The Tag to use when creating a new version Tag and version'
+    description: "The Tag to use when creating a new version Tag and version"
     required: false
     default: ${GITHUB_SHA::7}
   should_tag_image:
-    description: 'Should tag the image with the new version'
+    description: "Should tag the image with the new version"
     required: true
   should_tag_repository:
-    description: 'Should tag the repository with environment with new version'
+    description: "Should tag the repository with environment with new version"
     required: true
 
 runs:
   using: "composite"
   steps:
+    - name: Display Currnet SHA/Tag for current repository
+      run: |
+        echo Working in repository: ${{ github.repository }} on SHA/Tag: ${{ inputs.current_tag }} for
+      shell: bash
 
-  - name: Display Currnet SHA/Tag for current repository
-    run: |
-      echo Working in repository: ${{ github.repository }} on SHA/Tag: ${{ inputs.current_tag }} for
-    shell: bash
-  
-  - name: Set variables
-    id: variables
-    run: |
-      echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')"
-      echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
-    shell: bash
+    - name: Set variables
+      id: variables
+      run: |
+        echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')-${{ inputs.current_tag }}"
+        echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
+      shell: bash
 
-  - name: Display variables
-    run: |
-      echo ${{ steps.variables.outputs.new-tag }}
-      echo ${{ steps.variables.outputs.registry }}
-    shell: bash
+    - name: Display variables
+      run: |
+        echo ${{ steps.variables.outputs.new-tag }}
+        echo ${{ steps.variables.outputs.registry }}
+      shell: bash
 
-  - name: Login to Docker Hub
-    uses: docker/login-action@v1
-    if: ${{ inputs.should_tag_image }}
-    with:
-      username: ${{ inputs.docker_hub_user }}
-      password: ${{ inputs.docker_hub_password }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1
+      if: ${{ inputs.should_tag_image }}
+      with:
+        username: ${{ inputs.docker_hub_user }}
+        password: ${{ inputs.docker_hub_password }}
 
-  - name: Tag docker image with versions
-    shell: bash
-    if: ${{ inputs.should_tag_image == 'true' }}
-    run: |
-      docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
-      ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
-      docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
+    - name: Tag docker image with versions
+      shell: bash
+      if: ${{ inputs.should_tag_image == 'true' }}
+      run: |
+        docker manifest create ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }} \
+        ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
+        docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-  - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
-    with:
-      global: true
-      token: ${{ inputs.github_token }}
+    - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+      with:
+        global: true
+        token: ${{ inputs.github_token }}
 
-  - name: Tag github repository with version update
-    working-directory: code
-    run: |
-      git tag ${{ steps.variables.outputs.new-tag }}
-      git push origin refs/tags/${{ steps.variables.outputs.new-tag }}
-    shell: bash
+    - name: Tag github repository with version update
+      working-directory: code
+      run: |
+        git tag ${{ steps.variables.outputs.new-tag }}
+        git push origin refs/tags/${{ steps.variables.outputs.new-tag }}
+      shell: bash
 
-  - name: Tag github repository with latest environment Tag
-    working-directory: code
-    if: ${{ inputs.should_tag_repository == 'true' }}
-    run: |
-      git tag ${{ inputs.environment}} --force
-      git push origin refs/tags/${{ inputs.environment }} --force
-    shell: bash
-
+    - name: Tag github repository with latest environment Tag
+      working-directory: code
+      if: ${{ inputs.should_tag_repository == 'true' }}
+      run: |
+        git tag ${{ inputs.environment}} --force
+        git push origin refs/tags/${{ inputs.environment }} --force
+      shell: bash
