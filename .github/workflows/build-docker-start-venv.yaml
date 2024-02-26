@@ -173,9 +173,9 @@ jobs:
       - name: Generate npm token
         uses: ./workflows/.github/shared-actions/setup-npm-repository
         with:
-          npm_token: ${{ inputs.npm_token }}
-          package_manager: ${{ steps.detect-package-manager.outputs.manager }}
-          package_manager_version: ${{ steps.detect-package-manager.outputs.version }}
+          npm-token: ${{ inputs.npm_token }}
+          package-manager: ${{ steps.detect-package-manager.outputs.manager }}
+          package-manager-version: ${{ steps.detect-package-manager.outputs.version }}
       - name: Build and push
         uses: docker/build-push-action@v5
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
