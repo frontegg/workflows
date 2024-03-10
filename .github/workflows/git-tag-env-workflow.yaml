@@ -16,6 +16,10 @@ on:
         required: false
         default: staging
         type: string
+      ca_environment_name:
+          required: false
+          default: production-ca
+          type: string
       au_environment_name:
         required: false
         default: production-au
@@ -120,13 +124,36 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           environment: ${{ inputs.au_environment_name }}
 
+  deploy-to-canada:
+    name: Deploy to Canada Region (Central)
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.ca_environment_name }}
+    needs:
+      - deploy-to-australia
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: 'Deploy to Production CA'
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.ca_environment_name }}
+
   deploy-to-us:
     name: Deploy to US East 1
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
     needs:
-      - deploy-to-australia
+      - deploy-to-canada
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
