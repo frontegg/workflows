@@ -1,0 +1,16 @@
+name: Matrix test
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: This is the name
+    if: ${{ needs.start-venv.outputs.commits != 'skip' }}
+    strategy:
+      fail-fast: true
+      matrix: ["1","2","3","4"]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Display Commit name ${{ matrix }}
+        run: |
+          echo Building ${{ matrix }} docker
