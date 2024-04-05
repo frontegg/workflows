@@ -186,9 +186,22 @@ jobs:
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
 
+  check-build-docker-results:
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    name: Fail on build docker
+    needs: [ build-docker ]
+    steps:
+      - run: exit 1
+        # see https://stackoverflow.com/a/67532120/4907315
+        if: >-
+          ${{
+               contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+          }}
+
   wait:
     name: waiting for venv readiness
-    needs: [start-venv, build-docker]
+    needs: [start-venv, check-build-docker-results]
     if: always() && (needs.start-venv.result == 'success') && (needs.build-docker.result == 'success' || needs.build-docker.result == 'skipped')
     runs-on: [dev]
     steps:
