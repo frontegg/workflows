@@ -131,6 +131,7 @@ jobs:
       - name: Display Commit name ${{ matrix.commits }}
         run: |
           echo Building ${{ matrix.commits }} docker
+      - run: exit 1
       - name: Split repository name and commit hash
         uses: actions/github-script@v7
         id: 'params'
