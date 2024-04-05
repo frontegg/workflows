@@ -120,7 +120,7 @@ jobs:
             return JSON.stringify(result);
 
   build-docker:
-    name: Build services docker images for venv ${{ matrix.commits }}
+    name: Build services docker images for venv
     needs: [ start-venv ]
     if: ${{ needs.start-venv.outputs.commits != 'skip' }}
     strategy:
@@ -128,6 +128,9 @@ jobs:
       matrix: ${{ fromJSON(needs.start-venv.outputs.commits) }}
     runs-on: ubuntu-latest
     steps:
+      - name: Display Commit name ${{ matrix.commits }}
+        run: |
+          echo Building ${{ matrix.commits }} docker
       - name: Split repository name and commit hash
         uses: actions/github-script@v7
         id: 'params'
