@@ -8,9 +8,10 @@ jobs:
     if: ${{ needs.start-venv.outputs.commits != 'skip' }}
     strategy:
       fail-fast: true
-      matrix: ["1","2","3","4"]
+      matrix:
+        number: ["1","2","3","4"]
     runs-on: ubuntu-latest
     steps:
-      - name: Display Commit name ${{ matrix }}
+      - name: Display Commit name ${{ matrix.number }}
         run: |
-          echo Building ${{ matrix }} docker
+          echo Building ${{ matrix.number }} docker
