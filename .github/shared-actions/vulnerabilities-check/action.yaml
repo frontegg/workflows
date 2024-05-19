@@ -1,0 +1,15 @@
+name : Check dependencies vulnerabilities
+inputs :
+  node_version :
+    description : 'Node Version'
+    required : true
+
+runs :
+  using : 'composite'
+  steps :
+    - uses : actions/setup-node@v3
+      with :
+        node-version : ${{ inputs.node_version }}
+    - name : Run audit-ci
+      run : npx audit-ci --config ./audit-ci.jsonc
+      shell : bash
