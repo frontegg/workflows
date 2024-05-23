@@ -94,17 +94,47 @@ runs:
         git push origin refs/tags/${{ inputs.environment }} --force
       shell: bash
 
+    - name: Update appVersion in AppState
+      env:
+        DIRECTORY: "applications/${{ inputs.repository_name }}/${{ inputs.environment}}"
+        APP_VERSION: ${{ inputs.current_tag }}
+      shell: bash
+      working-directory: appState
+      run: |
+        FILE="$DIRECTORY/values.yaml"
+
+        # Check if directory exists, if not create it
+        if [ ! -d "$DIRECTORY" ]; then
+        echo "Directory does not exist. Creating directory..."
+        mkdir -p "$DIRECTORY"
+        fi
+
+        # Check if file exists, if not create it with initial content
+        if [ ! -f "$FILE" ]; then
+        echo "File does not exist. Creating file with initial content..."
+        echo "appVersion: \"$APP_VERSION\"" > "$FILE"
+        else
+        # File exists, update the appVersion value using yq
+        echo "File exists. Updating appVersion value..."
+        yq eval ".appVersion = \"$APP_VERSION\"" -i "$FILE"
+        fi
+
+        echo "Operation completed."
+
+    - name: Commit and push changes
+      shell: bash
+      working-directory: appState
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor}}@users.noreply.github.com"
+        git add .
+        git commit -m "Update appVersion in AppState"
+        git push origin master
+
     - name: Tag github repository with venv Tag
       working-directory: code
       if: ${{ inputs.environment == 'staging' }}
       run: |
         git tag venv-latest --force
         git push origin refs/tags/venv-latest --force
-      shell: bash
-
-    - name: Tag AppState with latest environment Tag
-      working-directory: appState
-      run: |
-        git tag ${{ inputs.environment}} --force
-        git push origin refs/tags/${{ inputs.environment }} --force
       shell: bash
