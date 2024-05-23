@@ -86,3 +86,11 @@ runs:
         git tag ${{ inputs.environment}} --force
         git push origin refs/tags/${{ inputs.environment }} --force
       shell: bash
+
+    - name: Tag github repository with venv Tag
+      working-directory: code
+      if: ${{ inputs.environment == 'staging' }}
+      run: |
+        git tag venv-latest --force
+        git push origin refs/tags/venv-latest --force
+      shell: bash

@@ -193,6 +193,54 @@ jobs:
           github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
 
+  update-version:
+    name: Update version in AppState
+    runs-on: ubuntu-latest
+    needs:
+      - params
+      - build-and-publish-docker
+    steps:
+      - name: Checkout AppState
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/AppState
+          token: ${{ secrets.admin_github_token }}
+      - name: Update appVersion in AppState
+        env:
+          DIRECTORY: "applications/${{ inputs.repository_name }}"
+          APP_VERSION: ${{ needs.params.outputs.short_sha }}
+        run: |
+          FILE="$DIRECTORY/values.yaml"
+  
+          # Check if directory exists, if not create it
+          if [ ! -d "$DIRECTORY" ]; then
+          echo "Directory does not exist. Creating directory..."
+          mkdir -p "$DIRECTORY"
+          fi
+  
+          # Check if file exists, if not create it with initial content
+          if [ ! -f "$FILE" ]; then
+          echo "File does not exist. Creating file with initial content..."
+          echo "appVersion: \"APP_VERSION\"" > "$FILE"
+          else
+          # File exists, update the appVersion value using yq
+          echo "File exists. Updating appVersion value..."
+          yq eval ".appVersion = \"$NEW_APP_VERSION\"" -i "$FILE"
+          fi
+          
+          echo "Operation completed."
+
+      - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+        with:
+          global: true
+          token: ${{ inputs.github_token }}
+
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Update appVersion in AppState"
+          git push origin master
+
   deploy-to-staging:
     name: Deploy to staging
     runs-on: ubuntu-latest
@@ -200,7 +248,7 @@ jobs:
       name: ${{ inputs.staging_environment_name }}
     needs:
       - params
-      - build-and-publish-docker
+      - update-version
     steps:
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
