@@ -230,7 +230,7 @@ jobs:
           
           echo "Operation completed."
 
-      - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+      - uses: oleksiyrudenko/gha-git-credentials@v2.1.2
         with:
           global: true
           token: ${{ inputs.github_token }}
