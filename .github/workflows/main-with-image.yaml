@@ -221,7 +221,7 @@ jobs:
           # Check if file exists, if not create it with initial content
           if [ ! -f "$FILE" ]; then
           echo "File does not exist. Creating file with initial content..."
-          echo "appVersion: \"APP_VERSION\"" > "$FILE"
+          echo "appVersion: \"$NEW_APP_VERSION\"" > "$FILE"
           else
           # File exists, update the appVersion value using yq
           echo "File exists. Updating appVersion value..."
