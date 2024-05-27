@@ -11,6 +11,7 @@ on:
         description: 'Set the grace period before removing venv, default is 0'
         required: false
         type: string
+        default: '0'
     secrets:
       admin_github_token:
         description: 'Github repository admin token'
