@@ -1,0 +1,185 @@
+name: Dashboard Regression Suite Test
+on:
+  workflow_call:
+    inputs:
+      build_image:
+        type: boolean
+        required: false
+        description: This has no effect on this workflow any more, should be remoeved when all services will remove it
+        default: false
+      tests_tag:
+        type: string
+        required: false
+        description: Set the e2e-api tests branch tag
+        default: master
+      ref:
+        type: string
+        required: false
+        description: Set the venv branch
+        default: ''
+      react_version:
+        type: string
+        required: false
+        description: Set the react version
+      dispatch_id:
+        type: string
+        required: false
+        description: Dispatch id to update status (repo/sha)
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: 'Github repository admin token'
+        required: true
+      DEV_ARGOCD_PASSWORD:
+        description: 'ArgoCD password'
+        required: true
+      NPM_TOKEN:
+        description: 'Npm token'
+        required: true
+      DOCKER_HUB_ACTION_USER:
+        description: 'Docker hub user'
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
+        description: 'Docker hub password'
+        required: true
+      MAILOSAUR_API_KEY:
+        description: 'MAILOSAUR API KEY'
+        required: true
+      MAILOSAUR_SERVER_ID:
+        description: 'MAILOSAUR SERVER ID'
+        required: true
+      MAILOSAUR_SERVER_DOMAIN:
+        description: 'MAILOSAUR SERVER DOMAIN'
+        required: true
+      ZEPHYR_TOKEN:
+        description: ''
+        required: true
+      AZURE_APP_CLIENT_ID:
+        description: ''
+        required: true
+      AZURE_APP_SECRET:
+        description: ''
+        required: true
+      GH_FRONTEGG_BOT_APP_ID:
+        description: 'Frontegg Bot Creds'
+        required: true
+      GH_FRONTEGG_BOT_APP_SECRET:
+        description: 'Frontegg Bot Creds'
+        required: true
+
+jobs:
+  start-venv:
+    name: Start venv
+    uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
+    with:
+      volatileEnvironment: true
+      triggerSlack: false
+      ref: ${{ inputs.ref }}
+    secrets: inherit
+
+  prepare-params:
+    name: Prepare environment params
+    runs-on: ubuntu-latest
+    needs: [ start-venv ]
+    outputs:
+      apiUrl: ${{ steps.variables.outputs.apiUrl }}
+      portalUrl: ${{ steps.variables.outputs.portalUrl }}
+      environmentId: ${{ steps.variables.outputs.environmentId }}
+    steps:
+      - name: prepare output params
+        id: variables
+        run: |
+          echo "environmentId=${{ needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
+          echo "apiUrl=${{ needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
+          echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
+      - id: create_bot_token
+        name: Create bot token
+        uses: wow-actions/use-app-token@v2
+        with:
+          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+      - name: "Update trigger status"
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
+        if: ${{ inputs.dispatch_id }}
+        with:
+          token: ${{ env.BOT_TOKEN }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
+
+  run-e2e-test:
+    runs-on: ubuntu-latest
+    needs: [ prepare-params ]
+    steps:
+      - name: Checkout codes
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      - id: create_bot_token
+        name: Create bot token
+        uses: wow-actions/use-app-token@v2
+        with:
+          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+      - name: Run E2E Tests from E2E-system-tests repo
+        uses: ./.github/actions/e2e-test
+        with:
+          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          npm_token: ${{ secrets.NPM_TOKEN }}
+          server_url: ${{ needs.prepare-params.outputs.apiUrl }}
+          portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+          twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
+          twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+          AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
+          AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          react_version: ${{ inputs.react_version }}
+          bot_token: ${{ env.BOT_TOKEN }}
+          test_script: "test:e2e:regression:portal:hosted"
+
+  update-trigger-status:
+    name: Update trigger status
+    runs-on: ubuntu-latest
+    needs: [ run-e2e-test, start-venv, prepare-params ]
+    if: ${{ always() && inputs.dispatch_id }}
+    steps:
+      - id: create_bot_token
+        name: Create bot token
+        uses: wow-actions/use-app-token@v2
+        with:
+          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+      - name: "trigger failure status"
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
+        with:
+          token: ${{ env.BOT_TOKEN }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          state: "failure"
+          description: 'Failed | Api Tests: ${{ needs.run-api-test.result }} | E2E Tests: ${{ needs.run-e2e-test.result }}'
+      - name: "trigger success status"
+        if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
+        uses: frontegg/workflows/.github/shared-actions/update-status@master
+        with:
+          token: ${{ env.BOT_TOKEN }}
+          dispatch_id: ${{ inputs.dispatch_id }}
+          state: "success"
+          description: 'E2E tests passed'
+
+  remove-venv:
+    name: Remove venv
+    needs: [ run-e2e-test, start-venv, prepare-params ]
+    if: |
+      always() &&
+      (needs.prepare-params.outputs.environmentId) &&
+      contains(needs.*.result, 'success')
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
+    with:
+      venvId: ${{ needs.prepare-params.outputs.environmentId }}
+      gracePeriodInMinutes: "${{ (needs.start-venv.result == 'failure') && '15' || '0' }}"
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
