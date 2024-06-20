@@ -2,16 +2,16 @@ name: Wait for venv
 description: Wait for venv to be ready
 inputs:
   argocd_password:
-    description: 'Admin github token'
+    description: "Admin github token"
     required: true
   environmentId:
-    description: 'Set the created venv id'
+    description: "Set the created venv id"
     required: true
   apiUrl:
-    description: 'Set the created venv api gateway url'
+    description: "Set the created venv api gateway url"
     required: true
   waitTimeout:
-    description: 'Set the wait timeout'
+    description: "Set the wait timeout"
     required: false
     default: "900"
 
@@ -21,30 +21,30 @@ runs:
     - name: Wait for ArgoCD
       uses: whatnick/wait-action@master
       with:
-        time: '4m'
+        time: "4m"
 
     - uses: clowdhaus/argo-cd-action/@main
       with:
         command: version
         options: --client
         version: 2.10.0
-    
+
     - name: Login to local argocd server
       run: argocd login argocd-server.argocd.svc.cluster.local --username admin --password ${{ inputs.argocd_password }} --insecure --plaintext
       shell: bash
 
     - name: Wait for venv to be ready
       run: |
-        argocd app wait -l venv=${{ inputs.environmentId }} --sync --timeout 600
-        argocd app wait -l venv=${{ inputs.environmentId }} --operation --timeout 600
-        argocd app wait -l venv=${{ inputs.environmentId }} --health --timeout 600
+        argocd app wait -l venv=${{ inputs.environmentId }} --sync --timeout 1200
+        argocd app wait -l venv=${{ inputs.environmentId }} --operation --timeout 1200
+        argocd app wait -l venv=${{ inputs.environmentId }} --health --timeout 1200
       shell: bash
 
-#    - uses: clowdhaus/argo-cd-action/@main
-#      name: Wait for venv to be ready
-#      with:
-#        version: 2.7.3
-#        command: app wait -l venv=${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }}
+    #    - uses: clowdhaus/argo-cd-action/@main
+    #      name: Wait for venv to be ready
+    #      with:
+    #        version: 2.7.3
+    #        command: app wait -l venv=${{ inputs.environmentId }} --timeout ${{ inputs.waitTimeout }}
     - name: Check access to the environment
       uses: mydea/action-wait-for-api@v1
       with:
