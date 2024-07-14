@@ -144,7 +144,8 @@ jobs:
             const data = { repository: splitString[0], hash: splitString[1], shortSha: splitString[1].substring(0, 7) };
             const result = { repository: data.repository,
                              hash: data.hash,
-                             image: `frontegg/${data.repository}:venv-${data.shortSha}`,
+                             venv-image: `frontegg/${data.repository}:venv-${data.shortSha}`,
+                             image: `frontegg/${data.repository}:${data.shortSha}`,
                              shortSha: data.shortSha };  
             console.log(`result: ${JSON.stringify(result)}`);
             return result;
@@ -166,7 +167,7 @@ jobs:
       - name: Check Docker Image
         id: check-image
         run: |
-          if docker manifest inspect ${{fromJSON(steps.params.outputs.result).image}} > /dev/null 2>&1; then
+          if docker manifest inspect ${{fromJSON(steps.params.outputs.result).venv-image}} > /dev/null 2>&1; then
             echo "Docker image exists, no need to build the image"
             echo "image-exist=true" >> $GITHUB_OUTPUT
           else
@@ -182,7 +183,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{fromJSON(steps.params.outputs.result).image}}
+          tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venv-image}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
 
