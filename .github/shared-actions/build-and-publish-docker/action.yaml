@@ -39,7 +39,19 @@ runs:
         echo input tag_name: ${{ steps.params.outputs.tag_name }}
         echo Commit Tag: ${{ inputs.tag }}
       shell: bash
+    - name: Check if Docker Image exists
+      id: check-image
+      shell: bash
+      run: |
+        if docker manifest inspect frontegg/${{ steps.params.outputs.tag_name }}:${{ inputs.tag }} > /dev/null 2>&1; then
+          echo "Docker image exists, no need to build the image"
+          echo "image-exist=true" >> $GITHUB_OUTPUT
+        else
+          echo "Docker image does not exist, starting to build the image"
+          echo "image-exist=false" >> $GITHUB_OUTPUT
+        fi
     - name: Build and push docker image
+      if: ${{ steps.check-image.outputs.image-exist == 'false' }}
       run: |
         echo using script ${{ inputs.build_image_script }} to build the image.
         sudo chmod +x ${{ inputs.build_image_script }}
