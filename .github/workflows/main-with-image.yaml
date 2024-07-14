@@ -121,6 +121,7 @@ jobs:
           npm_token: ${{ secrets.npm_token }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
+          repository: ${{ inputs.repository_name }}
 
   build-and-publish-hybrid-docker:
     name: Build and publish hybrid docker image

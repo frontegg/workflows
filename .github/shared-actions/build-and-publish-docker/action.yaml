@@ -20,6 +20,9 @@ inputs:
   tag_name:
     description: 'Set the tag of the docker image'
     required: false
+  repository:
+    description: 'The repository name'
+    required: true
 
 runs:
   using: "composite"
@@ -39,11 +42,20 @@ runs:
         echo input tag_name: ${{ steps.params.outputs.tag_name }}
         echo Commit Tag: ${{ inputs.tag }}
       shell: bash
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username:  ${{ inputs.docker_hub_user }}
+        password: ${{ inputs.docker_hub_password }}
     - name: Check if Docker Image exists
       id: check-image
       shell: bash
       run: |
-        if docker manifest inspect frontegg/${{ steps.params.outputs.tag_name }}:${{ inputs.tag }} > /dev/null 2>&1; then
+        if docker manifest inspect frontegg/${{ inputs.repository }}:${{ inputs.tag }} > /dev/null 2>&1; then
           echo "Docker image exists, no need to build the image"
           echo "image-exist=true" >> $GITHUB_OUTPUT
         else
@@ -63,3 +75,11 @@ runs:
         NPM_TOKEN: ${{ inputs.npm_token }}
         DOCKER_HUB_USER: ${{ inputs.docker_hub_user }}
         DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
+    - name: Tag current image with latest tag
+      if: ${{ steps.check-image.outputs.image-exist == 'true' }}
+      run: |
+        docker manifest create frontegg/${{ inputs.repository }}:${{ inputs.tag }} \
+        frontegg/${{ inputs.repository }}:master-latest
+        docker manifest push ${{ steps.variables.outputs.registry }}:master-latest
+      shell: bash
+
