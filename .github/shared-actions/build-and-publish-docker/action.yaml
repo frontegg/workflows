@@ -51,19 +51,19 @@ runs:
       with:
         username:  ${{ inputs.docker_hub_user }}
         password: ${{ inputs.docker_hub_password }}
-    - name: Check if Docker Image exists
-      id: check-image
-      shell: bash
-      run: |
-        if docker manifest inspect frontegg/${{ inputs.repository }}:${{ inputs.tag }} > /dev/null 2>&1; then
-          echo "Docker image exists, no need to build the image"
-          echo "image-exist=true" >> $GITHUB_OUTPUT
-        else
-          echo "Docker image does not exist, starting to build the image"
-          echo "image-exist=false" >> $GITHUB_OUTPUT
-        fi
+#    - name: Check if Docker Image exists
+#      id: check-image
+#      shell: bash
+#      run: |
+#        if docker manifest inspect frontegg/${{ inputs.repository }}:${{ inputs.tag }} > /dev/null 2>&1; then
+#          echo "Docker image exists, no need to build the image"
+#          echo "image-exist=true" >> $GITHUB_OUTPUT
+#        else
+#          echo "Docker image does not exist, starting to build the image"
+#          echo "image-exist=false" >> $GITHUB_OUTPUT
+#        fi
     - name: Build and push docker image
-      if: ${{ steps.check-image.outputs.image-exist == 'false' }}
+#      if: ${{ steps.check-image.outputs.image-exist == 'false' }}
       run: |
         echo using script ${{ inputs.build_image_script }} to build the image.
         sudo chmod +x ${{ inputs.build_image_script }}
@@ -75,11 +75,11 @@ runs:
         NPM_TOKEN: ${{ inputs.npm_token }}
         DOCKER_HUB_USER: ${{ inputs.docker_hub_user }}
         DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
-    - name: Tag current image with latest tag
-      if: ${{ steps.check-image.outputs.image-exist == 'true' }}
-      run: |
-        docker manifest create frontegg/${{ inputs.repository }}:${{ inputs.tag }} \
-        frontegg/${{ inputs.repository }}:master-latest
-        docker manifest push ${{ steps.variables.outputs.registry }}:master-latest
-      shell: bash
+#    - name: Tag current image with latest tag
+#      if: ${{ steps.check-image.outputs.image-exist == 'true' }}
+#      run: |
+#        docker manifest create frontegg/${{ inputs.repository }}:${{ inputs.tag }} \
+#        frontegg/${{ inputs.repository }}:master-latest
+#        docker manifest push ${{ steps.variables.outputs.registry }}:master-latest
+#      shell: bash
 
