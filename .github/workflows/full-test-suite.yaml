@@ -139,6 +139,17 @@ jobs:
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }}
           bot_token: ${{ env.BOT_TOKEN }}
+          FRONTEGG_COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
+          FRONTEGG_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          FRONTEGG_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          FRONTEGG_COGNITO_CLIENT_SECRET: ${{ secrets.COGNITO_CLIENT_SECRET }}
+          FRONTEGG_COGNITO_ACCESS_KEY_ID: ${{ secrets.COGNITO_ACCESS_KEY_ID }}
+          FRONTEGG_COGNITO_SECRET_ACCESS_KEY: ${{ secrets.COGNITO_SECRET_ACCESS_KEY }}
+          FRONTEGG_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FRONTEGG_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
 
   run-api-test:
     runs-on: ubuntu-latest
@@ -174,6 +185,17 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
+          FRONTEGG_COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
+          FRONTEGG_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          FRONTEGG_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+          FRONTEGG_COGNITO_CLIENT_SECRET: ${{ secrets.COGNITO_CLIENT_SECRET }}
+          FRONTEGG_COGNITO_ACCESS_KEY_ID: ${{ secrets.COGNITO_ACCESS_KEY_ID }}
+          FRONTEGG_COGNITO_SECRET_ACCESS_KEY: ${{ secrets.COGNITO_SECRET_ACCESS_KEY }}
+          FRONTEGG_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FRONTEGG_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+          FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+          FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
 
   update-trigger-status:
     name: Update trigger status
