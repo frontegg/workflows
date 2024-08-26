@@ -107,6 +107,11 @@ jobs:
 
   run-e2e-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        total: [ 5 ]
+        shard: [ 1,2,3,4,5 ]
     needs: [ prepare-params ]
     if: |
       always() &&
@@ -139,7 +144,7 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
-          test_script: "yarn run test:e2e:regression:portal:hosted"
+          test_script: yarn run test:e2e:regression:portal:hosted  --shard=${{ matrix.shard }}/${{ matrix.total }}
 
   update-trigger-status:
     name: Update trigger status
