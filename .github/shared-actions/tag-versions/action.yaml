@@ -130,7 +130,7 @@ runs:
         git add .
         git commit -m "Update appVersion in AppState with ${{ inputs.current_tag }}"
         git fetch origin
-        git rebase origin/main
+        git rebase origin/master
         git push origin master
 
     - name: Tag github repository with venv Tag
