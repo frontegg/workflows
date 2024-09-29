@@ -4,10 +4,8 @@ on: workflow_dispatch
 
 jobs:
   run-e2e-tests:
-    runs-on: [self-hosted, dev-ci]
-    environment: staging
+    runs-on: ubuntu-latest
     name: Run E2E Tests
-
     steps:
       - name: Say that you are testing
         run: echo "Testing......!"
