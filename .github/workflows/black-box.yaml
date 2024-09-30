@@ -1,13 +1,20 @@
 name: Progressive Delivery - Canary Release
 
-on: workflow_dispatch
-
+on: 
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        required: false
+      version:
+        description: 'Version being deployed'
+        required: true
 jobs:
   run-e2e-tests:
     runs-on: ubuntu-latest
     name: Run E2E Tests
     steps:
       - name: Say that you are testing
-        run: echo "Testing......!"
+        run: echo "Testing ${{inputs.service}} ${{inputs.version}} ...!"
       - name: Say that testing is done
-        run: echo "Completed......!"
+        run: echo "Completed ${{inputs.service}} ${{inputs.version}}..."
