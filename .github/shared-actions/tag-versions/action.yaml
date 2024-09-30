@@ -42,8 +42,8 @@ runs:
     - name: Set variables
       id: variables
       run: |
-        echo ::set-output name=new-tag::"${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')-${{ inputs.current_tag }}"
-        echo ::set-output name=registry::"${{ inputs.organization }}/${{ inputs.repository_name }}"
+        echo "new-tag=${{ inputs.environment }}-$(date +'%Y%m%d.%H%M%S')-${{ inputs.current_tag }}" >> $GITHUB_OUTPUT
+        echo "registry=${{ inputs.organization }}/${{ inputs.repository_name }}" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Display variables
@@ -60,7 +60,7 @@ runs:
         token: ${{ inputs.github_token }}
 
     - name: Login to Docker Hub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       if: ${{ inputs.should_tag_image }}
       with:
         username: ${{ inputs.docker_hub_user }}
@@ -74,7 +74,7 @@ runs:
         ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
         docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-    - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+    - uses: oleksiyrudenko/gha-git-credentials@v2-latest
       with:
         global: true
         token: ${{ inputs.github_token }}

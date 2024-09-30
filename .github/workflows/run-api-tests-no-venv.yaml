@@ -83,9 +83,9 @@ jobs:
       - name: prepare output params
         id: variables
         run: |
-          echo "::set-output name=environmentId::${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}"
-          echo "::set-output name=apiUrl::${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}"
-          echo "::set-output name=portalUrl::${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}"
+          echo "environmentId=${{ needs.start-venv-with-image.outputs.environmentId || needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
+          echo "apiUrl=${{ needs.start-venv-with-image.outputs.apiUrl || needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
+          echo "portalUrl=${{ needs.start-venv-with-image.outputs.portalUrl || needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
 
   run-api-test:
     runs-on: ubuntu-latest
