@@ -164,7 +164,7 @@ jobs:
           should_tag_repository: true
       - name: Assign variable
         id: secret
-        run: echo 'secret=${{ secrets.slack_production_webhook }}' >> $GITHUB_OUTPUT
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -213,7 +213,7 @@ jobs:
           should_tag_repository: true
       - name: Assign variable
         id: secret
-        run: echo 'secret=${{ secrets.slack_production_webhook }}' >> $GITHUB_OUTPUT
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if:  steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -262,7 +262,7 @@ jobs:
           should_tag_repository: true
       - name: Assign variable
         id: secret
-        run: echo 'secret=${{ secrets.slack_production_webhook }}' >> $GITHUB_OUTPUT
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
