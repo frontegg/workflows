@@ -32,9 +32,9 @@ runs:
       run: |
         if [ -z "${{ inputs.tag_name }}" ]
         then
-          echo "::set-output name=tag_name::${{ github.ref_name }}"
+          echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=tag_name::${{ inputs.tag_name }}"
+          echo "tag_name=${{ inputs.tag_name }}" >> $GITHUB_OUTPUT
         fi
       shell: bash
     - name: Display Current variables

@@ -148,7 +148,7 @@ jobs:
         id: variables
         run: |
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ::set-output name=version::"${HYBRID_VERSION}"
+          echo "version=${HYBRID_VERSION}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
         run: |
@@ -186,7 +186,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           working-directory: code
@@ -299,7 +299,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -363,7 +363,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if:  steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -427,7 +427,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
