@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: 'Service to deploy'
-        required: false
+        description: 'Service being deploy'
+        required: true
       version:
         description: 'Version being deployed'
         required: true
