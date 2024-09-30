@@ -1,4 +1,5 @@
 name: Progressive Delivery - Canary Release
+run-name: Deploying ${{inputs.version}} to ${{inputs.service}}
 
 on: 
   workflow_dispatch:
