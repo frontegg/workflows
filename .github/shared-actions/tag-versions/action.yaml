@@ -74,7 +74,7 @@ runs:
         ${{ steps.variables.outputs.registry }}:${{ inputs.current_tag }}
         docker manifest push ${{ steps.variables.outputs.registry }}:${{ steps.variables.outputs.new-tag }}
 
-    - uses: oleksiyrudenko/gha-git-credentials@v2.1.1
+    - uses: oleksiyrudenko/gha-git-credentials@v2-latest
       with:
         global: true
         token: ${{ inputs.github_token }}
