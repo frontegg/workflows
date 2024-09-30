@@ -66,6 +66,12 @@ on:
       slack_production_webhook:
         description: 'Slack webhook token'
         required: false
+      split_api_key:
+        description: 'Split.io SDK key'
+        required: true
+      split_eval_key:
+        description: 'Split.io staging env key'
+        required: true
 
 jobs:
   params:
@@ -203,6 +209,21 @@ jobs:
       - params
       - build-and-publish-docker
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.staging_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -237,6 +258,21 @@ jobs:
       - params
       - deploy-to-staging
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.au_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -286,6 +322,21 @@ jobs:
       - params
       - deploy-to-australia
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.us_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -335,6 +386,21 @@ jobs:
       - params
       - deploy-to-us
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.global_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
