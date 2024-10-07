@@ -10,6 +10,10 @@ on:
       version:
         description: 'Version being deployed'
         required: true
+      fail:
+        description: 'Fail the deployment'
+        required: false
+        default: 'false'
 jobs:
   run-e2e-tests:
     runs-on: ubuntu-latest
@@ -17,5 +21,12 @@ jobs:
     steps:
       - name: Say that you are testing
         run: echo "Testing ${{inputs.service}} ${{inputs.version}} ...!"
-      - name: Say that testing is done
-        run: echo "Completed ${{inputs.service}} ${{inputs.version}}..."
+      - name: Wait for 7 seconds
+        run: sleep 7
+      - name: Validate failure
+        run: |
+          if [ "${{inputs.fail}}" = "true" ]; then
+            echo "Tests failed on ${{inputs.service}} ${{inputs.version}}...!"
+            exit 1
+          fi
+          echo "Completed ${{inputs.service}} ${{inputs.version}}..."
