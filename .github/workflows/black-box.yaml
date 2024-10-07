@@ -26,7 +26,7 @@ jobs:
       - name: Validate failure
         run: |
           if [ "${{inputs.fail}}" = "true" ]; then
-            echo "Tests failed!"
+            echo "Tests failed on ${{inputs.service}} ${{inputs.version}}...!"
             exit 1
           fi
           echo "Completed ${{inputs.service}} ${{inputs.version}}..."
