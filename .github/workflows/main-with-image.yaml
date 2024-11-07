@@ -237,6 +237,10 @@ jobs:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
+      - name: extract latest commits 
+        run: |
+          commits=$(git log staging..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
+          echo "diff_commits=$commits" >> $GITHUB_ENV
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -258,7 +262,9 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to staging :rocket:'
+          SLACK_MESSAGE: |
+            '${{ github.actor }} has deployed ${{ inputs.repository_name }} to staging :rocket:'
+            'Commits: ${{ env.diff_commits }}'
           SLACK_TITLE: ${{ inputs.repository_name }} to staging
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
