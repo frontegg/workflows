@@ -241,6 +241,7 @@ jobs:
         run: |
           commits=$(git log staging..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
           echo "diff_commits=$commits" >> $GITHUB_ENV
+        working-directory: code
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
