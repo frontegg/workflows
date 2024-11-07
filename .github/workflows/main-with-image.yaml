@@ -230,6 +230,7 @@ jobs:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          depth: 2
           token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
