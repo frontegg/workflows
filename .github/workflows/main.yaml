@@ -61,6 +61,12 @@ on:
       slack_production_webhook:
         description: 'Slack webhook token'
         required: false
+      SPLIT_CHECK_DEPLOYMENT_API_KEY:
+        description: 'Split.io SDK key'
+        required: true
+      SPLIT_EVAL_KEY:
+        description: 'Split.io staging env key'
+        required: true
 
 jobs:
 #  check-changes:
@@ -112,6 +118,8 @@ jobs:
       docker_hub_user: ${{ secrets.docker_hub_user }}
       admin_github_token: ${{ secrets.admin_github_token }}
       slack_production_webhook: ${{ secrets.slack_production_webhook }}
+      split_api_key: ${{ secrets.SPLIT_CHECK_DEPLOYMENT_API_KEY }}
+      split_eval_key: ${{ secrets.SPLIT_EVAL_KEY }}
 
 #  main-without-image:
 #    name: Deploy

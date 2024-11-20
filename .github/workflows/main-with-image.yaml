@@ -66,6 +66,12 @@ on:
       slack_production_webhook:
         description: 'Slack webhook token'
         required: false
+      split_api_key:
+        description: 'Split.io SDK key'
+        required: true
+      split_eval_key:
+        description: 'Split.io staging env key'
+        required: true
 
 jobs:
   params:
@@ -142,7 +148,7 @@ jobs:
         id: variables
         run: |
           HYBRID_VERSION=$(date +%Y.%-m.%-d%H%M%S)
-          echo ::set-output name=version::"${HYBRID_VERSION}"
+          echo "version=${HYBRID_VERSION}" >> $GITHUB_OUTPUT
         shell: bash
       - name: Build and push docker image with tag ${{ needs.params.outputs.short_sha }}
         run: |
@@ -180,7 +186,7 @@ jobs:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           working-directory: code
@@ -203,12 +209,29 @@ jobs:
       - params
       - build-and-publish-docker
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.staging_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
           path: code
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
+          fetch-tags: true
+          fetch-depth: 2
           token: ${{ secrets.admin_github_token }}
       - name: Checkout workflows
         uses: actions/checkout@v4
@@ -216,6 +239,11 @@ jobs:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
+      - name: extract latest commits 
+        run: |
+          commits=$(git log staging..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
+          echo "diff_commits=$commits" >> $GITHUB_ENV
+        working-directory: ./code
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -227,6 +255,23 @@ jobs:
           current_tag: ${{ needs.params.outputs.short_sha }}
           should_tag_image: true
           should_tag_repository: ${{ inputs.chart_changed }}
+      - name: Assign variable
+        id: secret
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
+      - name: Notify Slack on deployment
+        if: steps.secret.outputs.secret
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: Production
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
+          SLACK_MESSAGE: |
+            '${{ github.actor }} has deployed ${{ inputs.repository_name }} to staging :rocket:'
+            'Commits: ${{ env.diff_commits }}'
+          SLACK_TITLE: ${{ inputs.repository_name }} to staging
+          SLACK_USERNAME: ${{ github.actor }}
+          SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
+          MSG_MINIMAL: Commit,actions url
 
   deploy-to-australia:
     name: Deploy to Australia Region (Sydney)
@@ -237,6 +282,21 @@ jobs:
       - params
       - deploy-to-staging
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.au_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -263,7 +323,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -286,6 +346,21 @@ jobs:
       - params
       - deploy-to-australia
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.us_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -312,7 +387,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if:  steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2
@@ -335,6 +410,21 @@ jobs:
       - params
       - deploy-to-us
     steps:
+      - name: Check Deployment Validation
+        id: evaluator
+        uses: frontegg/split-evaluator-action@main
+        with:
+          api-key: ${{ secrets.split_api_key }}
+          key: ${{ secrets.split_eval_key }}
+          environment: ${{ inputs.global_environment_name }}
+          feature-flags: |
+            allow-deployments
+      - name: Should Deploy
+        if: ${{ env.allow-deployments != 'on' }}
+        run: |
+          echo deployments are not allowed at this time. Please contact the team
+          echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -361,7 +451,7 @@ jobs:
           should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
-        run: echo '::set-output name=secret::${{ secrets.slack_production_webhook }}'
+        run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
       - name: Notify Slack on deployment
         if: steps.secret.outputs.secret
         uses: rtCamp/action-slack-notify@v2

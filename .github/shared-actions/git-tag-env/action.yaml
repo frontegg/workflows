@@ -14,7 +14,7 @@ runs:
     - name: Set variables
       id: variables
       run: |
-        echo ::set-output name=env-name::"${{ inputs.environment }}"
+        echo "env-name=${{ inputs.environment }}" >> $GITHUB_OUTPUT
       shell: bash
     - name: Git Tag
       id: git-tag-step
