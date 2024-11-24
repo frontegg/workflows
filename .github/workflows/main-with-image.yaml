@@ -305,12 +305,18 @@ jobs:
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.admin_github_token }}
+          fetch-tags: true
+          fetch-depth: 2
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
+      - name: extract latest commits
+        run: |
+          commits=$(git log ${{ inputs.au_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
+          echo "diff_commits=$commits" >> $GITHUB_ENV
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -332,7 +338,10 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:'
+          SLACK_MESSAGE: |
+            ${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }} :rocket:
+            Commits: 
+            ${{ env.diff_commits }}
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.au_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
@@ -369,12 +378,18 @@ jobs:
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.admin_github_token }}
+          fetch-tags: true
+          fetch-depth: 2
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
+      - name: extract latest commits
+        run: |
+          commits=$(git log ${{ inputs.us_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
+          echo "diff_commits=$commits" >> $GITHUB_ENV
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -396,7 +411,10 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:'
+          SLACK_MESSAGE: |
+            ${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }} :rocket:
+            Commits: 
+            ${{ env.diff_commits }}
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.us_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
@@ -433,12 +451,18 @@ jobs:
           repository: frontegg/${{ inputs.repository_name }}
           ref: ${{ inputs.ref }}
           token: ${{ secrets.admin_github_token }}
+          fetch-tags: true
+          fetch-depth: 2
       - name: Checkout workflows
         uses: actions/checkout@v4
         with:
           repository: frontegg/workflows
           path: workflows
           ref: ${{ inputs.workflows_version }}
+      - name: extract latest commits
+        run: |
+          commits=$(git log ${{ inputs.global_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
+          echo "diff_commits=$commits" >> $GITHUB_ENV
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -460,7 +484,10 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: '${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:'
+          SLACK_MESSAGE: |
+            ${{ github.actor }} has deployed ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }} :rocket:
+            Commits: 
+            ${{ env.diff_commits }}
           SLACK_TITLE: ${{ inputs.repository_name }} to ${{ inputs.global_environment_name }}
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
