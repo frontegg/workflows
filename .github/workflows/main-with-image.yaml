@@ -267,7 +267,8 @@ jobs:
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
           SLACK_MESSAGE: |
             '${{ github.actor }} has deployed ${{ inputs.repository_name }} to staging :rocket:'
-            'Commits: ${{ env.diff_commits }}'
+            Commits: 
+            ${{ env.diff_commits }}
           SLACK_TITLE: ${{ inputs.repository_name }} to staging
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
