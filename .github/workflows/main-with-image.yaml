@@ -317,6 +317,7 @@ jobs:
         run: |
           commits=$(git log ${{ inputs.au_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
           echo "diff_commits=$commits" >> $GITHUB_ENV
+        working-directory: ./code
       - name: 'Deploy to Production AU'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -390,6 +391,7 @@ jobs:
         run: |
           commits=$(git log ${{ inputs.us_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
           echo "diff_commits=$commits" >> $GITHUB_ENV
+        working-directory: ./code
       - name: 'Deploy to Production US'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -463,6 +465,7 @@ jobs:
         run: |
           commits=$(git log ${{ inputs.global_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
           echo "diff_commits=$commits" >> $GITHUB_ENV
+        working-directory: ./code
       - name: 'Deploy to Production Global'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
