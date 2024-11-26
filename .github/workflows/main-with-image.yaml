@@ -241,9 +241,46 @@ jobs:
           ref: ${{ inputs.workflows_version }}
       - name: extract latest commits 
         run: |
-          commits=$(git log staging..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
-          echo "diff_commits=$commits" >> $GITHUB_ENV
+          commits=$(git log ${{ inputs.au_environment_name }}..master --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s")
+          echo "diff_commits<<EOF" >> $GITHUB_ENV
+          echo "$commits" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
+      - name: Extract PRs from commits
+        id: extract_prs
+        run: |
+          pr_list=""
+      
+          # Extracting SHA from each commit line
+          while IFS= read -r line; do
+          sha=$(echo $line | awk '{print $1}')
+        
+          # Find associated PR using the GitHub CLI
+          pr_number=$(gh pr list --base master --state merged --search "$sha" --json number -q '.[0].number')
+        
+          # Add the PR link to the list if found
+          if [ ! -z "$pr_number" ]; then
+            pr_list="$pr_list https://github.com/frontegg/${{ inputs.repository_name }}/pull/$pr_number"
+          fi
+          done <<< "${{ env.diff_commits }}"
+      
+          echo "pr_list=$pr_list" >> $GITHUB_ENV
+      - name: Get Jira tickets from PRs
+        id: get_jira_tickets
+        run: |
+            jira_regex='[A-Z]+-[0-9]+'
+            jira_list=""
+            pr_numbers=$(echo "${{ env.pr_list }}" | grep -oP '\d+')
+            
+            for pr in $pr_numbers; do
+              title=$(gh pr view $pr --json title -q .title)
+              if [[ $title =~ $jira_regex ]]; then
+                jira_ticket="${BASH_REMATCH[0]}"
+                jira_list="$jira_list https://frontegg.atlassian.net/browse/$jira_ticket"
+              fi
+            done
+            
+            echo "jira_list=$jira_list" >> $GITHUB_ENV
       - name: 'Deploy to staging'
         uses: ./workflows/.github/shared-actions/tag-versions
         with:
@@ -265,10 +302,15 @@ jobs:
           SLACK_CHANNEL: Production
           SLACK_COLOR: ${{ job.status }}
           SLACK_ICON: https://avatars.githubusercontent.com/u/67857107?s=40&v=4
-          SLACK_MESSAGE: |
-            '${{ github.actor }} has deployed ${{ inputs.repository_name }} to staging :rocket:'
-            Commits: 
-            ${{ env.diff_commits }}
+          SLACK_MESSAGE: '${{ github.actor }} has deployed dashboard to production-au :rocket:
+                                  Commits:
+                                  ${{ env.diff_commits }}
+
+                                  PRs deployed:
+                                  ${{ env.pr_list }}
+
+                                  Jira Tickets:
+                                  ${{ env.jira_list }}'
           SLACK_TITLE: ${{ inputs.repository_name }} to staging
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
