@@ -19,9 +19,8 @@ runs:
   using: "composite"
   steps:
     - name: Wait for ArgoCD
-      uses: whatnick/wait-action@master
-      with:
-        time: "4m"
+      run: |
+        sleep 4m
 
     - uses: clowdhaus/argo-cd-action/@main
       with:
