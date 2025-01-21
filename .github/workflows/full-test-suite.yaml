@@ -70,8 +70,10 @@ env:
   AWS_REGION: "us-east-1"
 
 permissions:
-  id-token: write # Required for requesting the JWT
-  contents: read  # Required for actions/checkout
+  checks: read
+  id-token: write
+  contents: read 
+  
   
 jobs:
   start-venv:
