@@ -1,0 +1,13 @@
+name: Sleep test
+on:
+  workflow_dispatch:
+
+jobs:
+  sleep:
+    name: sleep
+    runs-on: ubuntu-latest
+    steps:
+      - name: sleep
+        run: |
+          sleep 30s
+    
