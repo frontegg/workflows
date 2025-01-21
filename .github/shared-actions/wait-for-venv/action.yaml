@@ -21,6 +21,7 @@ runs:
     - name: Wait for ArgoCD
       run: |
         sleep 4m
+      shell: bash
 
     - uses: clowdhaus/argo-cd-action/@main
       with:
