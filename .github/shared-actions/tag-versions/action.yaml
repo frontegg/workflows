@@ -122,7 +122,7 @@ runs:
 
         echo "Operation completed."
 
-    - name: Commit and push changes
+    - name: Commit version to AppState
       shell: bash
       working-directory: appState
       run: |
