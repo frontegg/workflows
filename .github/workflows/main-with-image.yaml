@@ -255,6 +255,17 @@ jobs:
           current_tag: ${{ needs.params.outputs.short_sha }}
           should_tag_image: true
           should_tag_repository: ${{ inputs.chart_changed }}
+      - name: 'Deploy to staging'
+        uses: ./workflows/.github/shared-actions/tag-versions
+        with:
+          github_token: ${{ secrets.admin_github_token }}
+          repository_name: ${{ inputs.repository_name }}
+          environment: production-uk
+          docker_hub_user: ${{ secrets.docker_hub_user }}
+          docker_hub_password: ${{ secrets.docker_hub_password }}
+          current_tag: ${{ needs.params.outputs.short_sha }}
+          should_tag_image: true
+          should_tag_repository: ${{ inputs.chart_changed }}
       - name: Assign variable
         id: secret
         run: echo "secret=${{ secrets.slack_production_webhook }}" >> $GITHUB_OUTPUT
