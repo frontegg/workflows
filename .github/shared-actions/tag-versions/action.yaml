@@ -112,7 +112,10 @@ runs:
         # Check if file exists, if not create it with initial content
         if [ ! -f "$FILE" ]; then
         echo "File does not exist. Creating file with initial content..."
-        echo "appVersion: \"$APP_VERSION\"\nworkflowRunId: \"$$GITHUB_RUN_ID\"" > "$FILE"
+        cat <<EOF > "$FILE"
+        appVersion: "$APP_VERSION"
+        workflowRunId: "$GITHUB_RUN_ID"
+        EOF
         else
         # File exists, update the appVersion value using yq
         echo "File exists. Updating appVersion value..."
