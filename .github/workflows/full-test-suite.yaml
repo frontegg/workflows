@@ -70,10 +70,11 @@ env:
   AWS_REGION: "us-east-1"
 
 permissions:
-  checks: read
   id-token: write
-  contents: read 
-  
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
   
 jobs:
   start-venv:
