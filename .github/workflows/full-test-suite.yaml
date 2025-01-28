@@ -133,7 +133,7 @@ jobs:
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
           role-session-name: github-action-session
@@ -192,7 +192,7 @@ jobs:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
+        uses: aws-actions/configure-aws-credentials@ev4
         with:
           role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
           role-session-name: github-action-session
