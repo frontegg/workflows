@@ -16,6 +16,10 @@ on:
         required: false
         default: staging
         type: string
+      uk_environment_name:
+        required: false
+        default: production-uk
+        type: string
       au_environment_name:
         required: false
         default: production-au
@@ -30,7 +34,7 @@ on:
         type: string
     secrets:
       admin_github_token:
-        description: 'Github repository admin token'
+        description: "Github repository admin token"
         required: true
 
 jobs:
@@ -49,7 +53,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to dev ci'
+      - name: "Deploy to dev ci"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -70,7 +74,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to dev'
+      - name: "Deploy to dev"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -91,11 +95,34 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to staging'
+      - name: "Deploy to staging"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           environment: ${{ inputs.staging_environment_name }}
+
+  deploy-to-uk:
+    name: Deploy to Uk Region (London)
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.uk_environment_name }}
+    needs:
+      - deploy-to-staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: code
+      - name: Checkout workflows
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/workflows
+          path: workflows
+      - name: "Deploy to Production UK"
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.uk_environment_name }}
 
   deploy-to-australia:
     name: Deploy to Australia Region (Sydney)
@@ -114,7 +141,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to Production AU'
+      - name: "Deploy to Production AU"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -137,7 +164,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to Production US'
+      - name: "Deploy to Production US"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -160,7 +187,7 @@ jobs:
         with:
           repository: frontegg/workflows
           path: workflows
-      - name: 'Deploy to Production Global'
+      - name: "Deploy to Production Global"
         uses: ./workflows/.github/shared-actions/git-tag-env
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
