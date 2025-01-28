@@ -65,7 +65,17 @@ on:
       GH_FRONTEGG_BOT_APP_SECRET:
         description: 'Frontegg Bot Creds'
         required: true
+env:
+  BUCKET_NAME: "frontegg-test-reports"
+  AWS_REGION: "us-east-1"
 
+permissions:
+  id-token: write
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
+  
 jobs:
   start-venv:
     name: Start venv
@@ -121,6 +131,14 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
+          role-session-name: github-action-session
+          aws-region: ${{ env.AWS_REGION }}
+        
       - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-test
         with:
@@ -173,6 +191,12 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@ev4
+        with:
+          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
+          role-session-name: github-action-session
+          aws-region: ${{ env.AWS_REGION }}
       - name: Run API Tests from E2E-system-tests repo
         uses: ./.github/actions/api-tests
         with:
