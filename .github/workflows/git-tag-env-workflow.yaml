@@ -12,6 +12,10 @@ on:
         required: false
         default: dev
         type: string
+      idgw_staging_environment_name:
+        required: false
+        default: idgw-stg
+        type: string
       staging_environment_name:
         required: false
         default: staging
@@ -84,7 +88,7 @@ jobs:
     name: Deploy to staging
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.staging_environment_name }}
+      name: ${{ inputs.idgw_staging_environment_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -100,6 +104,11 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           environment: ${{ inputs.staging_environment_name }}
+      - name: "Deploy to idgw staging"
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.idgw_staging_environment_name }}
 
   deploy-to-uk:
     name: Deploy to Uk Region (London)
