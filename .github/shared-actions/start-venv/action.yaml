@@ -83,7 +83,7 @@ runs:
         venvRepositoryMainBranchName: ${{ inputs.venvRepositoryMainBranchName }}
         disableDashboard: ${{ inputs.disableDashboard }}
         branchName: ${{ inputs.ref }}
-    - name: Commit version to AppState
+    - name: Commit venv file to repo
       shell: bash
       working-directory: './venv'
       run: |
