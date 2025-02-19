@@ -21,10 +21,18 @@ on:
         required: false
         default: production-au
         type: string
+      deploy_au:
+        required: false
+        default: true
+        type: boolean
       us_environment_name:
         required: false
         default: production-us
         type: string
+      deploy_us:
+        required: false
+        default: true
+        type: boolean
       global_environment_name:
         required: false
         default: production-global
@@ -47,51 +55,51 @@ on:
         type: string
     secrets:
       npm_token:
-        description: 'Npm Token'
+        description: "Npm Token"
         required: true
       docker_hub_password:
-        description: 'Docker Hub Password'
+        description: "Docker Hub Password"
         required: true
       docker_hub_user:
-        description: 'Docker Hub User'
+        description: "Docker Hub User"
         required: true
       admin_github_token:
-        description: 'Github repository admin token'
+        description: "Github repository admin token"
         required: true
       slack_production_webhook:
-        description: 'Slack webhook token'
+        description: "Slack webhook token"
         required: false
       SPLIT_CHECK_DEPLOYMENT_API_KEY:
-        description: 'Split.io SDK key'
+        description: "Split.io SDK key"
         required: true
       SPLIT_EVAL_KEY:
-        description: 'Split.io staging env key'
+        description: "Split.io staging env key"
         required: true
 
 jobs:
-#  check-changes:
-#    name: Check Changes
-#    runs-on: ubuntu-latest
-#    outputs:
-#      code_change: ${{ steps.changes.outputs.code-change }}
-#      chart_change: ${{ steps.changes.outputs.chart-change }}
-#    steps:
-#      - name: Checkout ${{ inputs.repository_name }}
-#        uses: actions/checkout@v4
-#        with:
-#          repository: frontegg/${{ inputs.repository_name }}
-#          ref: ${{ inputs.ref }}
-#          token: ${{ secrets.admin_github_token }}
-#      - uses: AurorNZ/paths-filter@v3
-#        id: changes
-#        with:
-#          filters: |
-#            code-change:
-#              - '**'
-#              - '!k8s/**'
-#            chart-change:
-#              - '!**'
-#              - 'k8s/**'
+  #  check-changes:
+  #    name: Check Changes
+  #    runs-on: ubuntu-latest
+  #    outputs:
+  #      code_change: ${{ steps.changes.outputs.code-change }}
+  #      chart_change: ${{ steps.changes.outputs.chart-change }}
+  #    steps:
+  #      - name: Checkout ${{ inputs.repository_name }}
+  #        uses: actions/checkout@v4
+  #        with:
+  #          repository: frontegg/${{ inputs.repository_name }}
+  #          ref: ${{ inputs.ref }}
+  #          token: ${{ secrets.admin_github_token }}
+  #      - uses: AurorNZ/paths-filter@v3
+  #        id: changes
+  #        with:
+  #          filters: |
+  #            code-change:
+  #              - '**'
+  #              - '!k8s/**'
+  #            chart-change:
+  #              - '!**'
+  #              - 'k8s/**'
 
   main-with-image:
     name: Build Image and deploy
@@ -120,7 +128,6 @@ jobs:
       slack_production_webhook: ${{ secrets.slack_production_webhook }}
       split_api_key: ${{ secrets.SPLIT_CHECK_DEPLOYMENT_API_KEY }}
       split_eval_key: ${{ secrets.SPLIT_EVAL_KEY }}
-
 #  main-without-image:
 #    name: Deploy
 #    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
