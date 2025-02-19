@@ -21,6 +21,14 @@ on:
         required: false
         default: production-au
         type: string
+      deploy_au:
+        required: false
+        default: true
+        type: boolean
+      deploy_us:
+        required: false
+        default: true
+        type: boolean
       us_environment_name:
         required: false
         default: production-us
@@ -276,6 +284,7 @@ jobs:
 
   deploy-to-australia:
     name: Deploy to Australia Region (Sydney)
+    if: ${{ inputs.deploy_au }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.au_environment_name }}
@@ -361,6 +370,7 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
+    if: ${{ inputs.deploy_us }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
