@@ -113,6 +113,8 @@ jobs:
       staging_environment_name: ${{ inputs.staging_environment_name }}
       au_environment_name: ${{ inputs.au_environment_name }}
       us_environment_name: ${{ inputs.us_environment_name }}
+      deploy_us: ${{ inputs.deploy_us }}
+      deploy_au: ${{ inputs.deploy_au }}
       global_environment_name: ${{ inputs.global_environment_name }}
       build_image_script: ${{ inputs.build_image_script }}
       build_hybrid_image_script: ${{ inputs.build_hybrid_image_script }}
