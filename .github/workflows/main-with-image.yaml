@@ -370,12 +370,13 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ inputs.deploy_us }}
+    if: ${{ inputs.deploy_us && (jobs.deploy-to-australia.result == 'success' || jobs.deploy-to-australia.result == 'skipped') }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
     needs:
       - params
+      - deploy-to-staging
       - deploy-to-australia
     steps:
       - name: Check Deployment Validation
@@ -446,10 +447,12 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
+    if: ${{ jobs.deploy-to-us.result == 'success' || jobs.deploy-to-us.result == 'skipped' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
       - params
+      - deploy-to-staging
       - deploy-to-us
     steps:
       - name: Check Deployment Validation
