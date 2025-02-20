@@ -444,6 +444,19 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
           MSG_MINIMAL: Commit,actions url
 
+  test-debug:
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - params
+      - deploy-to-staging
+      - deploy-to-us
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "Check 'should_run'"
+          echo "${{ needs.deploy-to-us.result }}"
+
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
