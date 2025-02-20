@@ -446,10 +446,12 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
+    if: ${{ contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-us.result) && contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-au.result) }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
       - params
+      - deploy-to-staging
       - deploy-to-us
     steps:
       - name: Check Deployment Validation
