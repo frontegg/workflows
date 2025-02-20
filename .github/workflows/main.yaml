@@ -105,7 +105,7 @@ jobs:
     name: Build Image and deploy
     if: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
     # needs: [ check-changes ]
-    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@master
+    uses: frontegg/workflows/.github/workflows/main-with-image.yaml@wip-idgw
     with:
       tag: ${{ inputs.tag }}
       repository_name: ${{ inputs.repository_name }}
