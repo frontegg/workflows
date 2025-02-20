@@ -370,12 +370,14 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ inputs.deploy_us }}
+    if: ${{ inputs.deploy_us && contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-staging.result) && contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-australia.result) }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
+
     needs:
       - params
+      - deploy-to-staging
       - deploy-to-australia
     steps:
       - name: Check Deployment Validation
