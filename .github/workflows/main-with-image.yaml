@@ -370,7 +370,7 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ inputs.deploy_us && contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-australia.result) }}
+    if: ${{ inputs.deploy_us && (jobs.deploy-to-australia.result == 'success' || jobs.deploy-to-australia.result == 'skipped') }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
@@ -447,7 +447,7 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
-    if: ${{ contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-us.result) && contains(fromJSON('["success", "skipped"]'), jobs.deploy-to-au.result) }}
+    if: ${{ jobs.deploy-to-us.result == 'success' || jobs.deploy-to-us.result == 'skipped' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
