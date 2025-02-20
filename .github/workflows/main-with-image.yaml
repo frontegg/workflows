@@ -455,7 +455,8 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           echo "Check 'should_run'"
-          echo "${{ needs.deploy-to-us.result }}"
+          echo "deploy_to_us_result=${{ needs.deploy-to-us.result }}"
+          echo "skipped=${{ needs.deploy-to-us.result == 'success' || needs.deploy-to-us.result == 'skipped' }}"
 
   deploy-to-global:
     name: Deploy to All Global Environments
