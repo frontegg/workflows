@@ -370,7 +370,7 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ inputs.deploy_us && (needs.deploy-to-australia.result == 'success' || needs.deploy-to-australia.result == 'skipped') }}
+    if: ${{ always() && inputs.deploy_us && (needs.deploy-to-australia.result == 'success' || needs.deploy-to-australia.result == 'skipped') }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
@@ -443,20 +443,6 @@ jobs:
           SLACK_USERNAME: ${{ github.actor }}
           SLACK_WEBHOOK: ${{ secrets.slack_production_webhook }}
           MSG_MINIMAL: Commit,actions url
-
-  test-debug:
-    runs-on: ubuntu-latest
-    if: always()
-    needs:
-      - params
-      - deploy-to-staging
-      - deploy-to-us
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          echo "Check 'should_run'"
-          echo "deploy_to_us_result=${{ needs.deploy-to-us.result }}"
-          echo "skipped=${{ needs.deploy-to-us.result == 'success' || needs.deploy-to-us.result == 'skipped' }}"
 
   deploy-to-global:
     name: Deploy to All Global Environments
