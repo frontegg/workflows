@@ -182,8 +182,6 @@ jobs:
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
         with:
           context: .
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           push: true
           tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
