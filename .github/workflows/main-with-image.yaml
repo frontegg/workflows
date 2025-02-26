@@ -80,6 +80,12 @@ on:
       split_eval_key:
         description: "Split.io staging env key"
         required: true
+      checkly_api_key:
+        description: "Checkly API key"
+        required: true
+      checkly_account_id:
+        description: "Checkly account ID"
+        required: true
 
 jobs:
   params:
