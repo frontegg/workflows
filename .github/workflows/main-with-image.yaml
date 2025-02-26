@@ -310,7 +310,7 @@ jobs:
       - name: Pre Deployment Validation
         id: pre-deployment-validator
         continue-on-error: true
-        uses: frontegg/pre-deploy-workflow-checks@main
+        uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
