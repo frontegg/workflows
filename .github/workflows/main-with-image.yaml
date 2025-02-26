@@ -313,16 +313,20 @@ jobs:
           echo deployments are not allowed at this time. Please contact the team
           echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
           exit 1
+      - name: Checkout pre-deploy-workflow-checks
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/pre-deploy-workflow-checks
+          path: pre-deploy-workflow-checks
+          ref: master
+          token: ${{ secrets.admin_github_token }}
       - name: Pre Deployment Validation
         id: pre-deployment-validator
-        continue-on-error: true
-        uses: frontegg/pre-deploy-workflow-checks@master
+        uses: ./pre-deploy-workflow-checks
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.staging_environment_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.admin_github_token }}
       - name: Verify Pre Deployment Validation
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
