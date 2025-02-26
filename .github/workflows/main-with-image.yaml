@@ -321,6 +321,8 @@ jobs:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.staging_environment_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.admin_github_token }}
       - name: Verify Pre Deployment Validation
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
