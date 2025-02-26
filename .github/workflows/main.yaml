@@ -130,6 +130,9 @@ jobs:
       slack_production_webhook: ${{ secrets.slack_production_webhook }}
       split_api_key: ${{ secrets.SPLIT_CHECK_DEPLOYMENT_API_KEY }}
       split_eval_key: ${{ secrets.SPLIT_EVAL_KEY }}
+      checkly_api_key: ${{ secrets.CHECKLY_API_KEY_2 }}
+      checkly_account_id: ${{ secrets.CHECKLY_ACCOUNT_ID_2 }}
+      
 #  main-without-image:
 #    name: Deploy
 #    if: ${{ needs.check-changes.outputs.code_change == 'false' && needs.check-changes.outputs.chart_change == 'true' }}
