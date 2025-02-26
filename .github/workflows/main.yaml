@@ -75,6 +75,12 @@ on:
       SPLIT_EVAL_KEY:
         description: "Split.io staging env key"
         required: true
+      CHECKLY_API_KEY:
+        description: "Checkly API key"
+        required: true
+      CHECKLY_ACCOUNT_ID:
+        description: "Checkly account ID"
+        required: true
 
 jobs:
   #  check-changes:
@@ -130,8 +136,8 @@ jobs:
       slack_production_webhook: ${{ secrets.slack_production_webhook }}
       split_api_key: ${{ secrets.SPLIT_CHECK_DEPLOYMENT_API_KEY }}
       split_eval_key: ${{ secrets.SPLIT_EVAL_KEY }}
-      checkly_api_key: ${{ secrets.CHECKLY_API_KEY_2 }}
-      checkly_account_id: ${{ secrets.CHECKLY_ACCOUNT_ID_2 }}
+      checkly_api_key: ${{ secrets.CHECKLY_API_KEY }}
+      checkly_account_id: ${{ secrets.CHECKLY_ACCOUNT_ID }}
       
 #  main-without-image:
 #    name: Deploy
