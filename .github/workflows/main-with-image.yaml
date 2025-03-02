@@ -327,7 +327,7 @@ jobs:
       - name: Checkout stress-tests
         uses: actions/checkout@v4
         with:
-          repository: 'frontegg/private-workflows'
+          repository: 'frontegg/stress-tests'
           path: stress-tests
           token: ${{ secrets.admin_github_token }}
       - name: Run Stress Tests
