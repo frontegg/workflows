@@ -324,6 +324,16 @@ jobs:
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. Please fix the issues and try again."
+      - name: Checkout stress-tests
+        uses: actions/checkout@v4
+        with:
+          repository: 'frontegg/private-workflows'
+          path: stress-tests
+          token: ${{ secrets.admin_github_token }}
+      - name: Run Stress Tests
+        uses: ./stress-tests/.github/workflows/sug-customer-flow-test.yaml
+        with:
+          working-directory: current
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
