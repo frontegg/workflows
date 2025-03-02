@@ -324,16 +324,30 @@ jobs:
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. Please fix the issues and try again."
-      - name: Checkout stress-tests
+      - name: Checkout Stress Tests
         uses: actions/checkout@v4
         with:
           repository: 'frontegg/stress-tests'
           path: stress-tests
           token: ${{ secrets.admin_github_token }}
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
       - name: Run Stress Tests
-        uses: ./stress-tests/.github/workflows/sug-customer-flow-test.yaml
-        with:
-          working-directory: current
+        run: |
+          k6 run -o experimental-prometheus-rw --tag testid="sug-customer-flow" --out json=results.json  -c ./stress-tests/tests/options.json ./stress-tests/tests/customer-flow-sug-test.js
+        env:
+          K6_PROMETHEUS_RW_SERVER_URL: http://vmagent-vm.observability.svc:8429/api/v1/write
+          K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: false
+          K6_PROMETHEUS_RW_TREND_STATS: p(99),p(90),avg,min,max
+          CLIENT_ID: 3e17e4b7-629c-4f76-8230-9923c2098af3
+          SECRET: f0b820ff-0534-4af9-aa66-967f4a539ff5
+          ROLE_IDS: 0aef1e4b-6a1d-41e8-99b2-87e9c9495d3e
+          VENDOR_HOST: https://fronteggers.stg.frontegg.com
+          API_BASE_URL: https://api.stg.frontegg.com
+      - name: Verify Stress Test Success
+        if: failure()
+        run: |
+          echo "Stress tests failed!"
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
