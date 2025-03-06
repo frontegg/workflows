@@ -20,6 +20,10 @@ on:
         required: false
         default: staging
         type: string
+      idgw_prd_environment_name:
+        required: false
+        default: idgw-prd
+        type: string
       uk_environment_name:
         required: false
         default: production-uk
@@ -88,7 +92,7 @@ jobs:
     name: Deploy to staging
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.idgw_staging_environment_name }}
+      name: ${{ inputs.staging_environment_name }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -201,3 +205,8 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           environment: ${{ inputs.global_environment_name }}
+      - name: "Deploy to idgw prd"
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: ${{ inputs.idgw_prd_environment_name }}
