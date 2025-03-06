@@ -233,6 +233,7 @@ jobs:
 
   run-admin-box-test:
     name: "Run Admin Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
+    if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
     steps:
@@ -291,6 +292,7 @@ jobs:
 
   run-logins-test:
     name: "Run Login Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
+    if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
     steps:
@@ -350,7 +352,7 @@ jobs:
   update-trigger-status:
     name: Update trigger status
     runs-on: ubuntu-latest
-    needs: [ run-e2e-test, run-logins-test, run-admin-box-test, prepare-params ]
+    needs: [ run-e2e-test, run-e2e-test-nextjs, run-logins-test, run-admin-box-test, prepare-params ]
     if: ${{ always() && inputs.dispatch_id }}
     steps:
       - id: create_bot_token
