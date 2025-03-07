@@ -145,7 +145,7 @@ jobs:
       - name: Check Docker Image
         id: check-image
         run: |
-          if docker manifest inspect 'frontegg/${{inputs.repository_name}}:${{needs.params.outputs.short_sha}} > /dev/null 2>&1; then
+          if docker manifest inspect 'frontegg/${{inputs.repository_name}}:${{needs.params.outputs.short_sha}}' > /dev/null 2>&1; then
             echo "Docker image exists, no need to build the image"
             echo "image-exist=true" >> $GITHUB_OUTPUT
           else
