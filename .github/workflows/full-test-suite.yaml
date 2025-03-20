@@ -65,6 +65,9 @@ on:
       GH_FRONTEGG_BOT_APP_SECRET:
         description: 'Frontegg Bot Creds'
         required: true
+      DD_API_KEY:
+        description: 'Datadog API Key'
+        required: true
 env:
   BUCKET_NAME: "frontegg-test-reports"
   AWS_REGION: "us-east-1"
@@ -226,6 +229,7 @@ jobs:
           FRONTEGG_OKTA_ENV_URL: "https://trial-5528396-admin.okta.com"
           FRONTEGG_OKTA_API_KEY: ${{ inputs.OKTA_API_KEY }}
           FRONTEGG_OKTA_APP_ID: ${{ inputs.OKTA_APP_ID }}
+          DD_API_KEY: $${{ secrets.DD_API_KEY }}
 
   update-trigger-status:
     name: Update trigger status
