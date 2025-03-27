@@ -176,7 +176,6 @@ jobs:
           FRONTEGG_OKTA_APP_ID: ${{ inputs.OKTA_APP_ID }}
 
   run-api-test:
-    runs-on: ubuntu-latest
     needs: [ prepare-params ]
     if: |
       always() &&
