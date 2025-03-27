@@ -117,6 +117,7 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+      command: "test:api"
     secrets: inherit
 
   remove-venv:
