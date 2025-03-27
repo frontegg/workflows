@@ -181,55 +181,60 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    steps:
-      - name: Checkout codes
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/e2e-system-tests
-          ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      - id: create_bot_token
-        name: Create bot token
-        uses: wow-actions/use-app-token@v2
-        with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
-      - name: Run API Tests from E2E-system-tests repo
-        uses: ./.github/actions/api-tests
-        with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-          npm_token: ${{ secrets.NPM_TOKEN }}
-          server_url: ${{ needs.prepare-params.outputs.apiUrl }}
-          portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-          twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
-          twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
-          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
-          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
-          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
-          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
-          AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
-          AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
-          FRONTEGG_COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
-          FRONTEGG_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
-          FRONTEGG_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
-          FRONTEGG_COGNITO_CLIENT_SECRET: ${{ secrets.COGNITO_CLIENT_SECRET }}
-          FRONTEGG_COGNITO_ACCESS_KEY_ID: ${{ secrets.COGNITO_ACCESS_KEY_ID }}
-          FRONTEGG_COGNITO_SECRET_ACCESS_KEY: ${{ secrets.COGNITO_SECRET_ACCESS_KEY }}
-          FRONTEGG_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          FRONTEGG_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
-          FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
-          FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
-          FRONTEGG_OKTA_ENV_URL: "https://trial-5528396-admin.okta.com"
-          FRONTEGG_OKTA_API_KEY: ${{ inputs.OKTA_API_KEY }}
-          FRONTEGG_OKTA_APP_ID: ${{ inputs.OKTA_APP_ID }}
-          DD_API_KEY: $${{ secrets.DD_API_KEY }}
+    uses: frontegg/e2e-system-tests/.github/workflows/exetute-api-tests.yaml@master
+    with:
+      server_url: ${{ needs.prepare-params.outputs.apiUrl }}
+      portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+    secrets: inherit
+  #    steps:
+#      - name: Checkout codes
+#        uses: actions/checkout@v4
+#        with:
+#          repository: frontegg/e2e-system-tests
+#          ref: ${{ inputs.tests_tag }}
+#          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+#      - id: create_bot_token
+#        name: Create bot token
+#        uses: wow-actions/use-app-token@v2
+#        with:
+#          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+#          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+#      - name: Configure AWS credentials
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
+#          role-session-name: github-action-session
+#          aws-region: ${{ env.AWS_REGION }}
+#      - name: Run API Tests from E2E-system-tests repo
+#        uses: ./.github/actions/api-tests
+#        with:
+#          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+#          npm_token: ${{ secrets.NPM_TOKEN }}
+#          server_url: ${{ needs.prepare-params.outputs.apiUrl }}
+#          portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+#          twilio_account_id: ${{ secrets.TWILIO_TEST_ACCOUND_ID }}
+#          twilio_token: ${{ secrets.TWILIO_TEST_TOKEN }}
+#          MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
+#          MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
+#          MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+#          ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
+#          AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
+#          AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
+#          FRONTEGG_COGNITO_REGION: ${{ secrets.COGNITO_REGION }}
+#          FRONTEGG_COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+#          FRONTEGG_COGNITO_USER_POOL_ID: ${{ secrets.COGNITO_USER_POOL_ID }}
+#          FRONTEGG_COGNITO_CLIENT_SECRET: ${{ secrets.COGNITO_CLIENT_SECRET }}
+#          FRONTEGG_COGNITO_ACCESS_KEY_ID: ${{ secrets.COGNITO_ACCESS_KEY_ID }}
+#          FRONTEGG_COGNITO_SECRET_ACCESS_KEY: ${{ secrets.COGNITO_SECRET_ACCESS_KEY }}
+#          FRONTEGG_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+#          FRONTEGG_FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+#          FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+#          FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+#          FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+#          FRONTEGG_OKTA_ENV_URL: "https://trial-5528396-admin.okta.com"
+#          FRONTEGG_OKTA_API_KEY: ${{ inputs.OKTA_API_KEY }}
+#          FRONTEGG_OKTA_APP_ID: ${{ inputs.OKTA_APP_ID }}
+#          DD_API_KEY: $${{ secrets.DD_API_KEY }}
 
   update-trigger-status:
     name: Update trigger status
