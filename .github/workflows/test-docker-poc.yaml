@@ -2,16 +2,6 @@ name: API TESTS DOCKER POC
 on:
   workflow_call:
     inputs:
-      build_image:
-        type: boolean
-        required: false
-        description: This has no effect on this workflow any more, should be remoeved when all services will remove it
-        default: false
-      tests_tag:
-        type: string
-        required: false
-        description: Set the e2e-api tests branch tag
-        default: master
       ref:
         type: string
         required: false
