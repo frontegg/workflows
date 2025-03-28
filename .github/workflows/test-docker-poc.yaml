@@ -120,6 +120,7 @@ jobs:
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: |
         FRAMEWORK="react"  yarn run test:e2e:sanity
+      workflowName: "E2E Tests on Venv"
       runs_on: ubuntu-latest-4-cores
     secrets: inherit
 
@@ -134,6 +135,7 @@ jobs:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: "yarn test:api"
+      workflowName: "API Tests on Venv"
     secrets: inherit
 
   remove-venv:
