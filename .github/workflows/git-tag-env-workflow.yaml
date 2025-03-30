@@ -113,6 +113,11 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           environment: ${{ inputs.idgw_staging_environment_name }}
+      - name: "Deploy to venv-latest"
+        uses: ./workflows/.github/shared-actions/git-tag-env
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          environment: venv-latest
 
   deploy-to-uk:
     name: Deploy to Uk Region (London)
