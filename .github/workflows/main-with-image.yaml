@@ -464,14 +464,14 @@ jobs:
           echo deployments are not allowed at this time. Please contact the team
           echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
           exit 1
-      - name: Pre Deployment Validation
+      - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.au_environment_name }}
-      - name: Verify Pre Deployment Validation
+      - name: Verify Pre Deployment Validation - Checkly
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
