@@ -126,12 +126,6 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
 
       - name : Configure Datadog Test Optimization
         uses : datadog/test-visibility-github-action@v2
@@ -198,13 +192,7 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
-
+      
       - name : Configure Datadog Test Optimization
         uses : datadog/test-visibility-github-action@v2
         with :
@@ -268,13 +256,7 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
-
+    
       - name : Configure Datadog Test Optimization
         uses : datadog/test-visibility-github-action@v2
         with :
@@ -337,12 +319,6 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
 
       - name : Configure Datadog Test Optimization
         uses : datadog/test-visibility-github-action@v2
