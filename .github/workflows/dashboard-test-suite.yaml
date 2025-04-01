@@ -161,6 +161,7 @@ jobs:
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
           test_script: "yarn run test:e2e:regression:portal:hosted"
           # test_script: yarn run test:e2e:regression:portal:hosted  --shard=${{ matrix.shard }}/${{ matrix.total }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
 
   update-trigger-status:
     name: Update trigger status
