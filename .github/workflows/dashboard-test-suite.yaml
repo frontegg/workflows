@@ -136,6 +136,13 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
           
       - name: Run API Tests from E2E-system-tests repo
         uses: ./.github/actions/api-tests
