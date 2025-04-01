@@ -69,10 +69,6 @@ on:
         description: 'Frontegg Bot Creds'
         required: true
 
-env:
-  BUCKET_NAME: "frontegg-test-reports"
-  AWS_REGION: "us-east-1"
-
 permissions:
   id-token: write
   contents: read
