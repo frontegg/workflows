@@ -143,6 +143,7 @@ jobs:
           languages : js
           api_key : ${{secrets.DD_API_KEY}}
           site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:venv"
           
       - name: Run API Tests from E2E-system-tests repo
         uses: ./.github/actions/api-tests
