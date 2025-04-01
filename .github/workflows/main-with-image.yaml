@@ -333,18 +333,23 @@ jobs:
           echo deployments are not allowed at this time. Please contact the team
           echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
           exit 1
-      - name: Pre Deployment Validation
+          
+      - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.staging_environment_name }}
-      - name: Verify Pre Deployment Validation
+          
+      - name: Verify Pre Deployment Validation - Checkly
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
-          echo "Pre deployment validation failed. Please fix the issues and try again."
+          echo "Pre deployment validation failed. You cannot proceed."
+          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
+          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
           exit 1
+
       - name: Checkout Stress Tests
         uses: actions/checkout@v4
         with:
@@ -368,8 +373,10 @@ jobs:
       - name: Verify Stress Test Success
         if: failure()
         run: |
-          echo "Stress tests failed!"
+          echo "Stress tests failed! You cannot proceed."
+          echo "Check the stress test results here: https://github.com/frontegg/stress-tests/actions/runs/${{ github.run_id }}"
           exit 1
+          
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -457,17 +464,19 @@ jobs:
           echo deployments are not allowed at this time. Please contact the team
           echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
           exit 1
-      - name: Pre Deployment Validation
+      - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.au_environment_name }}
-      - name: Verify Pre Deployment Validation
+      - name: Verify Pre Deployment Validation - Checkly
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
-          echo "Pre deployment validation failed. Please fix the issues and try again."
+          echo "Pre deployment validation failed. You cannot proceed."
+          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
+          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
           exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
@@ -555,7 +564,9 @@ jobs:
       - name: Verify Pre Deployment Validation
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
-          echo "Pre deployment validation failed. Please fix the issues and try again."
+          echo "Pre deployment validation failed. You cannot proceed."
+          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
+          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
           exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
