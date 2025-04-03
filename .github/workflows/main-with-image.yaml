@@ -388,7 +388,7 @@ jobs:
           echo "Check the test results in the workflow logs above."
           exit 1
       - name: Skip Stress Test Message
-        if: always() && steps.stress-tests.conclusion == 'skipped'
+        if: steps.stress-tests.conclusion == 'skipped'
         run: |
           echo "Stress tests were skipped because Checkly validation failed."
           echo "Please check the Checkly issues first and then try again."
@@ -456,7 +456,7 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ always() && inputs.deploy_us && needs.deploy-to-australia.result == 'success' }}
+    if: ${{ inputs.deploy_us && needs.deploy-to-australia.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
