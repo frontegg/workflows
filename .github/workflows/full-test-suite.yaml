@@ -68,9 +68,6 @@ on:
       DD_API_KEY:
         description: 'Datadog API Key'
         required: true
-env:
-  BUCKET_NAME: "frontegg-test-reports"
-  AWS_REGION: "us-east-1"
 
 permissions:
   id-token: write

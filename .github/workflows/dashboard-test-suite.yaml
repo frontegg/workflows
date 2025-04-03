@@ -66,10 +66,6 @@ on:
         description: "Frontegg Bot Creds"
         required: true
 
-env:
-  BUCKET_NAME: "frontegg-test-reports"
-  AWS_REGION: "us-east-1"
-
 permissions:
   id-token: write
   contents: read
@@ -141,12 +137,13 @@ jobs:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:venv"
           
       - name: Run API Tests from E2E-system-tests repo
         uses: ./.github/actions/api-tests
@@ -165,6 +162,7 @@ jobs:
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
           test_script: "yarn run test:e2e:regression:portal:hosted"
           # test_script: yarn run test:e2e:regression:portal:hosted  --shard=${{ matrix.shard }}/${{ matrix.total }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
 
   update-trigger-status:
     name: Update trigger status
