@@ -341,13 +341,17 @@ jobs:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.staging_environment_name }}
-          
+        continue-on-error: false
+
       - name: Verify Pre Deployment Validation - Checkly
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
-          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
-          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
+          echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
+          echo "Failed Check ID: ${{ steps.pre-deployment-validator.outputs.failed_check_id }}"
+          echo "Checkly Dashboard URL: ${{ steps.pre-deployment-validator.outputs.checkly_dashboard_url }}"
+          echo "Error Message: ${{ steps.pre-deployment-validator.outputs.error_message }}"
+          echo "Original Failure Message: ${{ steps.pre-deployment-validator.outcome == 'failure' && steps.pre-deployment-validator.conclusion == 'failure' }}"
           exit 1
 
       - name: Checkout Stress Tests
@@ -359,6 +363,7 @@ jobs:
       - name: Setup K6
         uses: grafana/setup-k6-action@v1
       - name: Run Stress Tests
+        id: stress-tests
         run: |
           k6 run -o experimental-prometheus-rw --tag testid="sug-customer-flow" --out json=results.json  -c ./stress-tests/tests/options.json ./stress-tests/tests/customer-flow-sug-test.js
         env:
@@ -371,12 +376,23 @@ jobs:
           VENDOR_HOST: https://fronteggers.stg.frontegg.com
           API_BASE_URL: https://api.stg.frontegg.com
       - name: Verify Stress Test Success
-        if: failure()
+        if: always() && steps.stress-tests.conclusion == 'failure'
         run: |
           echo "Stress tests failed! You cannot proceed."
-          echo "Check the stress test results here: https://github.com/frontegg/stress-tests/actions/runs/${{ github.run_id }}"
+          echo "Test source: https://github.com/frontegg/stress-tests/blob/main/tests/customer-flow-sug-test.js"
+          echo "Test configuration: https://github.com/frontegg/stress-tests/blob/main/tests/options.json"
+          echo "The test was run with the following parameters:"
+          echo "- Test ID: sug-customer-flow"
+          echo "- Environment: ${{ inputs.staging_environment_name }}"
+          echo "- API Base URL: https://api.stg.frontegg.com"
+          echo "Check the test results in the workflow logs above."
           exit 1
-          
+      - name: Skip Stress Test Message
+        if: always() && steps.stress-tests.conclusion == 'skipped'
+        run: |
+          echo "Stress tests were skipped because Checkly validation failed."
+          echo "Please check the Checkly issues first and then try again."
+          exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -440,7 +456,7 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    if: ${{ always() && inputs.deploy_us && (needs.deploy-to-australia.result == 'success' || needs.deploy-to-australia.result == 'skipped') }}
+    if: ${{ always() && inputs.deploy_us && needs.deploy-to-australia.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.us_environment_name }}
@@ -475,9 +491,13 @@ jobs:
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
-          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
-          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
+          echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
+          echo "Failed Check ID: ${{ steps.pre-deployment-validator.outputs.failed_check_id }}"
+          echo "Checkly Dashboard URL: ${{ steps.pre-deployment-validator.outputs.checkly_dashboard_url }}"
+          echo "Error Message: ${{ steps.pre-deployment-validator.outputs.error_message }}"
+          echo "Original Failure Message: ${{ steps.pre-deployment-validator.outcome == 'failure' && steps.pre-deployment-validator.conclusion == 'failure' }}"
           exit 1
+
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
         with:
@@ -531,7 +551,7 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.deploy-to-us.result == 'success' || needs.deploy-to-us.result == 'skipped') }}
+    if: ${{ always() && needs.deploy-to-us.result == 'success' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
@@ -565,8 +585,11 @@ jobs:
         if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
-          echo "Check the Checkly dashboard here: https://g03dtl52.checkly-dashboards.com/"
-          echo "If checks on Checkly are red, please investigate and fix the issues and try again."
+          echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
+          echo "Failed Check ID: ${{ steps.pre-deployment-validator.outputs.failed_check_id }}"
+          echo "Checkly Dashboard URL: ${{ steps.pre-deployment-validator.outputs.checkly_dashboard_url }}"
+          echo "Error Message: ${{ steps.pre-deployment-validator.outputs.error_message }}"
+          echo "Original Failure Message: ${{ steps.pre-deployment-validator.outcome == 'failure' && steps.pre-deployment-validator.conclusion == 'failure' }}"
           exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
