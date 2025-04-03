@@ -376,7 +376,7 @@ jobs:
           VENDOR_HOST: https://fronteggers.stg.frontegg.com
           API_BASE_URL: https://api.stg.frontegg.com
       - name: Verify Stress Test Success
-        if: always() && steps.stress-tests.conclusion == 'failure'
+        if: steps.stress-tests.conclusion == 'failure'
         run: |
           echo "Stress tests failed! You cannot proceed."
           echo "Test source: https://github.com/frontegg/stress-tests/blob/main/tests/customer-flow-sug-test.js"
@@ -551,7 +551,7 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
-    if: ${{ always() && needs.deploy-to-us.result == 'success' }}
+    if: ${{ needs.deploy-to-us.result == 'success' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
