@@ -53,6 +53,10 @@ on:
         required: false
         default: ""
         type: string
+      skip_stress_tests:
+        required: false
+        default: false
+        type: boolean
     secrets:
       npm_token:
         description: "Npm Token"
@@ -128,6 +132,7 @@ jobs:
       workflows_version: ${{ inputs.workflows_version }}
       code_changed: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
       chart_changed: true # ${{ needs.check-changes.outputs.chart_change == 'true' }}
+      skip_stress_tests: ${{ inputs.skip_stress_tests }}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
