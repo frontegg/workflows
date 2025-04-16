@@ -58,6 +58,10 @@ on:
       chart_changed:
         required: true
         type: boolean
+      run_stress_tests:
+        required: false
+        default: true
+        type: boolean
     secrets:
       npm_token:
         description: "Npm Token"
@@ -355,6 +359,7 @@ jobs:
           exit 1
 
       - name: Checkout Stress Tests
+        if: inputs.run_stress_tests
         uses: actions/checkout@v4
         with:
           repository: 'frontegg/stress-tests'
@@ -364,6 +369,7 @@ jobs:
         uses: grafana/setup-k6-action@v1
       - name: Run Stress Tests
         id: stress-tests
+        if: inputs.run_stress_tests
         run: |
           k6 run -o experimental-prometheus-rw --tag testid="sug-customer-flow" --out json=results.json  -c ./stress-tests/tests/options.json ./stress-tests/tests/customer-flow-sug-test.js
         env:
@@ -376,7 +382,7 @@ jobs:
           VENDOR_HOST: https://fronteggers.stg.frontegg.com
           API_BASE_URL: https://api.stg.frontegg.com
       - name: Verify Stress Test Success
-        if: steps.stress-tests.conclusion == 'failure'
+        if: inputs.run_stress_tests && steps.stress-tests.conclusion == 'failure'
         run: |
           echo "Stress tests failed! You cannot proceed."
           echo "Test source: https://github.com/frontegg/stress-tests/blob/main/tests/customer-flow-sug-test.js"
@@ -388,7 +394,7 @@ jobs:
           echo "Check the test results in the workflow logs above."
           exit 1
       - name: Skip Stress Test Message
-        if: steps.stress-tests.conclusion == 'skipped'
+        if: inputs.run_stress_tests && steps.stress-tests.conclusion == 'skipped'
         run: |
           echo "Stress tests were skipped because Checkly validation failed."
           echo "Please check the Checkly issues first and then try again."
