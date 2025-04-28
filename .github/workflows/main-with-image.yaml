@@ -62,6 +62,11 @@ on:
         required: false
         default: true
         type: boolean
+      run_checkly_validation:
+        required: false
+        default: true
+        type: boolean
+        description: "Set to false to skip Checkly validation steps."
     secrets:
       npm_token:
         description: "Npm Token"
@@ -340,6 +345,7 @@ jobs:
           
       - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
+        if: inputs.run_checkly_validation
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
@@ -348,7 +354,7 @@ jobs:
         continue-on-error: false
 
       - name: Verify Pre Deployment Validation - Checkly
-        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
+        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' && inputs.run_checkly_validation }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
           echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
@@ -366,6 +372,7 @@ jobs:
           path: stress-tests
           token: ${{ secrets.admin_github_token }}
       - name: Setup K6
+        if: inputs.run_stress_tests
         uses: grafana/setup-k6-action@v1
       - name: Run Stress Tests
         id: stress-tests
@@ -396,8 +403,8 @@ jobs:
       - name: Skip Stress Test Message
         if: inputs.run_stress_tests && steps.stress-tests.conclusion == 'skipped'
         run: |
-          echo "Stress tests were skipped because Checkly validation failed."
-          echo "Please check the Checkly issues first and then try again."
+          echo "Stress tests were skipped. This might be due to a previous step failing (like Checkly validation if it ran)."
+          echo "Please check the workflow logs."
           exit 1
       - name: Checkout ${{ inputs.repository_name }}
         uses: actions/checkout@v4
@@ -488,13 +495,16 @@ jobs:
           exit 1
       - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
+        if: inputs.run_checkly_validation
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.au_environment_name }}
+        continue-on-error: false
+
       - name: Verify Pre Deployment Validation - Checkly
-        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
+        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' && inputs.run_checkly_validation }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
           echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
@@ -582,13 +592,14 @@ jobs:
           exit 1
       - name: Pre Deployment Validation
         id: pre-deployment-validator
+        if: inputs.run_checkly_validation
         uses: frontegg/pre-deploy-workflow-checks@master
         with:
           checkly-api-key: ${{ secrets.checkly_api_key }}
           checkly-account-id: ${{ secrets.checkly_account_id }}
           environment: ${{ inputs.us_environment_name }}
       - name: Verify Pre Deployment Validation
-        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' }}
+        if: ${{ steps.pre-deployment-validator.outputs.result == 'failure' && inputs.run_checkly_validation }}
         run: |
           echo "Pre deployment validation failed. You cannot proceed."
           echo "Failed Check Name: ${{ steps.pre-deployment-validator.outputs.failed_check_name }}"
