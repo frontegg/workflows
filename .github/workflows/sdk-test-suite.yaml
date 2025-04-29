@@ -69,10 +69,6 @@ on:
         description: 'Frontegg Bot Creds'
         required: true
 
-env:
-  BUCKET_NAME: "frontegg-test-reports"
-  AWS_REGION: "us-east-1"
-
 permissions:
   id-token: write
   contents: read
@@ -126,12 +122,15 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
+
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:staging"
+          
       - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-test
         with:
@@ -166,6 +165,7 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
 
   run-e2e-test-nextjs:
     name: "Run E2E tests ${{ inputs.client_framework }}@${{ inputs.client_framework_version || inputs.react_version }}"
@@ -189,12 +189,15 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
+      
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:staging"
+        
       - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-test
         with:
@@ -230,6 +233,8 @@ jobs:
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
           nextjs_router: ${{ matrix.nextjs_router }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
+
 
   run-admin-box-test:
     name: "Run Admin Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
@@ -249,12 +254,15 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
+    
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:staging"
+        
       - name: Run Admin Box Tests from E2E-system-tests repo
         uses: ./.github/actions/admin-box
         with:
@@ -289,6 +297,8 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
+
 
   run-logins-test:
     name: "Run Login Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
@@ -308,12 +318,15 @@ jobs:
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::527305576865:role/github-action-s3-role
-          role-session-name: github-action-session
-          aws-region: ${{ env.AWS_REGION }}
+
+      - name : Configure Datadog Test Optimization
+        uses : datadog/test-visibility-github-action@v2
+        with :
+          languages : js
+          api_key : ${{secrets.DD_API_KEY}}
+          site : datadoghq.com
+          tags: "triggering_repo:${{ github.repository }}, environment:staging"
+        
       - name: Run Login Box Tests from E2E-system-tests repo
         uses: ./.github/actions/login-box
         with:
@@ -348,6 +361,8 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
+          NODE_OPTIONS: '-r ${{env.DD_TRACE_PACKAGE}}'
+
 
   update-trigger-status:
     name: Update trigger status
