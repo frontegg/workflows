@@ -57,6 +57,11 @@ on:
         required: false
         default: true
         type: boolean
+      run_checkly_validation:
+        required: false
+        default: true
+        type: boolean
+        
     secrets:
       npm_token:
         description: "Npm Token"
@@ -133,6 +138,7 @@ jobs:
       code_changed: true # ${{ needs.check-changes.outputs.code_change == 'true' }}
       chart_changed: true # ${{ needs.check-changes.outputs.chart_change == 'true' }}
       run_stress_tests: ${{ inputs.run_stress_tests }}
+      run_checkly_validation: ${{ inputs.run_checkly_validation }}
     secrets:
       npm_token: ${{ secrets.npm_token }}
       docker_hub_password: ${{ secrets.docker_hub_password }}
