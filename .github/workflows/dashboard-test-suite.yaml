@@ -163,7 +163,7 @@ jobs:
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
-          FRONTEGG_MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           test_script: "yarn run test:e2e:regression:portal:hosted"
           # test_script: yarn run test:e2e:regression:portal:hosted  --shard=${{ matrix.shard }}/${{ matrix.total }}
 
