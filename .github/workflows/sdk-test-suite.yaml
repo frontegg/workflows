@@ -158,6 +158,7 @@ jobs:
           FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+          FRONTEGG_MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
@@ -221,6 +222,7 @@ jobs:
           FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+          FRONTEGG_MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
@@ -281,6 +283,7 @@ jobs:
           FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+          FRONTEGG_MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
@@ -340,6 +343,7 @@ jobs:
           FRONTEGG_AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
           FRONTEGG_AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
           FRONTEGG_AUTH0_SECRET: ${{ secrets.AUTH0_SECRET }}
+          FRONTEGG_MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           dispatch_id: ${{ inputs.dispatch_id }}
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
