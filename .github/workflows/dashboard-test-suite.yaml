@@ -162,7 +162,7 @@ jobs:
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-          NODE_OPTIONS: '-r {0}', env.DD_TRACE_PACKAGE
+          NODE_OPTIONS: "-r ${{ env.DD_TRACE_PACKAGE }}"
           test_script: "yarn run test:e2e:regression:portal:hosted"
           # test_script: yarn run test:e2e:regression:portal:hosted  --shard=${{ matrix.shard }}/${{ matrix.total }}
 
