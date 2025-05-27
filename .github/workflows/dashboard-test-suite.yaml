@@ -139,7 +139,6 @@ jobs:
           private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
 
       - name: Configure Datadog Test Optimization
-        if: github.ref == 'refs/heads/master'
         uses: datadog/test-visibility-github-action@v2
         with:
           languages: js
