@@ -256,7 +256,7 @@ jobs:
   update-trigger-status:
     name: Update trigger status
     runs-on: ubuntu-latest
-    needs: [run-e2e-test, start-venv, prepare-params]
+    needs: [run-portal-test, start-venv, prepare-params]
     if: ${{ always() && inputs.dispatch_id }}
     steps:
       - id: create_bot_token
@@ -284,7 +284,7 @@ jobs:
 
   remove-venv:
     name: Remove venv
-    needs: [run-e2e-test, start-venv, prepare-params]
+    needs: [run-portal-test, start-venv, prepare-params]
     if: |
       always() &&
       (needs.prepare-params.outputs.environmentId) &&
