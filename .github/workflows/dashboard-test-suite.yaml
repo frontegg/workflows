@@ -126,7 +126,7 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-      command: "yarn run test:e2e:regression:portal:hosted --max-failures=1"
+      command: "yarn run test:e2e:regression:portal:hosted"
       workflowName: "Portal Regression Tests on Venv"
     secrets: inherit
 
