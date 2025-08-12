@@ -25,11 +25,6 @@ on:
         type: string
         required: false
         description: Dispatch id to update status (repo/sha)
-      shards:
-        type: number
-        required: false
-        description: Number of shards to split tests into for parallel execution
-        default: 1
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
