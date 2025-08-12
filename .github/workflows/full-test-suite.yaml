@@ -132,13 +132,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(format('[{0}]', join(range(1, inputs.shards + 1), ','))) }}
+        shard: [1, 2, 3]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: |
-        FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ inputs.shards }}
+        FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/3
       workflowName: "E2E Tests on Venv"
       runs_on: ubuntu-latest-4-cores
     secrets: inherit
@@ -152,12 +152,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(format('[{0}]', join(range(1, inputs.shards + 1), ','))) }}
+        shard: [1, 2, 3]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-      command: "yarn test:api --shard=${{ matrix.shard }}/${{ inputs.shards }}"
+      command: "yarn test:api --shard=${{ matrix.shard }}/3"
       workflowName: "API Tests on Venv"
     secrets: inherit
 
