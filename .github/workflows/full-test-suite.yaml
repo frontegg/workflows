@@ -25,6 +25,11 @@ on:
         type: string
         required: false
         description: Dispatch id to update status (repo/sha)
+      shards:
+        type: integer
+        required: false
+        description: Number of shards to split tests into for parallel execution
+        default: 1
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -119,32 +124,40 @@ jobs:
           description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
 
   run-e2e-test:
-    name: Run E2E Tests on Venv
+    name: Run E2E Tests on Venv (Shard ${{ matrix.shard }}/${{ inputs.shards }})
     needs: [ prepare-params ]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ range(1, inputs.shards + 1) }}
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: |
-        FRAMEWORK="react"  yarn run test:e2e:sanity
+        FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ inputs.shards }}
       workflowName: "E2E Tests on Venv"
       runs_on: ubuntu-latest-4-cores
     secrets: inherit
 
   run-api-test:
-    name: Run API Tests on Venv
+    name: Run API Tests on Venv (Shard ${{ matrix.shard }}/${{ inputs.shards }})
     needs: [ prepare-params ]
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ range(1, inputs.shards + 1) }}
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-      command: "yarn test:api"
+      command: "yarn test:api --shard=${{ matrix.shard }}/${{ inputs.shards }}"
       workflowName: "API Tests on Venv"
     secrets: inherit
 
@@ -183,7 +196,8 @@ jobs:
     if: |
       always() &&
       (needs.prepare-params.outputs.environmentId) &&
-      contains(needs.*.result, 'success')
+      !contains(needs.run-api-test.result, 'failure') &&
+      !contains(needs.run-e2e-test.result, 'failure')
     uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
     with:
       venvId: ${{ needs.prepare-params.outputs.environmentId }}
