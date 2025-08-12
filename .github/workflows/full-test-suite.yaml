@@ -26,7 +26,7 @@ on:
         required: false
         description: Dispatch id to update status (repo/sha)
       shards:
-        type: integer
+        type: number
         required: false
         description: Number of shards to split tests into for parallel execution
         default: 1
@@ -132,7 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ range(1, inputs.shards + 1) }}
+        shard: ${{ fromJSON(format('[{0}]', join(range(1, inputs.shards + 1), ','))) }}
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
@@ -152,7 +152,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ range(1, inputs.shards + 1) }}
+        shard: ${{ fromJSON(format('[{0}]', join(range(1, inputs.shards + 1), ','))) }}
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
