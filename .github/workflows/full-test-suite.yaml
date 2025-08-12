@@ -124,7 +124,7 @@ jobs:
           description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
 
   run-e2e-test:
-    name: Run E2E Tests on Venv (Shard ${{ matrix.shard }}/${{ inputs.shards }})
+    name: Run E2E Tests on Venv
     needs: [ prepare-params ]
     if: |
       always() &&
@@ -144,7 +144,7 @@ jobs:
     secrets: inherit
 
   run-api-test:
-    name: Run API Tests on Venv (Shard ${{ matrix.shard }}/${{ inputs.shards }})
+    name: Run API Tests on Venv
     needs: [ prepare-params ]
     if: |
       always() &&
