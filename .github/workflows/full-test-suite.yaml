@@ -127,7 +127,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [0, 1, 2]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
@@ -147,7 +147,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [0, 1, 2]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
