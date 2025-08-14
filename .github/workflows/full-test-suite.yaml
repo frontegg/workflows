@@ -124,16 +124,12 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: |
-        FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/3
+        FRAMEWORK="react" yarn run test:e2e:sanity --maxWorkers=2
       workflowName: "E2E Tests on Venv"
       runs_on: ubuntu-latest-4-cores
     secrets: inherit
@@ -144,15 +140,11 @@ jobs:
     if: |
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2]
     uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-      command: "yarn test:api --shard=${{ matrix.shard }}/3"
+      command: "yarn test:api --maxWorkers=2"
       workflowName: "API Tests on Venv"
     secrets: inherit
 
