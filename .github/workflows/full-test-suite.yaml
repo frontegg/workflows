@@ -131,7 +131,6 @@ jobs:
       command: |
         FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "E2E Tests on Venv"
-    runs_on: ubuntu-latest-4-cores
     strategy:
       fail-fast: false
       matrix:
