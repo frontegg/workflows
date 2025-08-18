@@ -135,8 +135,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        total: [ 2 ]
-        shard: [ 1,2 ]
+        total: [ 3 ]
+        shard: [ 1,2,3]
     secrets: inherit
 
   run-api-test:
@@ -155,8 +155,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        total: [ 2 ]
-        shard: [ 1,2 ]
+        total: [ 3 ]
+        shard: [ 1,2,3 ]
     secrets: inherit
 
   update-trigger-status:
