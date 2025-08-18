@@ -131,12 +131,12 @@ jobs:
       command: |
         FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "E2E Tests on Venv"
-      runs_on: ubuntu-latest-4-cores
-      strategy:
-        fail-fast: false
-        matrix:
-          total: [ 2 ]
-          shard: [ 1,2 ]
+    runs_on: ubuntu-latest-4-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        total: [ 2 ]
+        shard: [ 1,2 ]
     secrets: inherit
 
   run-api-test:
@@ -152,12 +152,12 @@ jobs:
       command: |
         yarn test:api --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "API Tests on Venv"
-      runs_on: ubuntu-latest-4-cores
-      strategy:
-        fail-fast: false
-        matrix:
-          total: [ 2 ]
-          shard: [ 1,2 ]
+    runs_on: ubuntu-latest-4-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        total: [ 2 ]
+        shard: [ 1,2 ]
     secrets: inherit
 
   update-trigger-status:
