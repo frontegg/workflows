@@ -129,9 +129,14 @@ jobs:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
       command: |
-        FRAMEWORK="react" yarn run test:e2e:sanity --workers 2
+        FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "E2E Tests on Venv"
       runs_on: ubuntu-latest-4-cores
+      strategy:
+        fail-fast: false
+        matrix:
+          total: [ 2 ]
+          shard: [ 1,2 ]
     secrets: inherit
 
   run-api-test:
@@ -144,8 +149,15 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
-      command: "yarn test:api --workers 2"
+      command: |
+        yarn test:api --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "API Tests on Venv"
+      runs_on: ubuntu-latest-4-cores
+      strategy:
+        fail-fast: false
+        matrix:
+          total: [ 2 ]
+          shard: [ 1,2 ]
     secrets: inherit
 
   update-trigger-status:
