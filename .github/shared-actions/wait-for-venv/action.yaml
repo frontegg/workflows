@@ -27,7 +27,7 @@ runs:
       with:
         command: version
         options: --client
-        version: 3.0.12
+        version: 3.1.5
 
     - name: Login to local argocd server
       run: argocd login argocd-server.argocd.svc.cluster.local --username admin --password ${{ inputs.argocd_password }} --insecure --plaintext
