@@ -109,18 +109,10 @@ jobs:
           description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
 
   run-e2e-test:
-    name: "Run E2E tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }} (shard ${{ matrix.shard }}/${{ matrix.total }})"
+    name: "Run E2E tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
-    strategy:
-      fail-fast: false
-      matrix:
-        total: [ 3 ]
-        shard: [ 1, 2, 3 ]
-    env:
-      SHARD: ${{ matrix.shard }}
-      TOTAL_SHARDS: ${{ matrix.total }}
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -175,24 +167,16 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
-          shard: ${{ matrix.shard }}
-          total_shards: ${{ matrix.total }}
 
   run-e2e-test-nextjs:
-    name: "Run E2E tests ${{ inputs.client_framework }}@${{ inputs.client_framework_version || inputs.react_version }} (shard ${{ matrix.shard }}/${{ matrix.total }}, router: ${{ matrix.nextjs_router }})"
+    name: "Run E2E tests ${{ inputs.client_framework }}@${{ inputs.client_framework_version || inputs.react_version }}"
     if: inputs.client_framework == 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
     continue-on-error: true
     strategy:
-      fail-fast: false
-      matrix:
-        total: [ 3 ]
-        shard: [ 1, 2, 3 ]
-        nextjs_router: [ pages, app ]
-    env:
-      SHARD: ${{ matrix.shard }}
-      TOTAL_SHARDS: ${{ matrix.total }}
+        matrix:
+            nextjs_router: [ pages, app ]
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -247,23 +231,13 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
-          shard: ${{ matrix.shard }}
-          total_shards: ${{ matrix.total }}
           nextjs_router: ${{ matrix.nextjs_router }}
 
   run-admin-box-test:
-    name: "Run Admin Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }} (shard ${{ matrix.shard }}/${{ matrix.total }})"
+    name: "Run Admin Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
-    strategy:
-      fail-fast: false
-      matrix:
-        total: [ 3 ]
-        shard: [ 1, 2, 3 ]
-    env:
-      SHARD: ${{ matrix.shard }}
-      TOTAL_SHARDS: ${{ matrix.total }}
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -318,22 +292,12 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
-          shard: ${{ matrix.shard }}
-          total_shards: ${{ matrix.total }}
 
   run-logins-test:
-    name: "Run Login Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }} (shard ${{ matrix.shard }}/${{ matrix.total }})"
+    name: "Run Login Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
-    strategy:
-      fail-fast: false
-      matrix:
-        total: [ 3 ]
-        shard: [ 1, 2, 3 ]
-    env:
-      SHARD: ${{ matrix.shard }}
-      TOTAL_SHARDS: ${{ matrix.total }}
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -388,8 +352,6 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
-          shard: ${{ matrix.shard }}
-          total_shards: ${{ matrix.total }}
 
   update-trigger-status:
     name: Update trigger status
