@@ -113,6 +113,11 @@ jobs:
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
+    strategy:
+      fail-fast: false
+      matrix:
+        total_shards: [ 3 ]
+        shard_index: [ 1, 2, 3 ]
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -167,6 +172,8 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
+          shard_index: ${{ matrix.shard_index }}
+          total_shards: ${{ matrix.total_shards }}
 
   run-e2e-test-nextjs:
     name: "Run E2E tests ${{ inputs.client_framework }}@${{ inputs.client_framework_version || inputs.react_version }}"
@@ -238,6 +245,11 @@ jobs:
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
+    strategy:
+      fail-fast: false
+      matrix:
+        total_shards: [ 3 ]
+        shard_index: [ 1, 2, 3 ]
     steps:
       - name: Checkout codes
         uses: actions/checkout@v4
@@ -292,6 +304,8 @@ jobs:
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
+          shard_index: ${{ matrix.shard_index }}
+          total_shards: ${{ matrix.total_shards }}
 
   run-logins-test:
     name: "Run Login Box tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
