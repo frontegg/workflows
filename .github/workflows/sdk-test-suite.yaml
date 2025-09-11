@@ -109,7 +109,7 @@ jobs:
           description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
 
   run-e2e-test:
-    name: "Run E2E tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }}"
+    name: "Run E2E tests ${{ inputs.client_framework || 'react' }}@${{ inputs.client_framework_version || inputs.react_version }} (${{ matrix.shard }})"
     if: inputs.client_framework != 'nextjs'
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
