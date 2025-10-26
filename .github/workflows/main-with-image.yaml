@@ -573,7 +573,7 @@ jobs:
     needs:
       - params
       - deploy-to-staging
-      - deploy-to-us
+      - deploy-to-australia
     steps:
       - name: Check Deployment Validation
         id: evaluator
