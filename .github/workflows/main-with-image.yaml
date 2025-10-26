@@ -567,7 +567,7 @@ jobs:
   deploy-to-global:
     name: Deploy to All Global Environments
     runs-on: ubuntu-latest
-    if: ${{ needs.deploy-to-us.result == 'success' }}
+    if: ${{ needs.deploy-to-australia.result == 'success' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
