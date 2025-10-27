@@ -342,7 +342,7 @@ jobs:
           echo deployments are not allowed at this time. Please contact the team
           echo "::error Deployments are not allowed at this time. It's probably Raz's fault"
           exit 1
-          
+
       - name: Pre Deployment Validation - Checkly
         id: pre-deployment-validator
         if: inputs.run_checkly_validation
@@ -469,9 +469,6 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
-    concurrency:
-      group: ${{ inputs.repository_name }}-production-deployment
-      cancel-in-progress: false
     if: ${{ inputs.deploy_us && needs.deploy-to-australia.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
@@ -569,17 +566,14 @@ jobs:
 
   deploy-to-global:
     name: Deploy to All Global Environments
-    concurrency:
-      group: ${{ inputs.repository_name }}-production-deployment
-      cancel-in-progress: false
     runs-on: ubuntu-latest
-    if: ${{ needs.deploy-to-australia.result == 'success' }}
+    if: ${{ needs.deploy-to-us.result == 'success' }}
     environment:
       name: ${{ inputs.global_environment_name }}
     needs:
       - params
       - deploy-to-staging
-      - deploy-to-australia
+      - deploy-to-us
     steps:
       - name: Check Deployment Validation
         id: evaluator
