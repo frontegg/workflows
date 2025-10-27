@@ -469,6 +469,9 @@ jobs:
 
   deploy-to-us:
     name: Deploy to US East 1
+    concurrency:
+      group: ${{ inputs.repository_name }}-production-deployment
+      cancel-in-progress: false
     if: ${{ inputs.deploy_us && needs.deploy-to-australia.result == 'success' }}
     runs-on: ubuntu-latest
     environment:
@@ -566,6 +569,9 @@ jobs:
 
   deploy-to-global:
     name: Deploy to All Global Environments
+    concurrency:
+      group: ${{ inputs.repository_name }}-production-deployment
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     if: ${{ needs.deploy-to-australia.result == 'success' }}
     environment:
