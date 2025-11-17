@@ -67,20 +67,43 @@ jobs:
                               .map(s => s.replace(/^!\s+/, "!").trim())
                               .filter(x => x !== "")
                               .map(s => `${imageName}:${s}`);
-            return { tags, primaryTag: tags[0] || `${imageName}:latest` };
+            const latestTag = `${imageName}:latest`;
+            return { tags, primaryTag: tags[0] || latestTag, latestTag, imageName };
       - name: Check if Docker Image exists
         id: check-image
         run: |
           PRIMARY_TAG="${{ fromJSON(steps.image-tags.outputs.result).primaryTag }}"
+          LATEST_TAG="${{ fromJSON(steps.image-tags.outputs.result).latestTag }}"
+          IMAGE_NAME="${{ fromJSON(steps.image-tags.outputs.result).imageName }}"
+          
+          echo "Checking if image $PRIMARY_TAG exists..."
           if docker manifest inspect "$PRIMARY_TAG" > /dev/null 2>&1; then
-            echo "Docker image $PRIMARY_TAG exists, skipping build"
+            echo "✓ Docker image $PRIMARY_TAG exists, skipping build"
             echo "image-exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "Docker image $PRIMARY_TAG does not exist, will build"
+            echo "use-latest=false" >> $GITHUB_OUTPUT
+          elif docker manifest inspect "$LATEST_TAG" > /dev/null 2>&1; then
+            echo "✓ Docker image $PRIMARY_TAG does not exist, but $LATEST_TAG exists"
+            echo "Will tag $LATEST_TAG as $PRIMARY_TAG instead of rebuilding"
             echo "image-exists=false" >> $GITHUB_OUTPUT
+            echo "use-latest=true" >> $GITHUB_OUTPUT
+          else
+            echo "✗ Docker image $PRIMARY_TAG does not exist, will build with cache"
+            echo "image-exists=false" >> $GITHUB_OUTPUT
+            echo "use-latest=false" >> $GITHUB_OUTPUT
+            echo "Note: Even if image doesn't exist, Docker layer cache will speed up the build"
           fi
+      - name: Tag latest image as new tag
+        if: steps.check-image.outputs.use-latest == 'true'
+        run: |
+          PRIMARY_TAG="${{ fromJSON(steps.image-tags.outputs.result).primaryTag }}"
+          LATEST_TAG="${{ fromJSON(steps.image-tags.outputs.result).latestTag }}"
+          echo "Tagging $LATEST_TAG as $PRIMARY_TAG..."
+          docker pull "$LATEST_TAG"
+          docker tag "$LATEST_TAG" "$PRIMARY_TAG"
+          docker push "$PRIMARY_TAG"
+          echo "✓ Successfully tagged and pushed $PRIMARY_TAG from $LATEST_TAG"
       - name: Run build and push docker image action
-        if: steps.check-image.outputs.image-exists != 'true'
+        if: steps.check-image.outputs.image-exists != 'true' && steps.check-image.outputs.use-latest != 'true'
         uses: ./workflows/.github/shared-actions/build-publish-image
         with:
           image: ${{ inputs.image }}
@@ -90,3 +113,17 @@ jobs:
           npm_token: ${{ secrets.npm_token }}
           docker_hub_user: ${{ secrets.docker_hub_user }}
           docker_hub_password: ${{ secrets.docker_hub_password }}
+      - name: Update latest tag after build
+        if: steps.check-image.outputs.image-exists != 'true' && steps.check-image.outputs.use-latest != 'true'
+        run: |
+          PRIMARY_TAG="${{ fromJSON(steps.image-tags.outputs.result).primaryTag }}"
+          LATEST_TAG="${{ fromJSON(steps.image-tags.outputs.result).latestTag }}"
+          if [ "$PRIMARY_TAG" != "$LATEST_TAG" ]; then
+            echo "Updating $LATEST_TAG to point to $PRIMARY_TAG..."
+            docker pull "$PRIMARY_TAG"
+            docker tag "$PRIMARY_TAG" "$LATEST_TAG"
+            docker push "$LATEST_TAG"
+            echo "✓ Successfully updated $LATEST_TAG"
+          else
+            echo "Primary tag is already latest, no update needed"
+          fi
