@@ -71,5 +71,5 @@ runs:
         build-args: |
           NPM_TOKEN=${{ inputs.npm_token }}
         tags: ${{ join( fromJSON(steps.params.outputs.result).tags, ',' ) }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        # cache-from: type=gha
+        # cache-to: type=gha,mode=max
