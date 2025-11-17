@@ -56,7 +56,7 @@ jobs:
           # sudo rm -rf /usr/share/dotnet
 
           # # Remove Swift toolchain
-          # sudo rm -rf /usr/share/swift
+          sudo rm -rf /usr/share/swift
 
           # # Remove Haskell (GHC)
           # sudo rm -rf /usr/local/.ghcup
@@ -65,7 +65,7 @@ jobs:
           # sudo rm -rf /usr/local/julia*
 
           # # Remove Android SDKs
-          # sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/lib/android
 
           # # Remove Chromium (optional if not using for browser tests)
           # sudo rm -rf /usr/local/share/chromium
