@@ -179,6 +179,8 @@ jobs:
           context: .
           push: true
           tags: ${{fromJSON(steps.params.outputs.result).image}}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   wait:
     name: waiting for venv readiness
