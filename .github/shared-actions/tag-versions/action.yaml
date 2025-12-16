@@ -149,7 +149,7 @@ runs:
               git rebase --abort >/dev/null 2>&1 || true
               RETRY_COUNT=$((RETRY_COUNT + 1))
               if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-                sleep $((2 ** RETRY_COUNT))  # Exponential backoff: 2, 4, 8, 16 seconds
+                sleep $((2 ** RETRY_COUNT))
               fi
               continue
             fi
