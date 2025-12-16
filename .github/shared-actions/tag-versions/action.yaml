@@ -141,8 +141,19 @@ runs:
           PUSH_SUCCESS=false
 
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            # If a previous attempt left a rebase in-progress, abort it so we can retry cleanly.
+            git rebase --abort >/dev/null 2>&1 || true
+
             git fetch origin
-            git rebase origin/master
+            if ! git rebase origin/master; then
+              echo "Rebase failed (likely due to parallel updates). Aborting rebase and retrying..."
+              git rebase --abort >/dev/null 2>&1 || true
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                sleep $((2 ** RETRY_COUNT))  # Exponential backoff: 2, 4, 8, 16 seconds
+              fi
+              continue
+            fi
 
             if git push origin master; then
               PUSH_SUCCESS=true
