@@ -134,9 +134,33 @@ runs:
         git add .
         if ! git diff --cached --exit-code; then
           git commit -m "Update appVersion in AppState with ${{ inputs.current_tag }}"
-          git fetch origin
-          git rebase origin/master
-          git push origin master
+
+          # Retry logic for parallel deployments
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          PUSH_SUCCESS=false
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            git fetch origin
+            git rebase origin/master
+
+            if git push origin master; then
+              PUSH_SUCCESS=true
+              echo "Successfully pushed to AppState repository"
+              break
+            else
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                echo "Push failed, retrying ($RETRY_COUNT/$MAX_RETRIES)..."
+                sleep $((2 ** RETRY_COUNT))  # Exponential backoff: 2, 4, 8, 16 seconds
+              fi
+            fi
+          done
+
+          if [ "$PUSH_SUCCESS" = false ]; then
+            echo "Failed to push after $MAX_RETRIES attempts"
+            exit 1
+          fi
         else
           echo "No changes to commit"
         fi
