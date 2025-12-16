@@ -135,7 +135,6 @@ runs:
         if ! git diff --cached --exit-code; then
           git commit -m "Update appVersion in AppState with ${{ inputs.current_tag }}"
 
-          # Retry logic for parallel deployments
           MAX_RETRIES=5
           RETRY_COUNT=0
           PUSH_SUCCESS=false
