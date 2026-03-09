@@ -128,6 +128,7 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+      tests_tag: ${{ inputs.tests_tag }}
       command: |
         FRAMEWORK="react" yarn run test:e2e:sanity --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "E2E Tests on Venv"
@@ -149,6 +150,7 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+      tests_tag: ${{ inputs.tests_tag }}
       command: |
         yarn test:api --shard=${{ matrix.shard }}/${{ matrix.total }}
       workflowName: "API Tests on Venv"
