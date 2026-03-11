@@ -186,6 +186,7 @@ jobs:
           tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
 
   check-build-docker-results:
     if: ${{ always() }}
