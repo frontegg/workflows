@@ -179,6 +179,8 @@ jobs:
           context: .
           push: true
           tags: ${{fromJSON(steps.params.outputs.result).image}}
+          build-args: |
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
 
   wait:
     name: waiting for venv readiness
