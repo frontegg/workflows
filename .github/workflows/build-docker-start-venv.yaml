@@ -180,7 +180,6 @@ jobs:
           push: true
           tags: ${{fromJSON(steps.params.outputs.result).image}}
           build-args: |
-            COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
 
   wait:
