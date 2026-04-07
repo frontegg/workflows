@@ -285,8 +285,8 @@ jobs:
       - name: extract latest commits
         run: |
           echo "diff_commits<<EOF" >> $GITHUB_ENV
-          git fetch origin staging || true
-          git log staging..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV || true
+          git fetch origin staging --depth=1
+          git log origin/staging..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
@@ -427,8 +427,8 @@ jobs:
       - name: extract latest commits
         run: |
           echo "diff_commits<<EOF" >> $GITHUB_ENV
-          git fetch origin ${{ inputs.au_environment_name }} || true
-          git log ${{ inputs.au_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV || true
+          git fetch origin ${{ inputs.au_environment_name }} --depth=1
+          git log origin/${{ inputs.au_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
@@ -538,8 +538,8 @@ jobs:
       - name: extract latest commits
         run: |
           echo "diff_commits<<EOF" >> $GITHUB_ENV
-          git fetch origin ${{ inputs.us_environment_name }} || true
-          git log ${{ inputs.us_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV || true
+          git fetch origin ${{ inputs.us_environment_name }} --depth=1
+          git log origin/${{ inputs.us_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
@@ -635,8 +635,8 @@ jobs:
       - name: extract latest commits
         run: |
           echo "diff_commits<<EOF" >> $GITHUB_ENV
-          git fetch origin ${{ inputs.global_environment_name }} || true
-          git log ${{ inputs.global_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV || true
+          git fetch origin ${{ inputs.global_environment_name }} --depth=1
+          git log origin/${{ inputs.global_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
