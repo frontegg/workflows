@@ -284,8 +284,10 @@ jobs:
           ref: ${{ inputs.workflows_version }}
       - name: extract latest commits
         run: |
-          commits=$(git log staging..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
-          echo "diff_commits=$commits" >> $GITHUB_ENV
+          echo "diff_commits<<EOF" >> $GITHUB_ENV
+          git log staging..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
       - name: "Deploy to staging"
         uses: ./workflows/.github/shared-actions/tag-versions
@@ -423,8 +425,10 @@ jobs:
           ref: ${{ inputs.workflows_version }}
       - name: extract latest commits
         run: |
-          commits=$(git log ${{ inputs.au_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
-          echo "diff_commits=$commits" >> $GITHUB_ENV
+          echo "diff_commits<<EOF" >> $GITHUB_ENV
+          git log ${{ inputs.au_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
       - name: "Deploy to Production AU"
         uses: ./workflows/.github/shared-actions/tag-versions
@@ -531,8 +535,10 @@ jobs:
           ref: ${{ inputs.workflows_version }}
       - name: extract latest commits
         run: |
-          commits=$(git log ${{ inputs.us_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
-          echo "diff_commits=$commits" >> $GITHUB_ENV
+          echo "diff_commits<<EOF" >> $GITHUB_ENV
+          git log ${{ inputs.us_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
       - name: "Deploy to Production US"
         uses: ./workflows/.github/shared-actions/tag-versions
@@ -625,8 +631,10 @@ jobs:
           ref: ${{ inputs.workflows_version }}
       - name: extract latest commits
         run: |
-          commits=$(git log ${{ inputs.global_environment_name }}..master  --pretty=format:"%C(auto)%h | %C(bold blue)%an | %C(green)%ar | %C(reset)%s" | tee)
-          echo "diff_commits=$commits" >> $GITHUB_ENV
+          echo "diff_commits<<EOF" >> $GITHUB_ENV
+          git log ${{ inputs.global_environment_name }}..master --pretty=format:"%h | %an | %ar | %s" >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
         working-directory: ./code
       - name: "Deploy to Production Global"
         uses: ./workflows/.github/shared-actions/tag-versions
