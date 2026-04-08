@@ -212,6 +212,7 @@ jobs:
           for i in $(seq 1 30); do
             curl -sf http://localhost:4873/-/ping && break || sleep 1
           done
+          curl -sf http://localhost:4873/-/ping || { echo "ERROR: Verdaccio did not start"; exit 1; }
       - name: Enable Corepack
         if: ${{ inputs.useVerdaccio }}
         run: corepack enable
@@ -228,17 +229,14 @@ jobs:
           ref: ${{ inputs.templateAndLibsBranch }}
           path: _shadow-libs
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          fetch-depth: 0
       - name: Install library dependencies
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
         run: yarn install --immutable || YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Build all library packages
-        if: ${{ inputs.useVerdaccio }}
-        working-directory: _shadow-libs
-        run: yarn build:no-cache
-      - name: Commit post-build state
+      - name: Commit post-install state
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
         run: |
@@ -246,36 +244,52 @@ jobs:
           git config user.name "shadow-agent"
           git add -A
           if ! git diff --cached --exit-code; then
-            git commit -m "chore: post-build"
+            git commit -m "chore: post-install"
           fi
-      - name: Register Verdaccio user and token
+      - name: Detect changed packages
         if: ${{ inputs.useVerdaccio }}
+        id: lerna-changed
+        working-directory: _shadow-libs
+        run: |
+          CHANGED_JSON=$(npx lerna changed --json 2>/dev/null || echo "[]")
+          echo "Changed packages: ${CHANGED_JSON}"
+
+          if [ "${CHANGED_JSON}" = "[]" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+
+            SCOPES=$(echo "${CHANGED_JSON}" | node -e "
+              const pkgs = JSON.parse(require('fs').readFileSync(0,'utf8'));
+              process.stdout.write(pkgs.map(p => '--scope ' + p.name).join(' '));
+            ")
+            echo "scopes=${SCOPES}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build changed packages and their dependencies
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        working-directory: _shadow-libs
+        run: |
+          echo "Building: ${{ steps.lerna-changed.outputs.scopes }}"
+          npx lerna run build --no-cache ${{ steps.lerna-changed.outputs.scopes }} --include-dependencies
+      - name: Register Verdaccio user and token
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         run: |
           REG_BODY="$(curl -sf -X PUT "http://localhost:4873/-/user/org.couchdb.user:shadow" \
             -H "Content-Type: application/json" \
             -d '{"name":"shadow","password":"shadow","email":"shadow@frontegg.com","type":"user"}')"
           echo "VERDACCIO_NPM_TOKEN=$(echo "${REG_BODY}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token")" >> "$GITHUB_ENV"
       - name: Publish changed packages to Verdaccio
-        if: ${{ inputs.useVerdaccio }}
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         working-directory: _shadow-libs
         run: |
-          CHANGED=$(npx lerna changed --json 2>/dev/null || echo "[]")
-          echo "Changed packages: ${CHANGED}"
-
-          if [ "$CHANGED" = "[]" ]; then
-            echo "No packages changed — Verdaccio will proxy everything from npmjs"
-            exit 0
-          fi
-
           echo "//localhost:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
 
           npx lerna version prerelease \
             --no-push \
-            --no-git-tag-version \
             --preid "venv.${{ github.run_number }}" \
             --yes
 
-          npx lerna publish from-git \
+          npx lerna publish from-package \
             --registry http://localhost:4873 \
             --no-verify-access \
             --yes
