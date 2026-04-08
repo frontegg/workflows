@@ -353,6 +353,10 @@ jobs:
           fi
           if [ -f yarn.lock ]; then
             LOCKFILE="yarn.lock"
+            # Yarn Berry reads scoped registry from .yarnrc.yml (npmScopes), not from .npmrc; without this,
+            # yarn up resolves @frontegg to registry.npmjs.org and the prerelease version 404s.
+            yarn config set npmScopes.frontegg.npmRegistryServer "http://localhost:4873"
+            yarn config set npmScopes.frontegg.npmAuthToken "fake-token"
             upgrade_cmd() { yarn up "$1@${SHADOW_VERSION}"; }
           elif [ -f package-lock.json ]; then
             LOCKFILE="package-lock.json"
