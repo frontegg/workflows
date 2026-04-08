@@ -229,7 +229,10 @@ jobs:
           ref: ${{ inputs.templateAndLibsBranch }}
           path: _shadow-libs
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-          fetch-depth: 0
+      - name: Fetch master ref for lerna comparison
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: git fetch origin master --depth=1
       - name: Install library dependencies
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
@@ -251,7 +254,7 @@ jobs:
         id: lerna-changed
         working-directory: _shadow-libs
         run: |
-          CHANGED_JSON=$(npx lerna changed --json 2>/dev/null || echo "[]")
+          CHANGED_JSON=$(npx lerna changed --since origin/master --json 2>/dev/null || echo "[]")
           echo "Changed packages: ${CHANGED_JSON}"
 
           if [ "${CHANGED_JSON}" = "[]" ]; then
@@ -259,11 +262,12 @@ jobs:
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
 
-            SCOPES=$(echo "${CHANGED_JSON}" | node -e "
+            echo "${CHANGED_JSON}" | node -e "
               const pkgs = JSON.parse(require('fs').readFileSync(0,'utf8'));
-              process.stdout.write(pkgs.map(p => '--scope ' + p.name).join(' '));
-            ")
-            echo "scopes=${SCOPES}" >> "$GITHUB_OUTPUT"
+              const scopes = pkgs.map(p => '--scope ' + p.name).join(' ');
+              const names = pkgs.map(p => p.name).join(',');
+              process.stdout.write('scopes=' + scopes + '\n' + 'names=' + names + '\n');
+            " >> "$GITHUB_OUTPUT"
           fi
       - name: Build changed packages and their dependencies
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
@@ -285,6 +289,7 @@ jobs:
           echo "//localhost:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
 
           npx lerna version prerelease \
+            --force-publish=${{ steps.lerna-changed.outputs.names }} \
             --no-push \
             --preid "venv.${{ github.run_number }}" \
             --yes
