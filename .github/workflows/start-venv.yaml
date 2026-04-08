@@ -230,7 +230,7 @@ jobs:
           path: _shadow-libs
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           fetch-depth: 0
-      - name: Fetch master ref for lerna comparison
+      - name: Fetch master ref for affected comparison
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
         run: git fetch origin master
@@ -270,20 +270,16 @@ jobs:
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
           else
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
-
-            echo "${CHANGED_JSON}" | node -e "
+            NAMES=$(echo "${CHANGED_JSON}" | node -e "
               const pkgs = JSON.parse(require('fs').readFileSync(0,'utf8'));
-              const scopes = pkgs.map(p => '--scope ' + p.name).join(' ');
-              const names = pkgs.map(p => p.name).join(',');
-              process.stdout.write('scopes=' + scopes + '\n' + 'names=' + names + '\n');
-            " >> "$GITHUB_OUTPUT"
+              process.stdout.write(pkgs.map(p => p.name).join(','));
+            ")
+            echo "names=${NAMES}" >> "$GITHUB_OUTPUT"
           fi
-      - name: Build changed packages and their dependencies
+      - name: Build affected packages
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         working-directory: _shadow-libs
-        run: |
-          echo "Building: ${{ steps.lerna-changed.outputs.scopes }}"
-          npx lerna run build --no-cache ${{ steps.lerna-changed.outputs.scopes }} --include-dependencies
+        run: yarn build:ci
       - name: Register Verdaccio user and token
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         run: |
@@ -312,7 +308,7 @@ jobs:
         run: rm -rf _shadow-libs
       - name: Check Docker Image
         id: check-image
-        if: ${{ !inputs.useVerdaccio }}
+        if: ${{ !inputs.useVerdaccio || steps.lerna-changed.outputs.has_changes != 'true' }}
         run: |
           if docker manifest inspect ${{fromJSON(steps.params.outputs.result).venvImage}} > /dev/null 2>&1; then
             echo "Docker image exists, no need to build the image"
@@ -324,7 +320,7 @@ jobs:
       - name: Generate npmrc
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
-          if [ "${{ inputs.useVerdaccio }}" = "true" ]; then
+          if [ "${{ inputs.useVerdaccio }}" = "true" ] && [ "${{ steps.lerna-changed.outputs.has_changes }}" = "true" ]; then
             echo '@frontegg:registry=http://localhost:4873' >> .npmrc
             echo '//localhost:4873/:_authToken=fake-token' >> .npmrc
           fi
@@ -340,7 +336,7 @@ jobs:
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
       - name: Build and push (Verdaccio)
         uses: docker/build-push-action@v6
-        if: ${{ inputs.useVerdaccio }}
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         with:
           context: .
           push: true
