@@ -351,30 +351,32 @@ jobs:
             echo "::error::Missing published Verdaccio version"
             exit 1
           fi
-          if [ -f yarn.lock ]; then
-            LOCKFILE="yarn.lock"
-            # Yarn Berry reads scoped registry from .yarnrc.yml (npmScopes), not from .npmrc; without this,
-            # yarn up resolves @frontegg to registry.npmjs.org and the prerelease version 404s.
+          # Yarn Berry ignores .npmrc scoped registries; patch .yarnrc.yml when present
+          if [ -f .yarnrc.yml ]; then
             yarn config set npmScopes.frontegg.npmRegistryServer "http://localhost:4873"
             yarn config set npmScopes.frontegg.npmAuthToken "fake-token"
-            upgrade_cmd() { yarn up "$1@${SHADOW_VERSION}"; }
-          elif [ -f package-lock.json ]; then
-            LOCKFILE="package-lock.json"
-            upgrade_cmd() { npm install "$1@${SHADOW_VERSION}"; }
-          else
-            echo "::warning::No yarn.lock or package-lock.json found; skipping lockfile bump"
-            exit 0
           fi
-          echo "Detected ${LOCKFILE}"
-          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
-          for pkg in "${PKGS[@]}"; do
-            if ! grep -qF "${pkg}" "${LOCKFILE}"; then
-              echo "Skipping ${pkg}; not referenced in ${LOCKFILE}"
-              continue
-            fi
-            echo "Upgrading ${pkg} to ${SHADOW_VERSION}"
-            upgrade_cmd "${pkg}"
-          done
+          # Pin changed packages via resolutions (Yarn 1 + Berry) and overrides (npm)
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
+            const names = '${{ steps.lerna-changed.outputs.names }}'.split(',');
+            const version = process.env.SHADOW_VERSION;
+            const pins = {};
+            names.forEach(n => { pins[n] = version; });
+            pkg.resolutions = { ...pkg.resolutions, ...pins };
+            pkg.overrides = { ...pkg.overrides, ...pins };
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('Pinned packages:', JSON.stringify(pins));
+          "
+          # Re-install to update lockfile with pinned versions
+          if [ -f yarn.lock ]; then
+            YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+          elif [ -f package-lock.json ]; then
+            npm install
+          else
+            echo "::warning::No lockfile found; skipping install"
+          fi
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
