@@ -256,12 +256,12 @@ jobs:
         working-directory: _shadow-libs
         run: |
           set +e
-          CHANGED_JSON=$(npx lerna changed --since origin/master --json 2>lerna-changed.stderr)
+          CHANGED_JSON=$(npx lerna list --since origin/master --all --json 2>lerna-list.stderr)
           LERNA_EXIT=$?
           set -e
           if [ "${LERNA_EXIT}" -ne 0 ]; then
-            echo "::warning::lerna changed exited ${LERNA_EXIT}; stderr:"
-            cat lerna-changed.stderr || true
+            echo "::warning::lerna list --since exited ${LERNA_EXIT}; stderr:"
+            cat lerna-list.stderr || true
             CHANGED_JSON="[]"
           fi
           echo "Changed packages: ${CHANGED_JSON}"
