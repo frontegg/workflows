@@ -46,6 +46,16 @@ on:
         required: false
         description: 'Set to true in order to trigger slack notification'
         default: true
+      useVerdaccio:
+        type: boolean
+        required: false
+        description: 'Build Docker with custom @frontegg packages from a template-and-libs branch via local Verdaccio'
+        default: false
+      templateAndLibsBranch:
+        type: string
+        required: false
+        description: 'Branch of frontegg/template-and-libs to build and publish to local Verdaccio (only used when useVerdaccio is true)'
+        default: ''
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -164,8 +174,110 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_ACTION_USER }}
           password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+      - name: Write Verdaccio config
+        if: ${{ inputs.useVerdaccio }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          mkdir -p /tmp/verdaccio
+          cat > /tmp/verdaccio/config.yaml <<EOF
+          storage: /verdaccio/storage/data
+          auth:
+            htpasswd:
+              file: /verdaccio/storage/htpasswd
+          uplinks:
+            npmjs:
+              url: https://registry.npmjs.org/
+              auth:
+                type: bearer
+                token: ${NPM_TOKEN}
+          packages:
+            '@frontegg/*':
+              access: \$all
+              publish: \$all
+              proxy: npmjs
+            '**':
+              access: \$all
+              publish: \$all
+              proxy: npmjs
+          listen: 0.0.0.0:4873
+          EOF
+          sed -i 's/^          //' /tmp/verdaccio/config.yaml
+      - name: Start Verdaccio
+        if: ${{ inputs.useVerdaccio }}
+        run: |
+          docker run -d --name verdaccio -p 4873:4873 \
+            -v /tmp/verdaccio/config.yaml:/verdaccio/conf/config.yaml \
+            verdaccio/verdaccio
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4873/-/ping && break || sleep 1
+          done
+      - name: Enable Corepack
+        if: ${{ inputs.useVerdaccio }}
+        run: corepack enable
+      - name: Setup Node
+        if: ${{ inputs.useVerdaccio }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+      - name: Checkout template-and-libs
+        if: ${{ inputs.useVerdaccio }}
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/template-and-libs
+          ref: ${{ inputs.templateAndLibsBranch }}
+          path: _shadow-libs
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+      - name: Install library dependencies
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: yarn install --immutable || YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Build all library packages
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: yarn build:no-cache
+      - name: Register Verdaccio user and token
+        if: ${{ inputs.useVerdaccio }}
+        run: |
+          REG_BODY="$(curl -sf -X PUT "http://localhost:4873/-/user/org.couchdb.user:shadow" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"shadow","password":"shadow","email":"shadow@frontegg.com","type":"user"}')"
+          echo "VERDACCIO_NPM_TOKEN=$(echo "${REG_BODY}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token")" >> "$GITHUB_ENV"
+      - name: Publish changed packages to Verdaccio
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: |
+          git config user.email "shadow@frontegg.com"
+          git config user.name "shadow-agent"
+
+          CHANGED=$(npx lerna changed --json 2>/dev/null || echo "[]")
+          echo "Changed packages: ${CHANGED}"
+
+          if [ "$CHANGED" = "[]" ]; then
+            echo "No packages changed — Verdaccio will proxy everything from npmjs"
+            exit 0
+          fi
+
+          echo "//localhost:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
+
+          npx lerna version prerelease \
+            --no-push \
+            --no-git-tag-version \
+            --preid "venv.${{ github.run_number }}" \
+            --yes
+
+          npx lerna publish from-git \
+            --registry http://localhost:4873 \
+            --no-verify-access \
+            --yes
+      - name: Clean up shadow libs from build context
+        if: ${{ inputs.useVerdaccio }}
+        run: rm -rf _shadow-libs
       - name: Check Docker Image
         id: check-image
+        if: ${{ !inputs.useVerdaccio }}
         run: |
           if docker manifest inspect ${{fromJSON(steps.params.outputs.result).venvImage}} > /dev/null 2>&1; then
             echo "Docker image exists, no need to build the image"
@@ -177,12 +289,27 @@ jobs:
       - name: Generate npmrc
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          if [ "${{ inputs.useVerdaccio }}" = "true" ]; then
+            echo '@frontegg:registry=http://localhost:4873' >> .npmrc
+            echo '//localhost:4873/:_authToken=fake-token' >> .npmrc
+          fi
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
         with:
           context: .
           push: true
+          tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venvImage}}
+          build-args: |
+            COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+      - name: Build and push (Verdaccio)
+        uses: docker/build-push-action@v6
+        if: ${{ inputs.useVerdaccio }}
+        with:
+          context: .
+          push: true
+          network: host
           tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
