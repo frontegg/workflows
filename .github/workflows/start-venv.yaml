@@ -229,10 +229,11 @@ jobs:
           ref: ${{ inputs.templateAndLibsBranch }}
           path: _shadow-libs
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          fetch-depth: 0
       - name: Fetch master ref for lerna comparison
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
-        run: git fetch origin master --depth=1
+        run: git fetch origin master
       - name: Install library dependencies
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
@@ -254,7 +255,15 @@ jobs:
         id: lerna-changed
         working-directory: _shadow-libs
         run: |
-          CHANGED_JSON=$(npx lerna changed --since origin/master --json 2>/dev/null || echo "[]")
+          set +e
+          CHANGED_JSON=$(npx lerna changed --since origin/master --json 2>lerna-changed.stderr)
+          LERNA_EXIT=$?
+          set -e
+          if [ "${LERNA_EXIT}" -ne 0 ]; then
+            echo "::warning::lerna changed exited ${LERNA_EXIT}; stderr:"
+            cat lerna-changed.stderr || true
+            CHANGED_JSON="[]"
+          fi
           echo "Changed packages: ${CHANGED_JSON}"
 
           if [ "${CHANGED_JSON}" = "[]" ]; then
