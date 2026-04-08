@@ -229,11 +229,25 @@ jobs:
           ref: ${{ inputs.templateAndLibsBranch }}
           path: _shadow-libs
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-          fetch-depth: 0
-      - name: Fetch master ref for affected comparison
+          fetch-depth: 1
+          fetch-tags: false
+      - name: Fetch branch and master for affected comparison
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
-        run: git fetch origin master
+        env:
+          TARGET_BRANCH: ${{ inputs.templateAndLibsBranch }}
+        run: |
+          REFSPEC_MASTER="+refs/heads/master:refs/remotes/origin/master"
+          REFSPEC_BRANCH="+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}"
+          git fetch --no-tags --depth=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
+          for attempt in $(seq 1 20); do
+            if git merge-base HEAD origin/master > /dev/null; then
+              exit 0
+            fi
+            git fetch --no-tags --deepen=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
+          done
+          echo "::error::Unable to find merge-base between ${TARGET_BRANCH} and master after deepening fetch history"
+          exit 1
       - name: Install library dependencies
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
@@ -324,6 +338,14 @@ jobs:
             echo '@frontegg:registry=http://localhost:4873' >> .npmrc
             echo '//localhost:4873/:_authToken=fake-token' >> .npmrc
           fi
+      - name: Bump lockfile to Verdaccio packages
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        run: |
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${PKGS[@]}"; do
+            echo "Upgrading ${pkg} from Verdaccio"
+            yarn up "${pkg}"
+          done
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
