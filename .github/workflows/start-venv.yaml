@@ -303,6 +303,7 @@ jobs:
           echo "VERDACCIO_NPM_TOKEN=$(echo "${REG_BODY}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token")" >> "$GITHUB_ENV"
       - name: Publish changed packages to Verdaccio
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        id: publish-shadow
         working-directory: _shadow-libs
         run: |
           echo "//localhost:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
@@ -312,6 +313,9 @@ jobs:
             --no-push \
             --preid "venv.${{ github.run_number }}" \
             --yes
+
+          SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
+          echo "published_version=${SHADOW_VERSION}" >> "$GITHUB_OUTPUT"
 
           npx lerna publish from-package \
             --registry http://localhost:4873 \
@@ -340,11 +344,32 @@ jobs:
           fi
       - name: Bump lockfile to Verdaccio packages
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        env:
+          SHADOW_VERSION: ${{ steps.publish-shadow.outputs.published_version }}
         run: |
+          if [ -z "${SHADOW_VERSION}" ]; then
+            echo "::error::Missing published Verdaccio version"
+            exit 1
+          fi
+          if [ -f yarn.lock ]; then
+            LOCKFILE="yarn.lock"
+            upgrade_cmd() { yarn up "$1@${SHADOW_VERSION}"; }
+          elif [ -f package-lock.json ]; then
+            LOCKFILE="package-lock.json"
+            upgrade_cmd() { npm install "$1@${SHADOW_VERSION}"; }
+          else
+            echo "::warning::No yarn.lock or package-lock.json found; skipping lockfile bump"
+            exit 0
+          fi
+          echo "Detected ${LOCKFILE}"
           IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
           for pkg in "${PKGS[@]}"; do
-            echo "Upgrading ${pkg} from Verdaccio"
-            yarn up "${pkg}"
+            if ! grep -qF "${pkg}" "${LOCKFILE}"; then
+              echo "Skipping ${pkg}; not referenced in ${LOCKFILE}"
+              continue
+            fi
+            echo "Upgrading ${pkg} to ${SHADOW_VERSION}"
+            upgrade_cmd "${pkg}"
           done
       - name: Build and push
         uses: docker/build-push-action@v6
