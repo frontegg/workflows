@@ -353,9 +353,10 @@ jobs:
             echo "::error::Missing published Verdaccio version"
             exit 1
           fi
-          # Yarn Berry ignores .npmrc scoped registries; patch .yarnrc.yml when present.
-          # http://localhost also needs unsafeHttpWhitelist as a real YAML list (yarn config set cannot set arrays).
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
           if [ -f .yarnrc.yml ]; then
+            # Yarn Berry: .npmrc scoped registries are ignored; patch .yarnrc.yml directly.
+            # unsafeHttpWhitelist must be a real YAML list (yarn config set cannot set arrays).
             ruby -ryaml -e "
               f = '.yarnrc.yml'
               c = YAML.load(File.read(f)) || {}
@@ -369,27 +370,32 @@ jobs:
               c['unsafeHttpWhitelist'] = (wl + ['127.0.0.1']).uniq
               File.write(f, c.to_yaml)
             "
-          fi
-          # Pin changed packages via resolutions (Yarn 1 + Berry) and overrides (npm)
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json','utf8'));
-            const names = '${{ steps.lerna-changed.outputs.names }}'.split(',');
-            const version = process.env.SHADOW_VERSION;
-            const pins = {};
-            names.forEach(n => { pins[n] = version; });
-            pkg.resolutions = { ...pkg.resolutions, ...pins };
-            pkg.overrides = { ...pkg.overrides, ...pins };
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            console.log('Pinned packages:', JSON.stringify(pins));
-          "
-          # Re-install to update lockfile with pinned versions
-          if [ -f yarn.lock ]; then
-            YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+            for pkg in "${PKGS[@]}"; do
+              if grep -qF "${pkg}" yarn.lock; then
+                echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
+                YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up "${pkg}@${SHADOW_VERSION}"
+              else
+                echo "Skipping ${pkg}; not referenced in yarn.lock"
+              fi
+            done
+          elif [ -f yarn.lock ]; then
+            # Yarn 1: respects .npmrc scoped registries (already set in Generate npmrc step)
+            for pkg in "${PKGS[@]}"; do
+              if grep -qF "${pkg}" yarn.lock; then
+                echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
+                yarn upgrade "${pkg}@${SHADOW_VERSION}"
+              else
+                echo "Skipping ${pkg}; not referenced in yarn.lock"
+              fi
+            done
           elif [ -f package-lock.json ]; then
-            npm install
+            # npm: respects .npmrc scoped registries (already set in Generate npmrc step)
+            for pkg in "${PKGS[@]}"; do
+              echo "Bumping ${pkg} to ${SHADOW_VERSION} in package-lock.json"
+              npm install "${pkg}@${SHADOW_VERSION}"
+            done
           else
-            echo "::warning::No lockfile found; skipping install"
+            echo "::warning::No lockfile found; skipping lockfile bump"
           fi
       - name: Build and push
         uses: docker/build-push-action@v6
