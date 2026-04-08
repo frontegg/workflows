@@ -351,10 +351,22 @@ jobs:
             echo "::error::Missing published Verdaccio version"
             exit 1
           fi
-          # Yarn Berry ignores .npmrc scoped registries; patch .yarnrc.yml when present
+          # Yarn Berry ignores .npmrc scoped registries; patch .yarnrc.yml when present.
+          # http://localhost also needs unsafeHttpWhitelist as a real YAML list (yarn config set cannot set arrays).
           if [ -f .yarnrc.yml ]; then
-            yarn config set npmScopes.frontegg.npmRegistryServer "http://localhost:4873"
-            yarn config set npmScopes.frontegg.npmAuthToken "fake-token"
+            ruby -ryaml -e "
+              f = '.yarnrc.yml'
+              c = YAML.load(File.read(f)) || {}
+              c['npmScopes'] ||= {}
+              c['npmScopes']['frontegg'] = {
+                'npmRegistryServer' => 'http://localhost:4873',
+                'npmAuthToken' => 'fake-token'
+              }
+              wl = c['unsafeHttpWhitelist']
+              wl = wl.is_a?(Array) ? wl : []
+              c['unsafeHttpWhitelist'] = (wl + ['localhost']).uniq
+              File.write(f, c.to_yaml)
+            "
           fi
           # Pin changed packages via resolutions (Yarn 1 + Berry) and overrides (npm)
           node -e "
