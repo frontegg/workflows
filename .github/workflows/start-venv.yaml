@@ -323,10 +323,9 @@ jobs:
         run: |
           echo "//127.0.0.1:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
 
-          npx lerna version prerelease \
+          npx lerna version patch \
             --force-publish=${{ steps.lerna-changed.outputs.names }} \
             --no-push \
-            --preid "venv.${{ github.run_number }}" \
             --yes
 
           SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
@@ -388,7 +387,7 @@ jobs:
               if grep -rqF "\"${pkg}\":" --include="package.json" \
                   --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
-                YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact "${pkg}@${SHADOW_VERSION}"
+                YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up "${pkg}@${SHADOW_VERSION}"
               else
                 echo "Skipping ${pkg}; not a direct workspace dependency"
               fi
