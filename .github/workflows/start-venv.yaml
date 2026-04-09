@@ -128,6 +128,34 @@ jobs:
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
+      - name: Update venv repo appVersion for Verdaccio
+        if: ${{ inputs.useVerdaccio && steps.venv-actions.outputs.commits != '' }}
+        working-directory: ./venv
+        run: |
+          IFS=',' read -ra ENTRIES <<< "${{ steps.venv-actions.outputs.commits }}"
+          CHANGED=false
+          for entry in "${ENTRIES[@]}"; do
+            HASH="${entry##*:}"
+            SHORT_SHA="${HASH:0:7}"
+            NEW_APP_VERSION="shadow-${{ github.run_number }}-${SHORT_SHA}"
+            echo "Replacing appVersion: ${SHORT_SHA} -> ${NEW_APP_VERSION}"
+            if grep -rl "appVersion: ${SHORT_SHA}" environments/ 2>/dev/null; then
+              grep -rl "appVersion: ${SHORT_SHA}" environments/ | xargs sed -i "s|appVersion: ${SHORT_SHA}|appVersion: ${NEW_APP_VERSION}|g"
+              CHANGED=true
+            elif grep -rl "appVersion: \"${SHORT_SHA}\"" environments/ 2>/dev/null; then
+              grep -rl "appVersion: \"${SHORT_SHA}\"" environments/ | xargs sed -i "s|appVersion: \"${SHORT_SHA}\"|appVersion: \"${NEW_APP_VERSION}\"|g"
+              CHANGED=true
+            else
+              echo "::warning::appVersion ${SHORT_SHA} not found in venv environments"
+            fi
+          done
+          if [ "${CHANGED}" = "true" ]; then
+            git add .
+            git commit -m "venv: verdaccio appVersion for run ${{ github.run_number }}"
+            git fetch origin master
+            git rebase origin/master
+            git push origin master
+          fi
 
   build-docker:
     name: Build services docker images for venv
@@ -323,9 +351,10 @@ jobs:
         run: |
           echo "//127.0.0.1:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
 
-          npx lerna version patch \
+          npx lerna version prerelease \
             --force-publish=${{ steps.lerna-changed.outputs.names }} \
             --no-push \
+            --preid "venv.${{ github.run_number }}" \
             --yes
 
           SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
@@ -436,6 +465,7 @@ jobs:
           network: host
           tags: |
             frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_number}}-${{fromJSON(steps.params.outputs.result).shortSha}}
+            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:venv-shadow-${{github.run_number}}-${{fromJSON(steps.params.outputs.result).shortSha}}
             ${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
