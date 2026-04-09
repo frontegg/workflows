@@ -137,7 +137,7 @@ jobs:
           for entry in "${ENTRIES[@]}"; do
             HASH="${entry##*:}"
             SHORT_SHA="${HASH:0:7}"
-            NEW_APP_VERSION="shadow-${{ github.run_number }}-${SHORT_SHA}"
+            NEW_APP_VERSION="shadow-${{ github.run_id }}-${{ github.run_attempt }}-${SHORT_SHA}"
             echo "Replacing appVersion: ${SHORT_SHA} -> ${NEW_APP_VERSION}"
             if grep -rl "appVersion: ${SHORT_SHA}" environments/ 2>/dev/null; then
               grep -rl "appVersion: ${SHORT_SHA}" environments/ | xargs sed -i "s|appVersion: ${SHORT_SHA}|appVersion: ${NEW_APP_VERSION}|g"
@@ -151,7 +151,7 @@ jobs:
           done
           if [ "${CHANGED}" = "true" ]; then
             git add .
-            git commit -m "venv: verdaccio appVersion for run ${{ github.run_number }}"
+            git commit -m "venv: verdaccio appVersion for run ${{ github.run_id }}-${{ github.run_attempt }}"
             git fetch origin master
             git rebase origin/master
             git push origin master
@@ -354,7 +354,7 @@ jobs:
           npx lerna version prerelease \
             --force-publish=${{ steps.lerna-changed.outputs.names }} \
             --no-push \
-            --preid "venv.${{ github.run_number }}" \
+            --preid "venv.${{ github.run_id }}.${{ github.run_attempt }}" \
             --yes
 
           SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
@@ -464,8 +464,8 @@ jobs:
           push: true
           network: host
           tags: |
-            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_number}}-${{fromJSON(steps.params.outputs.result).shortSha}}
-            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:venv-shadow-${{github.run_number}}-${{fromJSON(steps.params.outputs.result).shortSha}}
+            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}}
+            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:venv-shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}}
             ${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
