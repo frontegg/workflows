@@ -384,28 +384,32 @@ jobs:
               File.write(f, c.to_yaml)
             "
             for pkg in "${PKGS[@]}"; do
-              if grep -qF "${pkg}" yarn.lock; then
+              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
                 YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up "${pkg}@${SHADOW_VERSION}"
               else
-                echo "Skipping ${pkg}; not referenced in yarn.lock"
+                echo "Skipping ${pkg}; not a direct workspace dependency"
               fi
             done
           elif [ -f yarn.lock ]; then
             # Yarn 1: respects .npmrc scoped registries (already set in Generate npmrc step)
             for pkg in "${PKGS[@]}"; do
-              if grep -qF "${pkg}" yarn.lock; then
+              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
                 yarn upgrade "${pkg}@${SHADOW_VERSION}"
               else
-                echo "Skipping ${pkg}; not referenced in yarn.lock"
+                echo "Skipping ${pkg}; not a direct workspace dependency"
               fi
             done
           elif [ -f package-lock.json ]; then
             # npm: respects .npmrc scoped registries (already set in Generate npmrc step)
             for pkg in "${PKGS[@]}"; do
-              echo "Bumping ${pkg} to ${SHADOW_VERSION} in package-lock.json"
-              npm install "${pkg}@${SHADOW_VERSION}"
+              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
+                echo "Bumping ${pkg} to ${SHADOW_VERSION} in package-lock.json"
+                npm install "${pkg}@${SHADOW_VERSION}"
+              else
+                echo "Skipping ${pkg}; not a direct workspace dependency"
+              fi
             done
           else
             echo "::warning::No lockfile found; skipping lockfile bump"
