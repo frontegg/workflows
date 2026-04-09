@@ -314,7 +314,7 @@ jobs:
         working-directory: _shadow-libs
         run: |
           set +e
-          CHANGED_JSON=$(npx lerna list --since origin/master --all --json 2>lerna-list.stderr)
+          CHANGED_JSON=$(npx lerna list --since origin/master --all --exclude-dependents --json 2>lerna-list.stderr)
           LERNA_EXIT=$?
           set -e
           if [ "${LERNA_EXIT}" -ne 0 ]; then
@@ -361,7 +361,14 @@ jobs:
           SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
           echo "published_version=${SHADOW_VERSION}" >> "$GITHUB_OUTPUT"
 
+          SCOPE_ARGS=""
+          IFS=',' read -ra CHANGED_PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${CHANGED_PKGS[@]}"; do
+            SCOPE_ARGS="${SCOPE_ARGS} --scope ${pkg}"
+          done
+
           npx lerna publish from-package \
+            ${SCOPE_ARGS} \
             --registry http://127.0.0.1:4873 \
             --no-verify-access \
             --yes
