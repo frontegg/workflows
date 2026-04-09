@@ -138,6 +138,11 @@ jobs:
       matrix: ${{ fromJSON(needs.start-venv.outputs.commits) }}
     runs-on: ubuntu-latest
     steps:
+      - name: Validate Verdaccio inputs
+        if: ${{ inputs.useVerdaccio && inputs.templateAndLibsBranch == '' }}
+        run: |
+          echo "::error::useVerdaccio is true but templateAndLibsBranch is empty"
+          exit 1
       - name: Display Commit name ${{ matrix.commits }}
         run: |
           echo Building ${{ matrix.commits }} docker
@@ -233,21 +238,29 @@ jobs:
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
           fetch-depth: 1
           fetch-tags: false
+          persist-credentials: false
       - name: Fetch branch and master for affected comparison
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
         env:
           TARGET_BRANCH: ${{ inputs.templateAndLibsBranch }}
+          GH_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
         run: |
+          AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64)"
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${AUTH}"
+
           REFSPEC_MASTER="+refs/heads/master:refs/remotes/origin/master"
           REFSPEC_BRANCH="+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}"
           git fetch --no-tags --depth=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
           for attempt in $(seq 1 20); do
             if git merge-base HEAD origin/master > /dev/null; then
+              git config --local --unset http.https://github.com/.extraheader
               exit 0
             fi
             git fetch --no-tags --deepen=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
           done
+
+          git config --local --unset-all http.https://github.com/.extraheader || true
           echo "::error::Unable to find merge-base between ${TARGET_BRANCH} and master after deepening fetch history"
           exit 1
       - name: Install library dependencies
@@ -414,7 +427,9 @@ jobs:
           context: .
           push: true
           network: host
-          tags: ${{fromJSON(steps.params.outputs.result).image}},${{fromJSON(steps.params.outputs.result).venvImage}}
+          tags: |
+            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_number}}-${{fromJSON(steps.params.outputs.result).shortSha}}
+            ${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
