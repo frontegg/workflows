@@ -137,16 +137,17 @@ jobs:
           for entry in "${ENTRIES[@]}"; do
             HASH="${entry##*:}"
             SHORT_SHA="${HASH:0:7}"
+            OLD_APP_VERSION="venv-${SHORT_SHA}"
             NEW_APP_VERSION="shadow-${{ github.run_id }}-${{ github.run_attempt }}-${SHORT_SHA}"
-            echo "Replacing appVersion: ${SHORT_SHA} -> ${NEW_APP_VERSION}"
-            if grep -rl "appVersion: ${SHORT_SHA}" environments/ 2>/dev/null; then
-              grep -rl "appVersion: ${SHORT_SHA}" environments/ | xargs sed -i "s|appVersion: ${SHORT_SHA}|appVersion: ${NEW_APP_VERSION}|g"
+            echo "Replacing appVersion: ${OLD_APP_VERSION} -> ${NEW_APP_VERSION}"
+            if grep -rl "appVersion: ${OLD_APP_VERSION}" environments/ 2>/dev/null; then
+              grep -rl "appVersion: ${OLD_APP_VERSION}" environments/ | xargs sed -i "s|appVersion: ${OLD_APP_VERSION}|appVersion: ${NEW_APP_VERSION}|g"
               CHANGED=true
-            elif grep -rl "appVersion: \"${SHORT_SHA}\"" environments/ 2>/dev/null; then
-              grep -rl "appVersion: \"${SHORT_SHA}\"" environments/ | xargs sed -i "s|appVersion: \"${SHORT_SHA}\"|appVersion: \"${NEW_APP_VERSION}\"|g"
+            elif grep -rl "appVersion: \"${OLD_APP_VERSION}\"" environments/ 2>/dev/null; then
+              grep -rl "appVersion: \"${OLD_APP_VERSION}\"" environments/ | xargs sed -i "s|appVersion: \"${OLD_APP_VERSION}\"|appVersion: \"${NEW_APP_VERSION}\"|g"
               CHANGED=true
             else
-              echo "::warning::appVersion ${SHORT_SHA} not found in venv environments"
+              echo "::warning::appVersion ${OLD_APP_VERSION} not found in venv environments"
             fi
           done
           if [ "${CHANGED}" = "true" ]; then
@@ -465,7 +466,6 @@ jobs:
           network: host
           tags: |
             frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}}
-            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:venv-shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}}
             ${{fromJSON(steps.params.outputs.result).venvImage}}
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
