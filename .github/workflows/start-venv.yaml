@@ -383,8 +383,10 @@ jobs:
               c['unsafeHttpWhitelist'] = (wl + ['127.0.0.1']).uniq
               File.write(f, c.to_yaml)
             "
+            # Match only dependency-style keys ("pkg": …), not "name": "@scope/pkg" inside node_modules after prior yarn up.
             for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
+              if grep -rqF "\"${pkg}\":" --include="package.json" \
+                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
                 YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up "${pkg}@${SHADOW_VERSION}"
               else
@@ -394,7 +396,8 @@ jobs:
           elif [ -f yarn.lock ]; then
             # Yarn 1: respects .npmrc scoped registries (already set in Generate npmrc step)
             for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
+              if grep -rqF "\"${pkg}\":" --include="package.json" \
+                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
                 yarn upgrade "${pkg}@${SHADOW_VERSION}"
               else
@@ -404,7 +407,8 @@ jobs:
           elif [ -f package-lock.json ]; then
             # npm: respects .npmrc scoped registries (already set in Generate npmrc step)
             for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\"" --include="package.json" .; then
+              if grep -rqF "\"${pkg}\":" --include="package.json" \
+                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
                 echo "Bumping ${pkg} to ${SHADOW_VERSION} in package-lock.json"
                 npm install "${pkg}@${SHADOW_VERSION}"
               else
