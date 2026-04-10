@@ -276,7 +276,7 @@ jobs:
           TARGET_BRANCH: ${{ inputs.templateAndLibsBranch }}
           GH_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
         run: |
-          AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64)"
+          AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 | tr -d '\n')"
           git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${AUTH}"
 
           REFSPEC_MASTER="+refs/heads/master:refs/remotes/origin/master"
