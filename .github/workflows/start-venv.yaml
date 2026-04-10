@@ -250,14 +250,14 @@ jobs:
             curl -sf http://127.0.0.1:4873/-/ping && break || sleep 1
           done
           curl -sf http://127.0.0.1:4873/-/ping || { echo "ERROR: Verdaccio did not start"; exit 1; }
-      - name: Enable Corepack
-        if: ${{ inputs.useVerdaccio }}
-        run: corepack enable
       - name: Setup Node
         if: ${{ inputs.useVerdaccio }}
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+      - name: Enable Corepack
+        if: ${{ inputs.useVerdaccio }}
+        run: corepack enable
       - name: Checkout template-and-libs
         if: ${{ inputs.useVerdaccio }}
         uses: actions/checkout@v4
@@ -484,6 +484,12 @@ jobs:
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+      - name: Push shadow tag (Verdaccio, no library changes)
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes != 'true' }}
+        run: |
+          docker buildx imagetools create \
+            --tag frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}} \
+            ${{fromJSON(steps.params.outputs.result).venvImage}}
 
   check-build-docker-results:
     if: ${{ always() }}
