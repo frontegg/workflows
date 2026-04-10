@@ -132,6 +132,8 @@ jobs:
         if: ${{ inputs.useVerdaccio && steps.venv-actions.outputs.commits != '' }}
         working-directory: ./venv
         run: |
+          git config user.email "shadow@frontegg.com"
+          git config user.name "shadow-agent"
           IFS=',' read -ra ENTRIES <<< "${{ steps.venv-actions.outputs.commits }}"
           CHANGED=false
           for entry in "${ENTRIES[@]}"; do
@@ -216,7 +218,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           mkdir -p /tmp/verdaccio
-          cat > /tmp/verdaccio/config.yaml <<EOF
+          cat > /tmp/verdaccio/config.yaml <<VERDACCIO_CFG
           storage: /verdaccio/storage/data
           auth:
             htpasswd:
@@ -237,8 +239,7 @@ jobs:
               publish: \$all
               proxy: npmjs
           listen: 0.0.0.0:4873
-          EOF
-          sed -i 's/^          //' /tmp/verdaccio/config.yaml
+          VERDACCIO_CFG
       - name: Start Verdaccio
         if: ${{ inputs.useVerdaccio }}
         run: |
@@ -298,6 +299,8 @@ jobs:
         run: yarn install --immutable || YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
         env:
           YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # yarn install may modify generated files; commit them so lerna list --since
+      # compares only real code changes against origin/master.
       - name: Commit post-install state
         if: ${{ inputs.useVerdaccio }}
         working-directory: _shadow-libs
@@ -365,9 +368,21 @@ jobs:
             --registry http://127.0.0.1:4873 \
             --no-verify-access \
             --yes
+      - name: Verdaccio summary
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        run: |
+          echo "### Verdaccio Shadow Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** \`${{ steps.publish-shadow.outputs.published_version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Packages bumped in service:**" >> "$GITHUB_STEP_SUMMARY"
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${PKGS[@]}"; do
+            echo "- \`${pkg}\`" >> "$GITHUB_STEP_SUMMARY"
+          done
       - name: Clean up shadow libs from build context
         if: ${{ inputs.useVerdaccio }}
         run: rm -rf _shadow-libs
+      # Non-Verdaccio: reuse an existing image when available.
+      # Verdaccio builds always push a fresh image with a unique shadow-* tag (see below).
       - name: Check Docker Image
         id: check-image
         if: ${{ !inputs.useVerdaccio || steps.lerna-changed.outputs.has_changes != 'true' }}
@@ -395,58 +410,57 @@ jobs:
             echo "::error::Missing published Verdaccio version"
             exit 1
           fi
-          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+
           if [ -f .yarnrc.yml ]; then
             # Yarn Berry: .npmrc scoped registries are ignored; patch .yarnrc.yml directly.
-            # unsafeHttpWhitelist must be a real YAML list (yarn config set cannot set arrays).
-            ruby -ryaml -e "
-              f = '.yarnrc.yml'
-              c = YAML.load(File.read(f)) || {}
-              c['npmScopes'] ||= {}
-              c['npmScopes']['frontegg'] = {
-                'npmRegistryServer' => 'http://127.0.0.1:4873',
-                'npmAuthToken' => 'fake-token'
+            node -e "
+              const fs = require('fs');
+              const f = '.yarnrc.yml';
+              let lines = fs.readFileSync(f, 'utf8').split('\n');
+              // Strip existing npmScopes and unsafeHttpWhitelist blocks
+              let i = 0, out = [];
+              while (i < lines.length) {
+                if (/^(npmScopes|unsafeHttpWhitelist):/.test(lines[i])) {
+                  i++;
+                  while (i < lines.length && /^\s+/.test(lines[i])) i++;
+                } else {
+                  out.push(lines[i]);
+                  i++;
+                }
               }
-              wl = c['unsafeHttpWhitelist']
-              wl = wl.is_a?(Array) ? wl : []
-              c['unsafeHttpWhitelist'] = (wl + ['127.0.0.1']).uniq
-              File.write(f, c.to_yaml)
+              // Remove trailing blank lines then re-add config
+              while (out.length && out[out.length - 1].trim() === '') out.pop();
+              out.push('');
+              out.push('npmScopes:');
+              out.push('  frontegg:');
+              out.push('    npmRegistryServer: \"http://127.0.0.1:4873\"');
+              out.push('    npmAuthToken: \"fake-token\"');
+              out.push('');
+              out.push('unsafeHttpWhitelist:');
+              out.push('  - 127.0.0.1');
+              out.push('');
+              fs.writeFileSync(f, out.join('\n'));
             "
-            # Match only dependency-style keys ("pkg": …), not "name": "@scope/pkg" inside node_modules after prior yarn up.
-            for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\":" --include="package.json" \
-                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
-                echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
-                YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact "${pkg}@${SHADOW_VERSION}"
-              else
-                echo "Skipping ${pkg}; not a direct workspace dependency"
-              fi
-            done
+            BUMP_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact"
           elif [ -f yarn.lock ]; then
-            # Yarn 1: respects .npmrc scoped registries (already set in Generate npmrc step)
-            for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\":" --include="package.json" \
-                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
-                echo "Bumping ${pkg} to ${SHADOW_VERSION} in yarn.lock"
-                yarn upgrade "${pkg}@${SHADOW_VERSION}"
-              else
-                echo "Skipping ${pkg}; not a direct workspace dependency"
-              fi
-            done
+            BUMP_CMD="yarn upgrade"
           elif [ -f package-lock.json ]; then
-            # npm: respects .npmrc scoped registries (already set in Generate npmrc step)
-            for pkg in "${PKGS[@]}"; do
-              if grep -rqF "\"${pkg}\":" --include="package.json" \
-                  --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
-                echo "Bumping ${pkg} to ${SHADOW_VERSION} in package-lock.json"
-                npm install "${pkg}@${SHADOW_VERSION}"
-              else
-                echo "Skipping ${pkg}; not a direct workspace dependency"
-              fi
-            done
+            BUMP_CMD="npm install"
           else
             echo "::warning::No lockfile found; skipping lockfile bump"
+            exit 0
           fi
+
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${PKGS[@]}"; do
+            if grep -rqF "\"${pkg}\":" --include="package.json" \
+                --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
+              echo "Bumping ${pkg} to ${SHADOW_VERSION}"
+              eval "${BUMP_CMD} \"${pkg}@${SHADOW_VERSION}\""
+            else
+              echo "Skipping ${pkg}; not a direct workspace dependency"
+            fi
+          done
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
