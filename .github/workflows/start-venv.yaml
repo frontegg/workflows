@@ -244,7 +244,7 @@ jobs:
         run: |
           docker run -d --name verdaccio -p 4873:4873 \
             -v /tmp/verdaccio/config.yaml:/verdaccio/conf/config.yaml \
-            verdaccio/verdaccio
+            verdaccio/verdaccio:6.3
           for i in $(seq 1 30); do
             curl -sf http://127.0.0.1:4873/-/ping && break || sleep 1
           done
@@ -256,7 +256,7 @@ jobs:
         if: ${{ inputs.useVerdaccio }}
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "24"
       - name: Checkout template-and-libs
         if: ${{ inputs.useVerdaccio }}
         uses: actions/checkout@v4
