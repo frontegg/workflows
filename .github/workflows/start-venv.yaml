@@ -361,21 +361,10 @@ jobs:
           SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
           echo "published_version=${SHADOW_VERSION}" >> "$GITHUB_OUTPUT"
 
-          ALL_PKGS_JSON=$(npx lerna list --all --json)
-          IFS=',' read -ra CHANGED_PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
-          for pkg in "${CHANGED_PKGS[@]}"; do
-            PKG_DIR=$(echo "${ALL_PKGS_JSON}" | node -e "
-              const pkgs = JSON.parse(require('fs').readFileSync(0,'utf8'));
-              const p = pkgs.find(x => x.name === '${pkg}');
-              if (p) process.stdout.write(p.location);
-            ")
-            if [ -n "${PKG_DIR}" ]; then
-              echo "Publishing ${pkg} from ${PKG_DIR}"
-              npm publish "${PKG_DIR}" --registry http://127.0.0.1:4873
-            else
-              echo "::warning::Could not find location for ${pkg}"
-            fi
-          done
+          npx lerna publish from-package \
+            --registry http://127.0.0.1:4873 \
+            --no-verify-access \
+            --yes
       - name: Clean up shadow libs from build context
         if: ${{ inputs.useVerdaccio }}
         run: rm -rf _shadow-libs
