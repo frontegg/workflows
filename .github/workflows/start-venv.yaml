@@ -46,6 +46,16 @@ on:
         required: false
         description: 'Set to true in order to trigger slack notification'
         default: true
+      useVerdaccio:
+        type: boolean
+        required: false
+        description: 'Build Docker with custom @frontegg packages from a template-and-libs branch via local Verdaccio'
+        default: false
+      templateAndLibsBranch:
+        type: string
+        required: false
+        description: 'Branch of frontegg/template-and-libs to build and publish to local Verdaccio (only used when useVerdaccio is true)'
+        default: ''
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
@@ -118,6 +128,37 @@ jobs:
             const result = { commits: splitString.map(x => x.toString()) };
             console.log(`result: ${JSON.stringify(result)}`);
             return JSON.stringify(result);
+      - name: Update venv repo appVersion for Verdaccio
+        if: ${{ inputs.useVerdaccio && steps.venv-actions.outputs.commits != '' }}
+        working-directory: ./venv
+        run: |
+          git config user.email "shadow@frontegg.com"
+          git config user.name "shadow-agent"
+          IFS=',' read -ra ENTRIES <<< "${{ steps.venv-actions.outputs.commits }}"
+          CHANGED=false
+          for entry in "${ENTRIES[@]}"; do
+            HASH="${entry##*:}"
+            SHORT_SHA="${HASH:0:7}"
+            OLD_APP_VERSION="venv-${SHORT_SHA}"
+            NEW_APP_VERSION="shadow-${{ github.run_id }}-${{ github.run_attempt }}-${SHORT_SHA}"
+            echo "Replacing appVersion: ${OLD_APP_VERSION} -> ${NEW_APP_VERSION}"
+            if grep -rl "appVersion: ${OLD_APP_VERSION}" environments/ 2>/dev/null; then
+              grep -rl "appVersion: ${OLD_APP_VERSION}" environments/ | xargs sed -i "s|appVersion: ${OLD_APP_VERSION}|appVersion: ${NEW_APP_VERSION}|g"
+              CHANGED=true
+            elif grep -rl "appVersion: \"${OLD_APP_VERSION}\"" environments/ 2>/dev/null; then
+              grep -rl "appVersion: \"${OLD_APP_VERSION}\"" environments/ | xargs sed -i "s|appVersion: \"${OLD_APP_VERSION}\"|appVersion: \"${NEW_APP_VERSION}\"|g"
+              CHANGED=true
+            else
+              echo "::warning::appVersion ${OLD_APP_VERSION} not found in venv environments"
+            fi
+          done
+          if [ "${CHANGED}" = "true" ]; then
+            git add .
+            git commit -m "venv: verdaccio appVersion for run ${{ github.run_id }}-${{ github.run_attempt }}"
+            git fetch origin master
+            git rebase origin/master
+            git push origin master
+          fi
 
   build-docker:
     name: Build services docker images for venv
@@ -128,6 +169,11 @@ jobs:
       matrix: ${{ fromJSON(needs.start-venv.outputs.commits) }}
     runs-on: ubuntu-latest
     steps:
+      - name: Validate Verdaccio inputs
+        if: ${{ inputs.useVerdaccio && inputs.templateAndLibsBranch == '' }}
+        run: |
+          echo "::error::useVerdaccio is true but templateAndLibsBranch is empty"
+          exit 1
       - name: Display Commit name ${{ matrix.commits }}
         run: |
           echo Building ${{ matrix.commits }} docker
@@ -159,13 +205,187 @@ jobs:
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_ACTION_USER }}
           password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+      - name: Write Verdaccio config
+        if: ${{ inputs.useVerdaccio }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          mkdir -p /tmp/verdaccio
+          cat > /tmp/verdaccio/config.yaml <<VERDACCIO_CFG
+          storage: /verdaccio/storage/data
+          auth:
+            htpasswd:
+              file: /verdaccio/storage/htpasswd
+          uplinks:
+            npmjs:
+              url: https://registry.npmjs.org/
+              auth:
+                type: bearer
+                token: ${NPM_TOKEN}
+          packages:
+            '@frontegg/*':
+              access: \$all
+              publish: \$all
+              proxy: npmjs
+            '**':
+              access: \$all
+              publish: \$all
+              proxy: npmjs
+          listen: 0.0.0.0:4873
+          VERDACCIO_CFG
+      - name: Start Verdaccio
+        if: ${{ inputs.useVerdaccio }}
+        run: |
+          docker run -d --name verdaccio -p 4873:4873 \
+            -v /tmp/verdaccio/config.yaml:/verdaccio/conf/config.yaml \
+            verdaccio/verdaccio:6.4
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:4873/-/ping && break || sleep 1
+          done
+          curl -sf http://127.0.0.1:4873/-/ping || { echo "ERROR: Verdaccio did not start"; exit 1; }
+      - name: Setup Node
+        if: ${{ inputs.useVerdaccio }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Enable Corepack
+        if: ${{ inputs.useVerdaccio }}
+        run: corepack enable
+      - name: Checkout template-and-libs
+        if: ${{ inputs.useVerdaccio }}
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/template-and-libs
+          ref: ${{ inputs.templateAndLibsBranch }}
+          path: _shadow-libs
+          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          fetch-depth: 1
+          fetch-tags: false
+          persist-credentials: false
+      - name: Fetch branch and master for affected comparison
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        env:
+          TARGET_BRANCH: ${{ inputs.templateAndLibsBranch }}
+          GH_TOKEN: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+        run: |
+          AUTH="$(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 | tr -d '\n')"
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${AUTH}"
+
+          REFSPEC_MASTER="+refs/heads/master:refs/remotes/origin/master"
+          REFSPEC_BRANCH="+refs/heads/${TARGET_BRANCH}:refs/remotes/origin/${TARGET_BRANCH}"
+          git fetch --no-tags --depth=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
+          for attempt in $(seq 1 20); do
+            if git merge-base HEAD origin/master > /dev/null; then
+              git config --local --unset http.https://github.com/.extraheader
+              exit 0
+            fi
+            git fetch --no-tags --deepen=50 origin "${REFSPEC_MASTER}" "${REFSPEC_BRANCH}"
+          done
+
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          echo "::error::Unable to find merge-base between ${TARGET_BRANCH} and master after deepening fetch history"
+          exit 1
+      - name: Install library dependencies
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: yarn install --immutable || YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # yarn install may modify generated files; commit them so lerna list --since
+      # compares only real code changes against origin/master.
+      - name: Commit post-install state
+        if: ${{ inputs.useVerdaccio }}
+        working-directory: _shadow-libs
+        run: |
+          git config user.email "shadow@frontegg.com"
+          git config user.name "shadow-agent"
+          git add -A
+          if ! git diff --cached --exit-code; then
+            git commit -m "chore: post-install"
+          fi
+      - name: Detect changed packages
+        if: ${{ inputs.useVerdaccio }}
+        id: lerna-changed
+        working-directory: _shadow-libs
+        run: |
+          set +e
+          CHANGED_JSON=$(npx lerna list --since origin/master --all --exclude-dependents --json 2>lerna-list.stderr)
+          LERNA_EXIT=$?
+          set -e
+          if [ "${LERNA_EXIT}" -ne 0 ]; then
+            echo "::warning::lerna list --since exited ${LERNA_EXIT}; stderr:"
+            cat lerna-list.stderr || true
+            CHANGED_JSON="[]"
+          fi
+          echo "Changed packages: ${CHANGED_JSON}"
+
+          if [ "${CHANGED_JSON}" = "[]" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            NAMES=$(echo "${CHANGED_JSON}" | node -e "
+              const pkgs = JSON.parse(require('fs').readFileSync(0,'utf8'));
+              process.stdout.write(pkgs.map(p => p.name).join(','));
+            ")
+            echo "names=${NAMES}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build affected packages
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        working-directory: _shadow-libs
+        run: yarn build:ci
+      - name: Register Verdaccio user and token
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        run: |
+          REG_BODY="$(curl -sf -X PUT "http://127.0.0.1:4873/-/user/org.couchdb.user:shadow" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"shadow","password":"shadow","email":"shadow@frontegg.com","type":"user"}')"
+          echo "VERDACCIO_NPM_TOKEN=$(echo "${REG_BODY}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token")" >> "$GITHUB_ENV"
+      - name: Publish changed packages to Verdaccio
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        id: publish-shadow
+        working-directory: _shadow-libs
+        run: |
+          echo "//127.0.0.1:4873/:_authToken=${VERDACCIO_NPM_TOKEN}" >> .npmrc
+
+          npx lerna version prerelease \
+            --force-publish=${{ steps.lerna-changed.outputs.names }} \
+            --no-push \
+            --preid "venv.${{ github.run_id }}.${{ github.run_attempt }}" \
+            --yes
+
+          SHADOW_VERSION="$(node -p "require('./lerna.json').version")"
+          echo "published_version=${SHADOW_VERSION}" >> "$GITHUB_OUTPUT"
+
+          npx lerna publish from-package \
+            --registry http://127.0.0.1:4873 \
+            --no-verify-access \
+            --yes
+      - name: Verdaccio summary
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        run: |
+          echo "### Verdaccio Shadow Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** \`${{ steps.publish-shadow.outputs.published_version }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Packages bumped in service:**" >> "$GITHUB_STEP_SUMMARY"
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${PKGS[@]}"; do
+            echo "- \`${pkg}\`" >> "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Clean up shadow libs from build context
+        if: ${{ inputs.useVerdaccio }}
+        run: rm -rf _shadow-libs
+      # Non-Verdaccio: reuse an existing image when available.
+      # Verdaccio builds always push a fresh image with a unique shadow-* tag (see below).
       - name: Check Docker Image
         id: check-image
+        if: ${{ !inputs.useVerdaccio || steps.lerna-changed.outputs.has_changes != 'true' }}
         run: |
           if docker manifest inspect ${{fromJSON(steps.params.outputs.result).venvImage}} > /dev/null 2>&1; then
             echo "Docker image exists, no need to build the image"
@@ -177,6 +397,70 @@ jobs:
       - name: Generate npmrc
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > .npmrc
+          if [ "${{ inputs.useVerdaccio }}" = "true" ] && [ "${{ steps.lerna-changed.outputs.has_changes }}" = "true" ]; then
+            echo '@frontegg:registry=http://127.0.0.1:4873' >> .npmrc
+            echo '//127.0.0.1:4873/:_authToken=fake-token' >> .npmrc
+          fi
+      - name: Bump lockfile to Verdaccio packages
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        env:
+          SHADOW_VERSION: ${{ steps.publish-shadow.outputs.published_version }}
+        run: |
+          if [ -z "${SHADOW_VERSION}" ]; then
+            echo "::error::Missing published Verdaccio version"
+            exit 1
+          fi
+
+          if [ -f .yarnrc.yml ]; then
+            # Yarn Berry: .npmrc scoped registries are ignored; patch .yarnrc.yml directly.
+            node -e "
+              const fs = require('fs');
+              const f = '.yarnrc.yml';
+              let lines = fs.readFileSync(f, 'utf8').split('\n');
+              // Strip existing npmScopes and unsafeHttpWhitelist blocks
+              let i = 0, out = [];
+              while (i < lines.length) {
+                if (/^(npmScopes|unsafeHttpWhitelist):/.test(lines[i])) {
+                  i++;
+                  while (i < lines.length && /^\s+/.test(lines[i])) i++;
+                } else {
+                  out.push(lines[i]);
+                  i++;
+                }
+              }
+              // Remove trailing blank lines then re-add config
+              while (out.length && out[out.length - 1].trim() === '') out.pop();
+              out.push('');
+              out.push('npmScopes:');
+              out.push('  frontegg:');
+              out.push('    npmRegistryServer: \"http://127.0.0.1:4873\"');
+              out.push('    npmAuthToken: \"fake-token\"');
+              out.push('');
+              out.push('unsafeHttpWhitelist:');
+              out.push('  - 127.0.0.1');
+              out.push('');
+              fs.writeFileSync(f, out.join('\n'));
+            "
+            BUMP_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact"
+          elif [ -f yarn.lock ]; then
+            BUMP_CMD="yarn upgrade"
+          elif [ -f package-lock.json ]; then
+            BUMP_CMD="npm install"
+          else
+            echo "::warning::No lockfile found; skipping lockfile bump"
+            exit 0
+          fi
+
+          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
+          for pkg in "${PKGS[@]}"; do
+            if grep -rqF "\"${pkg}\":" --include="package.json" \
+                --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
+              echo "Bumping ${pkg} to ${SHADOW_VERSION}"
+              eval "${BUMP_CMD} \"${pkg}@${SHADOW_VERSION}\""
+            else
+              echo "Skipping ${pkg}; not a direct workspace dependency"
+            fi
+          done
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
@@ -187,6 +471,25 @@ jobs:
           build-args: |
             COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
             NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+      - name: Build and push (Verdaccio)
+        uses: docker/build-push-action@v6
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
+        with:
+          context: .
+          push: true
+          network: host
+          tags: |
+            frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}}
+            ${{fromJSON(steps.params.outputs.result).venvImage}}
+          build-args: |
+            COMMIT_HASH=${{fromJSON(steps.params.outputs.result).shortSha}}
+            NPM_TOKEN=${{ secrets.NPM_TOKEN }}
+      - name: Push shadow tag (Verdaccio, no library changes)
+        if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes != 'true' }}
+        run: |
+          docker buildx imagetools create \
+            --tag frontegg/${{fromJSON(steps.params.outputs.result).repository}}:shadow-${{github.run_id}}-${{github.run_attempt}}-${{fromJSON(steps.params.outputs.result).shortSha}} \
+            ${{fromJSON(steps.params.outputs.result).venvImage}}
 
   check-build-docker-results:
     if: ${{ always() }}
