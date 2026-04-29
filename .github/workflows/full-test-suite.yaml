@@ -106,6 +106,7 @@ jobs:
           echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
       - id: create_bot_token
         name: Create bot token
+        if: ${{ inputs.dispatch_id }}
         uses: wow-actions/use-app-token@v2
         with:
           app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
