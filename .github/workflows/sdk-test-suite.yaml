@@ -96,15 +96,17 @@ jobs:
           echo "portalUrl=https://portal.stg.frontegg.com" >> $GITHUB_OUTPUT
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: "Update trigger status"
         uses: frontegg/workflows/.github/shared-actions/update-status@master
         if: ${{ inputs.dispatch_id }}
         with:
-          token: ${{ env.BOT_TOKEN }}
+          token: ${{ steps.create_bot_token.outputs.token }}
           dispatch_id: ${{ inputs.dispatch_id }}
           description: 'Start tests environment ${{ steps.variables.outputs.apiUrl }}'
 
@@ -127,10 +129,12 @@ jobs:
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -168,7 +172,7 @@ jobs:
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
           client_framework_version: ${{ inputs.client_framework_version }}
-          bot_token: ${{ env.BOT_TOKEN }}
+          bot_token: ${{ steps.create_bot_token.outputs.token }}
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
@@ -193,10 +197,12 @@ jobs:
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -234,7 +240,7 @@ jobs:
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
           client_framework_version: ${{ inputs.client_framework_version }}
-          bot_token: ${{ env.BOT_TOKEN }}
+          bot_token: ${{ steps.create_bot_token.outputs.token }}
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
@@ -259,10 +265,12 @@ jobs:
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -300,7 +308,7 @@ jobs:
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
           client_framework_version: ${{ inputs.client_framework_version }}
-          bot_token: ${{ env.BOT_TOKEN }}
+          bot_token: ${{ steps.create_bot_token.outputs.token }}
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
@@ -321,10 +329,12 @@ jobs:
           token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -362,7 +372,7 @@ jobs:
           react_version: ${{ inputs.react_version }} # deprecated
           client_framework: ${{ inputs.client_framework }}
           client_framework_version: ${{ inputs.client_framework_version }}
-          bot_token: ${{ env.BOT_TOKEN }}
+          bot_token: ${{ steps.create_bot_token.outputs.token }}
           environment: "staging"
           frontegg_client_id: ${{ secrets.FRONTEGG_STG_CLIENT_ID }}
           frontegg_secret: ${{ secrets.FRONTEGG_STG_SECRET }}
@@ -375,15 +385,17 @@ jobs:
     steps:
       - id: create_bot_token
         name: Create bot token
-        uses: wow-actions/use-app-token@v2
+        uses: actions/create-github-app-token@v1
         with:
-          app_id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
-          private_key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          repositories: e2e-system-tests
+          owner: frontegg
       - name: "trigger failure status"
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         uses: frontegg/workflows/.github/shared-actions/update-status@master
         with:
-          token: ${{ env.BOT_TOKEN }}
+          token: ${{ steps.create_bot_token.outputs.token }}
           dispatch_id: ${{ inputs.dispatch_id }}
           state: "failure"
           description: 'E2E Tests Failed'
@@ -391,7 +403,7 @@ jobs:
         if: ${{ !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
         uses: frontegg/workflows/.github/shared-actions/update-status@master
         with:
-          token: ${{ env.BOT_TOKEN }}
+          token: ${{ steps.create_bot_token.outputs.token }}
           dispatch_id: ${{ inputs.dispatch_id }}
           state: "success"
           description: 'E2E tests passed'
