@@ -104,12 +104,12 @@ jobs:
           echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
       - id: create_bot_token
         name: Create bot token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           repositories: e2e-system-tests
-          owner: frontegg
+          owner: ${{ github.repository_owner }}
       - name: "Update trigger status"
         uses: frontegg/workflows/.github/shared-actions/update-status@master
         if: ${{ inputs.dispatch_id }}
@@ -140,10 +140,11 @@ jobs:
     steps:
       - id: create_bot_token
         name: Create bot token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          owner: ${{ github.repository_owner }}
       - name: "trigger failure status"
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
         uses: frontegg/workflows/.github/shared-actions/update-status@master
