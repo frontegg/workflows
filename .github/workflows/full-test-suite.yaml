@@ -77,6 +77,7 @@ permissions:
   contents: read
   issues: read
   checks: write
+  statuses: write
   pull-requests: write
   
 jobs:
@@ -111,7 +112,6 @@ jobs:
         with:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-          repositories: e2e-system-tests
           owner: ${{ github.repository_owner }}
       - name: "Update trigger status"
         uses: frontegg/workflows/.github/shared-actions/update-status@master
@@ -176,7 +176,6 @@ jobs:
         with:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
-          repositories: e2e-system-tests
           owner: ${{ github.repository_owner }}
       - name: "trigger failure status"
         if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
