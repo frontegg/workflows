@@ -1,0 +1,33 @@
+name: Check PR is up to date with base
+description: >
+  Fails when the PR head commit is behind the given base branch.
+  Callers decide whether to run this before expensive jobs (e.g. full-test-suite).
+inputs:
+  base_ref:
+    description: Base branch name (e.g. master)
+    required: true
+  head_sha:
+    description: PR head commit SHA to check
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout PR head
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ inputs.head_sha }}
+
+    - name: Fail if behind base branch
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base_ref }}
+      run: |
+        git fetch --no-tags origin "$BASE_REF"
+        if ! git merge-base --is-ancestor "origin/$BASE_REF" HEAD; then
+          echo "::error::PR branch is behind '$BASE_REF'. Update the branch, then re-run."
+          git --no-pager log --oneline "HEAD..origin/$BASE_REF" | head -20
+          exit 1
+        fi
+        echo "PR is up to date with origin/$BASE_REF"
