@@ -36,6 +36,11 @@ on:
         required: false
         description: 'Set to true in order to disable starting dashboard application'
         default: false
+      useMessagePit:
+        type: boolean
+        required: false
+        description: 'Enable MessagePit and route Identity/Auth Hub email to it for this venv'
+        default: false
       ref:
         type: string
         required: false
@@ -116,6 +121,7 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
+          useMessagePit: ${{ inputs.useMessagePit }}
           ref: ${{ inputs.ref }}
       - name: Generate matrix for docker build
         uses: actions/github-script@v7

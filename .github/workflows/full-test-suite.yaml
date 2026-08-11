@@ -92,6 +92,7 @@ jobs:
     with:
       volatileEnvironment: true
       triggerSlack: false
+      useMessagePit: ${{ inputs.useMessagePit }}
       ref: ${{ inputs.ref }}
     secrets: inherit
 
