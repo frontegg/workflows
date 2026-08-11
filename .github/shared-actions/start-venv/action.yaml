@@ -49,6 +49,9 @@ outputs:
   apiUrl:
     description: "The created venv api gateway url"
     value: ${{ steps.venv-actions.outputs.apiUrl }}
+  messagepitUrl:
+    description: "The MessagePit inbox URL for the created venv"
+    value: ${{ steps.venv-actions.outputs.messagepitUrl }}
   commits:
     description: "The commits that were pushed to the venv repository"
     value: ${{ steps.venv-actions.outputs.commits }}

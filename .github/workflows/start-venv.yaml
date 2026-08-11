@@ -85,6 +85,9 @@ on:
       portalUrl:
         value: ${{ jobs.start-venv.outputs.portalUrl }}
         description: 'Outputs the portalUrl of the newly created venv'
+      messagepitUrl:
+        value: ${{ jobs.start-venv.outputs.messagepitUrl }}
+        description: 'Outputs the MessagePit inbox URL of the newly created venv'
 jobs:
   start-venv:
     concurrency: start-venv
@@ -94,6 +97,7 @@ jobs:
       environmentId: ${{ steps.venv-actions.outputs.environmentId }}
       portalUrl: ${{ steps.venv-actions.outputs.portalUrl }}
       apiUrl: ${{ steps.venv-actions.outputs.apiUrl }}
+      messagepitUrl: ${{ steps.venv-actions.outputs.messagepitUrl }}
       commits: ${{ steps.params.outputs.result }}
     steps:
       - name: Checkout Workflows

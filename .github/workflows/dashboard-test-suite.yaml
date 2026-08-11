@@ -12,6 +12,11 @@ on:
         required: false
         description: Set the e2e-api tests branch tag
         default: master
+      useMessagePit:
+        type: boolean
+        required: false
+        description: Read Venv emails from MessagePit instead of Mailosaur
+        default: false
       ref:
         type: string
         required: false
@@ -96,6 +101,7 @@ jobs:
       apiUrl: ${{ steps.variables.outputs.apiUrl }}
       portalUrl: ${{ steps.variables.outputs.portalUrl }}
       environmentId: ${{ steps.variables.outputs.environmentId }}
+      messagepitUrl: ${{ steps.variables.outputs.messagepitUrl }}
     steps:
       - name: prepare output params
         id: variables
@@ -103,6 +109,7 @@ jobs:
           echo "environmentId=${{ needs.start-venv.outputs.environmentId }}" >> $GITHUB_OUTPUT
           echo "apiUrl=${{ needs.start-venv.outputs.apiUrl }}" >> $GITHUB_OUTPUT
           echo "portalUrl=${{ needs.start-venv.outputs.portalUrl }}" >> $GITHUB_OUTPUT
+          echo "messagepitUrl=${{ needs.start-venv.outputs.messagepitUrl }}" >> $GITHUB_OUTPUT
       - id: create_bot_token
         name: Create bot token
         uses: actions/create-github-app-token@v2
@@ -128,6 +135,7 @@ jobs:
     with:
       server_url: ${{ needs.prepare-params.outputs.apiUrl }}
       portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
+      messagepit_url: ${{ inputs.useMessagePit && needs.prepare-params.outputs.messagepitUrl || '' }}
       command: "yarn run test:e2e:regression:portal:hosted"
       workflowName: "Portal Regression Tests on Venv"
     secrets: inherit
