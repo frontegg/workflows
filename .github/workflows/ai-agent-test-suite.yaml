@@ -1,0 +1,131 @@
+name: AI Agent Test Suite (On Venv)
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        description: Set the venv branch, leave empty to use the calling branch
+        default: ""
+      tests_tag:
+        type: string
+        required: false
+        description: Set the e2e-system-tests branch tag
+        default: master
+      expected_tests:
+        type: string
+        required: false
+        description: Fail if the project resolves to fewer tests than this, so a skipped suite cannot report green
+        default: "6"
+      continue_on_test_failure:
+        type: boolean
+        required: false
+        description: Report failing shards as warnings instead of failing the workflow
+        default: false
+    secrets:
+      GH_REPOSITORY_ADMIN_TOKEN:
+        description: "Github repository admin token"
+        required: true
+      DEV_ARGOCD_PASSWORD:
+        description: "ArgoCD password"
+        required: true
+      NPM_TOKEN:
+        description: "Npm token"
+        required: true
+      DOCKER_HUB_ACTION_USER:
+        description: "Docker hub user"
+        required: true
+      DOCKER_HUB_ACTION_PASSWORD:
+        description: "Docker hub password"
+        required: true
+      MAILOSAUR_API_KEY:
+        description: "MAILOSAUR API KEY"
+        required: true
+      MAILOSAUR_SERVER_ID:
+        description: "MAILOSAUR SERVER ID"
+        required: true
+      MAILOSAUR_SERVER_DOMAIN:
+        description: "MAILOSAUR SERVER DOMAIN"
+        required: true
+      ZEPHYR_TOKEN:
+        description: "Zephyr token"
+        required: true
+      AZURE_APP_CLIENT_ID:
+        description: "Azure app client id"
+        required: true
+      AZURE_APP_SECRET:
+        description: "Azure app secret"
+        required: true
+      DD_API_KEY:
+        description: "Datadog API Key"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+  issues: read
+  checks: write
+  statuses: write
+  pull-requests: write
+
+jobs:
+  start-venv:
+    name: Start venv
+    uses: frontegg/workflows/.github/workflows/start-venv.yaml@master
+    with:
+      volatileEnvironment: true
+      triggerSlack: false
+      ref: ${{ inputs.ref }}
+    secrets: inherit
+
+  verify-suite-size:
+    name: Verify the suite is not empty
+    needs: [start-venv]
+    uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
+    with:
+      server_url: ${{ needs.start-venv.outputs.apiUrl }}
+      portal_url: ${{ needs.start-venv.outputs.portalUrl }}
+      tests_tag: ${{ inputs.tests_tag }}
+      command: |
+        resolved=$(yarn test:e2e:ai-agent-sanity:hosted --list | grep -oE 'Total: [0-9]+ test' | grep -oE '[0-9]+')
+        echo "resolved ${resolved:-0} test(s), expected at least ${{ inputs.expected_tests }}"
+        [ "${resolved:-0}" -ge "${{ inputs.expected_tests }}" ] || {
+          echo "::error::the AI agent suite resolved ${resolved:-0} tests; specs are being skipped on this environment"
+          exit 1
+        }
+      workflowName: "Verify the suite is not empty"
+    secrets: inherit
+
+  run-ai-agent-tests:
+    name: Run AI Agent Tests on Venv
+    needs: [start-venv]
+    uses: frontegg/e2e-system-tests/.github/workflows/execute-test-command.yaml@master
+    with:
+      server_url: ${{ needs.start-venv.outputs.apiUrl }}
+      portal_url: ${{ needs.start-venv.outputs.portalUrl }}
+      tests_tag: ${{ inputs.tests_tag }}
+      command: |
+        yarn test:e2e:ai-agent-sanity:hosted --shard=${{ matrix.shard }}/${{ matrix.total }}${{ inputs.continue_on_test_failure && ' || echo "::warning::AI agent suite failed on this shard, reported as a warning" ' || '' }}
+      workflowName: "AI Agent Tests on Venv (shard ${{ matrix.shard }}/${{ matrix.total }})"
+      runs_on: ubuntu-latest-4-cores
+    strategy:
+      fail-fast: false
+      matrix:
+        total: [3]
+        shard: [1, 2, 3]
+    secrets: inherit
+
+  remove-venv:
+    name: Remove venv
+    needs: [start-venv, verify-suite-size, run-ai-agent-tests]
+    if: |
+      always() &&
+      (needs.start-venv.outputs.environmentId) &&
+      !contains(needs.run-ai-agent-tests.result, 'failure') &&
+      !contains(needs.verify-suite-size.result, 'failure')
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
+    with:
+      venvId: ${{ needs.start-venv.outputs.environmentId }}
+      gracePeriodInMinutes: "0"
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
