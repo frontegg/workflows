@@ -83,17 +83,33 @@ jobs:
         shard: [1, 2]
     secrets: inherit
 
+  # Two removal jobs so a failure never strands a venv for the full 2h age cap:
+  #  - tests failed  → keep briefly, the venv is worth poking at
+  #  - guard/setup failed, or everything passed → remove now, nothing to debug
   remove-venv:
     name: Remove venv
     needs: [start-venv, verify-suite-size, run-ai-agent-tests]
     if: |
       always() &&
       (needs.start-venv.outputs.environmentId) &&
-      !contains(needs.run-ai-agent-tests.result, 'failure') &&
-      !contains(needs.verify-suite-size.result, 'failure')
+      !contains(needs.run-ai-agent-tests.result, 'failure')
     uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
     with:
       venvId: ${{ needs.start-venv.outputs.environmentId }}
       gracePeriodInMinutes: "0"
+    secrets:
+      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+
+  remove-venv-after-test-failure:
+    name: Remove venv (tests failed)
+    needs: [start-venv, run-ai-agent-tests]
+    if: |
+      always() &&
+      (needs.start-venv.outputs.environmentId) &&
+      contains(needs.run-ai-agent-tests.result, 'failure')
+    uses: frontegg/workflows/.github/workflows/remove-single-venv.yaml@master
+    with:
+      venvId: ${{ needs.start-venv.outputs.environmentId }}
+      gracePeriodInMinutes: "30"
     secrets:
       admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
