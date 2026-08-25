@@ -36,6 +36,11 @@ on:
         required: false
         description: 'Set to true in order to disable starting dashboard application'
         default: false
+      extended:
+        type: boolean
+        required: false
+        description: 'Set to true in order to deploy the extended applications into the venv, currently mcp-gateway and custom-code'
+        default: false
       ref:
         type: string
         required: false
@@ -112,6 +117,7 @@ jobs:
           leaseTime: ${{ inputs.leaseTime }}
           venvRepoDirectory: ${{ github.workspace }}/venv/environments
           disableDashboard: ${{ inputs.disableDashboard }}
+          extended: ${{ inputs.extended }}
           ref: ${{ inputs.ref }}
       - name: Generate matrix for docker build
         uses: actions/github-script@v7
