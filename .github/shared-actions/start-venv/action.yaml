@@ -31,6 +31,14 @@ inputs:
     description: "Should the venv disable dashboard"
     required: false
     default: "false"
+  enableMcpGateway:
+    description: "Should the venv deploy the mcp-gateway application"
+    required: false
+    default: "false"
+  enableCustomCode:
+    description: "Should the venv deploy the custom-code application"
+    required: false
+    default: "false"
   ref:
     description: "The branch name to start the venv from"
     required: false
@@ -82,6 +90,8 @@ runs:
         venvRepository: ${{ inputs.venvRepository }}
         venvRepositoryMainBranchName: ${{ inputs.venvRepositoryMainBranchName }}
         disableDashboard: ${{ inputs.disableDashboard }}
+        enableMcpGateway: ${{ inputs.enableMcpGateway }}
+        enableCustomCode: ${{ inputs.enableCustomCode }}
         branchName: ${{ inputs.ref }}
     - name: Commit venv file to repo
       shell: bash
