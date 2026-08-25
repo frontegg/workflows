@@ -32,9 +32,9 @@ inputs:
     required: false
     default: "false"
   extended:
-    description: "Comma separated list of optional applications to deploy into the venv"
+    description: "Should the venv deploy the extended applications"
     required: false
-    default: ""
+    default: "false"
   ref:
     description: "The branch name to start the venv from"
     required: false

@@ -75,7 +75,7 @@ jobs:
     with:
       volatileEnvironment: true
       triggerSlack: false
-      extended: mcp-gateway
+      extended: true
       ref: ${{ inputs.ref }}
     secrets: inherit
 

@@ -37,10 +37,10 @@ on:
         description: 'Set to true in order to disable starting dashboard application'
         default: false
       extended:
-        type: string
+        type: boolean
         required: false
-        description: 'Comma separated list of optional applications to deploy into the venv, for example mcp-gateway,custom-code'
-        default: ''
+        description: 'Set to true in order to deploy the extended applications into the venv, currently mcp-gateway and custom-code'
+        default: false
       ref:
         type: string
         required: false
