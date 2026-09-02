@@ -405,6 +405,7 @@ jobs:
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         env:
           SHADOW_VERSION: ${{ steps.publish-shadow.outputs.published_version }}
+          CHANGED_PACKAGES: ${{ steps.lerna-changed.outputs.names }}
         run: |
           if [ -z "${SHADOW_VERSION}" ]; then
             echo "::error::Missing published Verdaccio version"
@@ -441,26 +442,54 @@ jobs:
               out.push('');
               fs.writeFileSync(f, out.join('\n'));
             "
-            BUMP_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact"
+            export DEP_FIELD="resolutions"
+            INSTALL_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install"
           elif [ -f yarn.lock ]; then
-            BUMP_CMD="yarn upgrade"
+            export DEP_FIELD="resolutions"
+            INSTALL_CMD="yarn install"
           elif [ -f package-lock.json ]; then
-            BUMP_CMD="npm install"
+            export DEP_FIELD="overrides"
+            INSTALL_CMD="npm install"
           else
             echo "::warning::No lockfile found; skipping lockfile bump"
             exit 0
           fi
 
-          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
-          for pkg in "${PKGS[@]}"; do
-            if grep -rqF "\"${pkg}\":" --include="package.json" \
-                --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
-              echo "Bumping ${pkg} to ${SHADOW_VERSION}"
-              eval "${BUMP_CMD} \"${pkg}@${SHADOW_VERSION}\""
-            else
-              echo "Skipping ${pkg}; not a direct workspace dependency"
-            fi
-          done
+          MANIFESTS="$(find . -name package.json \
+            -not -path '*/node_modules/*' -not -path './.yarn/*' -not -path './_shadow-libs/*')"
+
+          # A shadow version is a prerelease, so it satisfies no published range. Rewriting only the
+          # direct dependencies leaves any @frontegg package that another @frontegg package depends
+          # on installed a second time at its published version, and the build sees two copies of it;
+          # the resolution catches those. Both are written because npm rejects an override whose spec
+          # differs from a direct dependency on the same package (EOVERRIDE).
+          MANIFESTS="${MANIFESTS}" node -e "
+            const fs = require('fs');
+            const { DEP_FIELD: field, CHANGED_PACKAGES: names, SHADOW_VERSION: version, MANIFESTS: files } = process.env;
+            const packages = names.split(',').filter(Boolean);
+            const depFields = ['dependencies', 'devDependencies', 'optionalDependencies'];
+
+            for (const file of files.split('\n').filter(Boolean)) {
+              const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+              const pinned = packages.filter((name) => depFields.some((f) => manifest[f]?.[name]));
+              if (!pinned.length) continue;
+              for (const name of pinned) {
+                for (const f of depFields.filter((f) => manifest[f]?.[name])) {
+                  manifest[f][name] = version;
+                }
+              }
+              fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n');
+              console.log(\`\${file}: \${pinned.join(', ')} -> \${version}\`);
+            }
+
+            const root = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            root[field] = root[field] || {};
+            for (const name of packages) root[field][name] = version;
+            fs.writeFileSync('package.json', JSON.stringify(root, null, 2) + '\n');
+            console.log(\`\${field}: \${packages.join(', ')} -> \${version}\`);
+          "
+
+          eval "${INSTALL_CMD}"
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
