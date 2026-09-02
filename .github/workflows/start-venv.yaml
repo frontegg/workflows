@@ -405,6 +405,7 @@ jobs:
         if: ${{ inputs.useVerdaccio && steps.lerna-changed.outputs.has_changes == 'true' }}
         env:
           SHADOW_VERSION: ${{ steps.publish-shadow.outputs.published_version }}
+          CHANGED_PACKAGES: ${{ steps.lerna-changed.outputs.names }}
         run: |
           if [ -z "${SHADOW_VERSION}" ]; then
             echo "::error::Missing published Verdaccio version"
@@ -441,13 +442,13 @@ jobs:
               out.push('');
               fs.writeFileSync(f, out.join('\n'));
             "
-            DEP_FIELD="resolutions"
+            export DEP_FIELD="resolutions"
             INSTALL_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install"
           elif [ -f yarn.lock ]; then
-            DEP_FIELD="resolutions"
+            export DEP_FIELD="resolutions"
             INSTALL_CMD="yarn install"
           elif [ -f package-lock.json ]; then
-            DEP_FIELD="overrides"
+            export DEP_FIELD="overrides"
             INSTALL_CMD="npm install"
           else
             echo "::warning::No lockfile found; skipping lockfile bump"
@@ -459,7 +460,7 @@ jobs:
           # on installed a second time at its published version, and the build sees two copies of it.
           node -e "
             const fs = require('fs');
-            const [field, names, version] = process.argv.slice(1);
+            const { DEP_FIELD: field, CHANGED_PACKAGES: names, SHADOW_VERSION: version } = process.env;
             const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             manifest[field] = manifest[field] || {};
             for (const name of names.split(',').filter(Boolean)) {
@@ -467,7 +468,7 @@ jobs:
               console.log(\`Pinning \${name} to \${version}\`);
             }
             fs.writeFileSync('package.json', JSON.stringify(manifest, null, 2) + '\n');
-          " "${DEP_FIELD}" "${{ steps.lerna-changed.outputs.names }}" "${SHADOW_VERSION}"
+          "
 
           eval "${INSTALL_CMD}"
       - name: Build and push
