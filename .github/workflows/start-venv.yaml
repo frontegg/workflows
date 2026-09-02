@@ -441,26 +441,35 @@ jobs:
               out.push('');
               fs.writeFileSync(f, out.join('\n'));
             "
-            BUMP_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn up --exact"
+            DEP_FIELD="resolutions"
+            INSTALL_CMD="YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install"
           elif [ -f yarn.lock ]; then
-            BUMP_CMD="yarn upgrade"
+            DEP_FIELD="resolutions"
+            INSTALL_CMD="yarn install"
           elif [ -f package-lock.json ]; then
-            BUMP_CMD="npm install"
+            DEP_FIELD="overrides"
+            INSTALL_CMD="npm install"
           else
             echo "::warning::No lockfile found; skipping lockfile bump"
             exit 0
           fi
 
-          IFS=',' read -ra PKGS <<< "${{ steps.lerna-changed.outputs.names }}"
-          for pkg in "${PKGS[@]}"; do
-            if grep -rqF "\"${pkg}\":" --include="package.json" \
-                --exclude-dir=node_modules --exclude-dir=_shadow-libs --exclude-dir=.yarn .; then
-              echo "Bumping ${pkg} to ${SHADOW_VERSION}"
-              eval "${BUMP_CMD} \"${pkg}@${SHADOW_VERSION}\""
-            else
-              echo "Skipping ${pkg}; not a direct workspace dependency"
-            fi
-          done
+          # A shadow version is a prerelease, so it satisfies no published range. Bumping only the
+          # direct dependencies leaves any @frontegg package that another @frontegg package depends
+          # on installed a second time at its published version, and the build sees two copies of it.
+          node -e "
+            const fs = require('fs');
+            const [field, names, version] = process.argv.slice(1);
+            const manifest = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            manifest[field] = manifest[field] || {};
+            for (const name of names.split(',').filter(Boolean)) {
+              manifest[field][name] = version;
+              console.log(\`Pinning \${name} to \${version}\`);
+            }
+            fs.writeFileSync('package.json', JSON.stringify(manifest, null, 2) + '\n');
+          " "${DEP_FIELD}" "${{ steps.lerna-changed.outputs.names }}" "${SHADOW_VERSION}"
+
+          eval "${INSTALL_CMD}"
       - name: Build and push
         uses: docker/build-push-action@v6
         if: ${{ steps.check-image.outputs.image-exist == 'false' }}
