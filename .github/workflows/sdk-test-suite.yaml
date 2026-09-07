@@ -53,6 +53,15 @@ on:
       MAILOSAUR_SERVER_DOMAIN:
         description: 'MAILOSAUR SERVER DOMAIN'
         required: true
+      MESSAGEPIT_USERNAME:
+        description: 'MessagePit inbox username'
+        required: false
+      MESSAGEPIT_PASSWORD:
+        description: 'MessagePit inbox password'
+        required: false
+      TWINGATE_SERVICE_KEY:
+        description: 'Twingate service key for staging MessagePit'
+        required: false
       ZEPHYR_TOKEN:
         description: ''
         required: true
@@ -152,6 +161,10 @@ jobs:
           MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          MESSAGEPIT_BASE_URL: ${{ vars.FRONTEGG_MESSAGEPIT_BASE_URL }}
+          MESSAGEPIT_USERNAME: ${{ secrets.MESSAGEPIT_USERNAME }}
+          MESSAGEPIT_PASSWORD: ${{ secrets.MESSAGEPIT_PASSWORD }}
+          TWINGATE_SERVICE_KEY: ${{ secrets.TWINGATE_SERVICE_KEY }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
@@ -219,6 +232,10 @@ jobs:
           MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          MESSAGEPIT_BASE_URL: ${{ vars.FRONTEGG_MESSAGEPIT_BASE_URL }}
+          MESSAGEPIT_USERNAME: ${{ secrets.MESSAGEPIT_USERNAME }}
+          MESSAGEPIT_PASSWORD: ${{ secrets.MESSAGEPIT_PASSWORD }}
+          TWINGATE_SERVICE_KEY: ${{ secrets.TWINGATE_SERVICE_KEY }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
@@ -286,6 +303,10 @@ jobs:
           MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          MESSAGEPIT_BASE_URL: ${{ vars.FRONTEGG_MESSAGEPIT_BASE_URL }}
+          MESSAGEPIT_USERNAME: ${{ secrets.MESSAGEPIT_USERNAME }}
+          MESSAGEPIT_PASSWORD: ${{ secrets.MESSAGEPIT_PASSWORD }}
+          TWINGATE_SERVICE_KEY: ${{ secrets.TWINGATE_SERVICE_KEY }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
@@ -349,6 +370,10 @@ jobs:
           MAILOSAUR_API_KEY: ${{ secrets.MAILOSAUR_API_KEY }}
           MAILOSAUR_SERVER_ID: ${{ secrets.MAILOSAUR_SERVER_ID }}
           MAILOSAUR_SERVER_DOMAIN: ${{ secrets.MAILOSAUR_SERVER_DOMAIN }}
+          MESSAGEPIT_BASE_URL: ${{ vars.FRONTEGG_MESSAGEPIT_BASE_URL }}
+          MESSAGEPIT_USERNAME: ${{ secrets.MESSAGEPIT_USERNAME }}
+          MESSAGEPIT_PASSWORD: ${{ secrets.MESSAGEPIT_PASSWORD }}
+          TWINGATE_SERVICE_KEY: ${{ secrets.TWINGATE_SERVICE_KEY }}
           ZEPHYR_TOKEN: ${{ secrets.ZEPHYR_TOKEN }}
           AZURE_APP_CLIENT_ID: ${{ secrets.AZURE_APP_CLIENT_ID }}
           AZURE_APP_SECRET: ${{ secrets.AZURE_APP_SECRET }}
