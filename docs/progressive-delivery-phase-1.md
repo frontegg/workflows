@@ -1,7 +1,11 @@
 # Progressive Delivery — Phase 1 Plan
 
-_Status: design settled, nothing built. Last updated 2026-09-16._
-_Verified against `workflows@594548f`, `StateOps@95feb8ab6`, `helm-charts` local checkout._
+_Status: design settled, nothing built. Last updated 2026-09-17._
+_Verified against `workflows@594548f`, `StateOps@95feb8ab6` (Rollouts + notifications
+files re-checked against `origin/main` 2026-09-17), `helm-charts` local checkout,
+`nexus@7286753`, and **Argo Rollouts v1.8.3** — the installed version (argo-helm chart
+`2.39.6`). The readthedocs `stable` docs describe v1.10.0; every claim below was
+checked against the v1.8.3 source where the two could differ._
 
 ## 1. Goal
 
@@ -87,8 +91,16 @@ failure: block promotion and surface it (GitHub status + message).
   `on-sync-status-unknown`, `on-sync-succeeded`, `progressing`, `healthy`. Services:
   `slack`, `opsgenie`. Adding `service.github` is a values change to a file that
   already exists — not a new component.
-- **Argo Rollouts installed in all 10 envs** (`namespaces/argo-rollouts/frontegg-argo-rollouts`,
-  wave 600, per-env values in every `environments-values/*/main/`).
+- **Argo Rollouts v1.8.3 installed in all 10 envs** (`namespaces/argo-rollouts/frontegg-argo-rollouts`,
+  argo-helm chart `2.39.6`, unchanged since 2025-06-18, wave 600, per-env values in
+  every `environments-values/*/main/`). The unified-chart Rollout template sets neither
+  `progressDeadlineSeconds` nor `progressDeadlineAbort`, so the defaults apply: 600s,
+  **no abort on deadline** (see 5.3).
+- **The Gateway API traffic-router plugin is configured in `staging-group` only**,
+  pinned to `argoproj-labs/gatewayAPI` **v0.2.0** (released 2024-02-26; latest is
+  v0.17.0, 2026-09-01). No production `frontegg-argo-rollouts/values.yaml` declares
+  `trafficRouterPlugins`, so canary mode cannot be switched on in production without a
+  StateOps change.
 
 ### 3.4 The service chart (`helm-charts/common/unified-chart`)
 
@@ -96,18 +108,33 @@ failure: block promotion and surface it (GitHub status + message).
   (`templates/{web,high-priority,worker}/*-rollout.yaml`), each with HPA + KEDA
   ScaledObject. **All services are already Rollouts.**
 - Strategy is canary when `argoRollouts.progressiveDelivery.enabled` (default
-  `false`), else `blueGreen` with `autoPromotionEnabled: true` hardcoded.
+  `false`), else `blueGreen` with `autoPromotionEnabled: true` hardcoded (the upstream
+  default anyway).
 - Canary steps: `setCanaryScale(1)` -> `setHeaderRoute` (match
   `frontegg-trace-id` prefix `automation`) -> `analysis` -> remove header route.
   **No `pause` step.** Traffic routing via `argoproj-labs/gatewayAPI` plugin
-  (`useHeaderRoutes: true`, canary/stable Services, managed HTTPRoute).
+  (`useHeaderRoutes: true`, canary/stable Services, header route pre-declared in
+  `managedRoutes` as the plugin docs require). **The plugin binary is deployed in
+  staging only** (3.3).
 - Analysis (`*-analysis-template.yaml`): one `web` provider metric — POST to
   `blackBox.url` (default `nexus-v2-web.frontegg.svc.cluster.local/blackbox`),
   `successCondition: result.status_code == 200`, `count: 1`, `failureLimit: 1`,
   `consecutiveErrorLimit: 0`, `timeoutSeconds: 1200`.
+- **That analysis can only fail through the Error path** (v1.8.3
+  `analysis/analysis.go`, `assessMetricFailureInconclusiveOrError`): a metric is Failed
+  only when `failed > failureLimit`, so with one measurement and `failureLimit: 1` a
+  failed check still ends **Successful**. What aborts the Rollout is a non-2xx response
+  — the web provider marks it Error and `consecutiveErrorLimit: 0` fails the run. nexus
+  `/blackbox` (`internal/handler/handler.go`) dispatches a GitHub Actions blackbox
+  workflow, waits for its conclusion, answers **500** on failure and `{"status": true}`
+  with 200 on success. `result.status_code` therefore names a field that never exists
+  and the `successCondition` is dead code. It works by accident (see 8.8, 10.4).
 - Consequence: **Application health converges on its own** (no manual pause in
   either mode) and a full canary is bounded at roughly one 20-minute call plus
-  rollout time. A 45–60 minute job timeout is comfortable; the 6-hour cap is far.
+  rollout time. Analysis, experiment and pause steps do not count toward
+  `progressDeadlineSeconds` (`rollout/sync.go` `isIndefiniteStep`), so the 20-minute
+  wait cannot time the Rollout out. A 45–60 minute job timeout is comfortable; the
+  6-hour cap is far.
 
 ### 3.5 GitHub
 
@@ -131,7 +158,8 @@ failure: block promotion and surface it (GitHub status + message).
 Corrections made during design (recorded so they are not re-made): services *are*
 Rollouts already (not Deployments); rings *are* human-gated today (not auto-flowing);
 progressive delivery machinery (Gateway API routing, AnalysisTemplates) *already
-exists* behind a feature flag.
+exists* behind a feature flag — in the chart; the traffic-router plugin itself is
+deployed in staging only (3.3).
 
 ## 5. Research summary (Fable agents, 2026-09-16)
 
@@ -164,9 +192,14 @@ exists* behind a feature flag.
 - Failure templates should use `status.sync.revisions[i]`, not `syncResult`, which
   can be nil when a sync fails before producing a result
   ([argo-cd#29575](https://github.com/argoproj/argo-cd/issues/29575)).
-- Argo Rollouts notifications have **no `oncePer` and no retry**
-  ([argo-rollouts#5037](https://github.com/argoproj/argo-rollouts/issues/5037)).
-  Use them only for fast-fail detail, not as the gate.
+- Argo Rollouts notifications have **no `oncePer` and no retry** — verified in v1.8.3
+  `utils/record/record.go`: the event recorder calls `RunTrigger` then `Send` directly,
+  logs a failed send and moves on, and never reads or writes the
+  `notified.notifications.argoproj.io` state annotation
+  ([argo-rollouts#5037](https://github.com/argoproj/argo-rollouts/issues/5037), open,
+  external reporter). The docs page lists nine triggers (`on-rollout-completed`,
+  `on-rollout-aborted`, `on-analysis-run-failed`, `on-analysis-run-error`, ...) and
+  says nothing about either. Use them only for fast-fail detail, not as the gate.
 - Multi-source revision arrays (`status.sync.revisions[]`,
   `status.operationState.syncResult.revisions[]`) are indexed like `spec.sources`;
   populated for multi-source since after ArgoCD 2.6.7 — **verify on the deployed version**.
@@ -179,9 +212,17 @@ exists* behind a feature flag.
 - `Deployment` Healthy = observedGeneration caught up, replicas updated and available.
   Never inspects restarts or CrashLoopBackOff; a crashlooping new version sits in
   `Progressing` until `progressDeadlineSeconds` (default 600s) then `Degraded`.
-- `Rollout` Healthy additionally requires `stableRS == currentPodHash` (fully
-  promoted). Paused canary = `Suspended`; aborted = `Degraded`. AnalysisRun failure
-  aborts the Rollout -> `Degraded` -> auto-rollback to stable.
+- `Rollout` health: ArgoCD's `health.lua` surfaces `status.phase` as-is, mapping
+  `Paused` -> `Suspended`; the phase is computed in v1.8.3
+  `utils/rollout/rolloututil.go`. **Healthy** = `stableRS == currentPodHash` (fully
+  promoted) and `available >= updated >= desired`. **Degraded** = `InvalidSpec`,
+  `RolloutAborted` or `ProgressDeadlineExceeded`. AnalysisRun failure or error aborts
+  the Rollout -> `Degraded`; the stable ReplicaSet keeps serving.
+- **Degraded is not always terminal.** With `progressDeadlineAbort` unset (default
+  `false`), a Rollout that shows no progress for `progressDeadlineSeconds` (600s) is
+  marked `Degraded` with reason `ProgressDeadlineExceeded` **but keeps rolling**, and
+  flips back to Progressing then Healthy once pods come up. StateOps hit exactly this
+  in 2024 (PR #772). Only `RolloutAborted` stays until someone retries. See 8.9.
 - Application health = worst child, including non-Rollout children (ExternalSecret,
   ScaledObject, hook Jobs). **Any child stuck in `Progressing` means the app never
   reaches Healthy** — see 8.1.
@@ -294,14 +335,21 @@ whether Promoter accepts CI (not the hydrator) as the writer of `-next` branches
 - [ ] `status.sync.revisions[1]` resolves the force-moved `<env>` tag to the expected
       service SHA on a real Application.
 - [ ] Notifications controller pods have egress to `api.github.com:443` (check
-      against `forward-proxy` / `zero-trust` policies).
+      against `forward-proxy` / `zero-trust` policies). nexus pods already have it —
+      they dispatch and poll GitHub Actions from staging and five production clusters
+      (8.11) — so the question is narrowed to the `argocd` namespace.
 - [ ] The argo-helm chart in `argo-release` installs the notifications controller
       (it does — `notifications.enabled: true` — but confirm the catalog triggers are
       not overriding custom ones).
 - [ ] Trigger expressions with `revisions[1]` work via
       `argocd admin notifications trigger run <trigger> <app>` before rollout.
+- [ ] Confirm the AnalysisTemplate reading (3.4) with a `dryRun` metric in staging: a
+      200 with the real nexus body must show `Failed` on the measurement yet
+      `Successful` on the run; a 500 must show `Error` and abort the Rollout.
+- [ ] Decide `progressDeadlineAbort` for the unified-chart before wiring a degraded
+      trigger to a `failure` status (8.9).
 
-## 8. Review findings (Fable, 2026-09-16)
+## 8. Review findings (Fable, 2026-09-16; items 8–11 added 2026-09-17 after checking the Argo Rollouts docs and v1.8.3 source)
 
 1. **Stale success on rollback** — commit statuses persist; rolling back to a commit
    that was deployed before finds its old `success` and passes instantly. **Fix:
@@ -320,6 +368,26 @@ whether Promoter accepts CI (not the hydrator) as the writer of `-next` branches
    Rollouts abort to stable on analysis failure; a `Degraded` Deployment stays so.
 7. **Positive side effect** — AU's Checkly checks will run against a staging that has
    actually finished rolling out.
+8. **The unified-chart analysis cannot fail on a measurement** — `failureLimit: 1`
+   with `count: 1`; only a non-2xx from nexus aborts (3.4). Harmless for phase 1,
+   whose gate is Application health and where a 500 does abort, but fix it before
+   phase 2 leans on analysis: `failureLimit: 0` and a `successCondition` that matches
+   the real body, or no condition at all.
+9. **`Degraded` can be transient** — `ProgressDeadlineExceeded` without
+   `progressDeadlineAbort` recovers on its own (5.3). If Option A's degraded trigger
+   writes `failure` and the job fails fast on it, a slow but successful rollout (image
+   pull, node scale-up) fails the ring. Either set `progressDeadlineAbort: true` in the
+   chart so that Degraded always means aborted, or have the poller treat `failure` as
+   "keep waiting, flag it in the summary" and let only the timeout end the job.
+   Decide in 9.
+10. **Canary mode is staging-only today** — the Gateway API plugin is not configured in
+    any production environment and is fifteen releases behind (3.3). Not a phase-1
+    blocker, since blue-green converges the same way, but a phase-2 prerequisite.
+11. **nexus is a live precedent for in-cluster -> GitHub** — it holds a GitHub token
+    through an ExternalSecret and dispatches and polls GitHub Actions from inside
+    staging and five production clusters (prd-ap-se2, prd-ca-c1, prd-eu-w1, prd-eu-w2,
+    prd-us-e1). It could even post the commit status itself. Not chosen: it is absent
+    from prd-eu-n1 and prd-us-e2, and it would couple the gate to a service deploy.
 
 ## 9. Open questions
 
@@ -332,6 +400,10 @@ whether Promoter accepts CI (not the hydrator) as the writer of `-next` branches
   before failing.
 - **Where the ring -> cluster map lives.**
 - **Fix the existing Slack notification templates** (see 10.1)?
+- **`progressDeadlineAbort: true` in the unified-chart, or tolerate a transient
+  `Degraded` in the poller?** (8.9)
+- **Upgrade the Gateway API plugin and roll it out to production** before phase 2,
+  or as part of it? (8.10)
 
 ## 10. Pre-existing issues found along the way
 
@@ -349,6 +421,15 @@ whether Promoter accepts CI (not the hydrator) as the writer of `-next` branches
 3. StateOps docs (`CLAUDE.md`, `.claude/rules/cluster-applications.md`) describe
    ArgoCD Image Updater as how microservices update. True only of the dormant legacy
    `charts` path.
+4. **unified-chart AnalysisTemplate can never fail a measurement** — `failureLimit: 1`
+   with `count: 1`, and `successCondition: result.status_code == 200` checks a field
+   nexus does not return (its body is `{"status": true}`). The Rollout aborts only
+   because nexus answers 500 on a failed blackbox run. Fix: `failureLimit: 0`; a
+   condition on the real body, or none (3.4, 8.8).
+5. **Gateway API plugin pinned to v0.2.0 (2024-02) in staging and absent from
+   production**; latest is v0.17.0. Header-route handling changed in v0.15.0 (one
+   managed rule per source rule), so the upgrade should be tested against the chart's
+   single `setHeaderRoute` step.
 
 ## 11. References
 
@@ -363,3 +444,16 @@ whether Promoter accepts CI (not the hydrator) as the writer of `-next` branches
 - Kargo promotion steps (note Enterprise gating): https://docs.kargo.io/user-guide/reference-docs/promotion-steps/
 - GitOps Promoter: https://github.com/argoproj-labs/gitops-promoter
 - Issues: argo-cd #15617, #20879, #29575, #29410; argo-rollouts #5037; kargo #4189, #4020
+- Argo Rollouts docs (`stable` = v1.10.0; installed v1.8.3):
+  https://argo-rollouts.readthedocs.io/en/stable/features/notifications/ ,
+  https://argo-rollouts.readthedocs.io/en/stable/features/analysis/ ,
+  https://argo-rollouts.readthedocs.io/en/stable/analysis/web/ ,
+  https://argo-rollouts.readthedocs.io/en/stable/features/specification/
+- Argo Rollouts v1.8.3 source read for 3.4 / 5.2 / 5.3: `analysis/analysis.go`,
+  `metricproviders/webmetric/webmetric.go`, `utils/rollout/rolloututil.go`,
+  `rollout/sync.go`, `utils/conditions/conditions.go`, `utils/record/record.go`
+- ArgoCD Rollout health check: `resource_customizations/argoproj.io/Rollout/health.lua`
+- Gateway API plugin, header routes:
+  https://rollouts-plugin-trafficrouter-gatewayapi.readthedocs.io/en/latest/features/header-based-routing/
+- nexus blackbox endpoint: `frontegg/nexus` `internal/handler/handler.go`,
+  `internal/blackbox/blackbox.go`
