@@ -75,6 +75,7 @@ jobs:
     with:
       volatileEnvironment: true
       triggerSlack: false
+      extended: true
       ref: ${{ inputs.ref }}
     secrets: inherit
 
