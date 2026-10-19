@@ -37,9 +37,33 @@ runs:
         venvRepoDirectory: ${{ inputs.venvRepoDirectory }}
         venvId: ${{ inputs.venvId }}
         gracePeriodInMinutes: ${{ inputs.gracePeriodInMinutes }}
-    - name: Add changes and push venv files
-      uses: EndBug/add-and-commit@v9
-      with:
-        author_name: 'Automation'
-        message: venv ${{ steps.venv-actions.outputs.environmentId }} removed
-        cwd: './venv'
+    - name: Commit and push venv removal
+      shell: bash
+      working-directory: './venv'
+      env:
+        VENV_ID: ${{ inputs.venvId }}
+      run: |
+        git config user.name "Automation"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add -A
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+          exit 0
+        fi
+        git commit -m "venv ${VENV_ID} removed"
+        # Other pipelines push to the shared venv repo at the same time, so rebase and retry on a rejected push
+        for attempt in 1 2 3 4 5; do
+          if git push origin HEAD:master; then
+            exit 0
+          fi
+          echo "Push rejected (attempt ${attempt}/5), rebasing on the latest master"
+          sleep $((attempt * 2))
+          git fetch origin master
+          if ! git rebase origin/master; then
+            git rebase --abort
+            echo "Rebase conflict while removing venv ${VENV_ID}"
+            exit 1
+          fi
+        done
+        echo "Could not push the removal of venv ${VENV_ID} after 5 attempts"
+        exit 1
