@@ -41,5 +41,6 @@ runs:
       uses: EndBug/add-and-commit@v9
       with:
         author_name: 'Automation'
-        message: venv ${{ steps.venv-actions.outputs.environmentId }} removed
+        message: venv ${{ inputs.venvId }} removed
         cwd: './venv'
+        pull: '--rebase --autostash'
