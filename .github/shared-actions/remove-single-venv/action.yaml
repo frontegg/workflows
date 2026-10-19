@@ -44,7 +44,7 @@ runs:
         VENV_ID: ${{ inputs.venvId }}
       run: |
         git config user.name "Automation"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
         git add -A
         if git diff --cached --quiet; then
           echo "No changes to commit"
