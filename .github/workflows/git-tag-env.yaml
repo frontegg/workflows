@@ -17,8 +17,7 @@ env:
 jobs:
   git-tag-env:
     environment: ${{ inputs.environment }}
-    # Production tags are always moved from GitHub-hosted runners, whatever the caller asks for.
-    runs-on: ${{ startsWith(inputs.environment, 'production') && 'ubuntu-latest' || inputs.runner }}
+    runs-on: ${{ inputs.runner }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
