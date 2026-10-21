@@ -141,7 +141,7 @@ jobs:
               echo "action=copy" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-            echo "::error::could not inspect $TARGET_REF. Docker Hub answers 'access denied' when the repository does not exist or the token lacks scope: create the repository with Terraform (infra/customer-registry) and check target_password."
+            echo "::error::could not inspect $TARGET_REF. Docker Hub answers 'access denied' when the repository does not exist or the token lacks scope: create the target repository first and check target_password."
             sed 's/^/  /' "$RUNNER_TEMP/inspect.err"
             exit 1
           fi
