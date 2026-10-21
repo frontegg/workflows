@@ -31,7 +31,7 @@ on:
     secrets:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
-        required: true
+        required: false
       DEV_ARGOCD_PASSWORD:
         description: 'ArgoCD password'
         required: true
@@ -130,12 +130,6 @@ jobs:
         total_shards: [ 3 ]
         shard_index: [ 1, 2, 3 ]
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/e2e-system-tests
-          ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
         uses: actions/create-github-app-token@v2
@@ -143,6 +137,12 @@ jobs:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           owner: ${{ github.repository_owner }}
+      - name: Checkout codes
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ steps.create_bot_token.outputs.token }}
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -152,7 +152,7 @@ jobs:
       - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-test
         with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          github_token: ${{ steps.create_bot_token.outputs.token }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
@@ -201,12 +201,6 @@ jobs:
         matrix:
             nextjs_router: [ pages, app ]
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/e2e-system-tests
-          ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
         uses: actions/create-github-app-token@v2
@@ -214,6 +208,12 @@ jobs:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           owner: ${{ github.repository_owner }}
+      - name: Checkout codes
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ steps.create_bot_token.outputs.token }}
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -223,7 +223,7 @@ jobs:
       - name: Run E2E Tests from E2E-system-tests repo
         uses: ./.github/actions/e2e-test
         with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          github_token: ${{ steps.create_bot_token.outputs.token }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
@@ -272,12 +272,6 @@ jobs:
         total_shards: [ 3 ]
         shard_index: [ 1, 2, 3 ]
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/e2e-system-tests
-          ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
         uses: actions/create-github-app-token@v2
@@ -285,6 +279,12 @@ jobs:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           owner: ${{ github.repository_owner }}
+      - name: Checkout codes
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ steps.create_bot_token.outputs.token }}
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -294,7 +294,7 @@ jobs:
       - name: Run Admin Box Tests from E2E-system-tests repo
         uses: ./.github/actions/admin-box
         with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          github_token: ${{ steps.create_bot_token.outputs.token }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
@@ -340,12 +340,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [ prepare-params ]
     steps:
-      - name: Checkout codes
-        uses: actions/checkout@v4
-        with:
-          repository: frontegg/e2e-system-tests
-          ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
       - id: create_bot_token
         name: Create bot token
         uses: actions/create-github-app-token@v2
@@ -353,6 +347,12 @@ jobs:
           app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
           private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
           owner: ${{ github.repository_owner }}
+      - name: Checkout codes
+        uses: actions/checkout@v4
+        with:
+          repository: frontegg/e2e-system-tests
+          ref: ${{ inputs.tests_tag }}
+          token: ${{ steps.create_bot_token.outputs.token }}
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -362,7 +362,7 @@ jobs:
       - name: Run Login Box Tests from E2E-system-tests repo
         uses: ./.github/actions/login-box
         with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          github_token: ${{ steps.create_bot_token.outputs.token }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
