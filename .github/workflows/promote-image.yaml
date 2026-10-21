@@ -1,0 +1,198 @@
+name: Promote container image
+run-name: Promote ${{ inputs.image }}:${{ inputs.tag }} to ${{ inputs.target_namespace }}
+
+# Copies an already-built multi-arch image from an internal Docker Hub namespace to a
+# customer-facing Docker Hub namespace by digest (no rebuild). Idempotent: re-running for
+# a tag that already exists with the same digest is a no-op; a different digest fails.
+#
+# Callers must provide a read-only credential for the source namespace and a push-scoped
+# organization access token for the target namespace. Never pass the credential that
+# pushes internal images.
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: 'Repository name without namespace, e.g. hybrid-agen-co-gw'
+        required: true
+        type: string
+      tag:
+        description: 'Source tag to promote (the 7-char commit SHA pushed by CI)'
+        required: true
+        type: string
+      target_namespace:
+        description: 'Customer-facing Docker Hub organization, e.g. fronteggcustomers'
+        required: true
+        type: string
+      source_namespace:
+        description: 'Internal Docker Hub namespace that holds the built image'
+        required: false
+        default: 'frontegg'
+        type: string
+      target_tag:
+        description: 'Tag to write in the target namespace; defaults to the source tag'
+        required: false
+        default: ''
+        type: string
+      environment:
+        description: 'GitHub environment to run under (required reviewers / environment secrets)'
+        required: false
+        default: 'customer-registry'
+        type: string
+    secrets:
+      source_user:
+        description: 'Docker Hub username with read-only access to the source repository'
+        required: true
+      source_password:
+        description: 'Password / access token for source_user'
+        required: true
+      target_password:
+        description: 'Organization access token with image push scope on the target repository (username is target_namespace)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.image }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      REGISTRY: docker.io
+      SOURCE_REF: docker.io/${{ inputs.source_namespace }}/${{ inputs.image }}:${{ inputs.tag }}
+      TARGET_REF: docker.io/${{ inputs.target_namespace }}/${{ inputs.image }}:${{ inputs.target_tag != '' && inputs.target_tag || inputs.tag }}
+    steps:
+      - name: Validate inputs
+        env:
+          IMAGE: ${{ inputs.image }}
+          TAG: ${{ inputs.tag }}
+          TARGET_TAG: ${{ inputs.target_tag != '' && inputs.target_tag || inputs.tag }}
+          SOURCE_NS: ${{ inputs.source_namespace }}
+          TARGET_NS: ${{ inputs.target_namespace }}
+        run: |
+          set -euo pipefail
+          fail() { echo "::error::$1"; exit 1; }
+          [[ "$IMAGE" =~ ^[a-z0-9][a-z0-9._-]{1,254}$ ]] || fail "image '$IMAGE' is not a valid repository name"
+          [[ "$SOURCE_NS" =~ ^[a-z0-9]{4,30}$ ]] || fail "source_namespace '$SOURCE_NS' is not a valid Docker Hub namespace"
+          [[ "$TARGET_NS" =~ ^[a-z0-9]{4,30}$ ]] || fail "target_namespace '$TARGET_NS' is not a valid Docker Hub namespace"
+          for t in "$TAG" "$TARGET_TAG"; do
+            [[ "$t" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]] || fail "tag '$t' is not a valid OCI tag"
+          done
+          case "$TARGET_TAG" in
+            latest|master|main) fail "refusing to publish moving tag '$TARGET_TAG' to customers" ;;
+          esac
+          [[ "$SOURCE_NS" != "$TARGET_NS" ]] || fail "source and target namespace are the same"
+          # --preserve-digests needs skopeo >= 1.6; ubuntu-24.04 ships 1.13, ubuntu-26.04 1.21.
+          v="$(skopeo --version | grep -oE '[0-9]+\.[0-9]+' | head -1)"
+          [[ "${v%%.*}" -gt 1 || ( "${v%%.*}" -eq 1 && "${v##*.}" -ge 6 ) ]] || fail "skopeo $v is too old (need >= 1.6)"
+          echo "skopeo $v"
+          echo "SRC_AUTH=$RUNNER_TEMP/src-auth.json" >> "$GITHUB_ENV"
+          echo "DST_AUTH=$RUNNER_TEMP/dst-auth.json" >> "$GITHUB_ENV"
+
+      - name: Login to source namespace (read-only)
+        env:
+          SOURCE_USER: ${{ secrets.source_user }}
+          SOURCE_PASSWORD: ${{ secrets.source_password }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$SOURCE_PASSWORD" | skopeo login --authfile "$SRC_AUTH" --username "$SOURCE_USER" --password-stdin "$REGISTRY"
+
+      - name: Login to target namespace (push token)
+        env:
+          TARGET_USER: ${{ inputs.target_namespace }}
+          TARGET_PASSWORD: ${{ secrets.target_password }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$TARGET_PASSWORD" | skopeo login --authfile "$DST_AUTH" --username "$TARGET_USER" --password-stdin "$REGISTRY"
+
+      - name: Inspect source image
+        id: source
+        run: |
+          set -euo pipefail
+          raw="$(skopeo inspect --raw --authfile "$SRC_AUTH" "docker://$SOURCE_REF")"
+          media_type="$(jq -r '.mediaType // empty' <<<"$raw")"
+          case "$media_type" in
+            application/vnd.oci.image.index.v1+json|application/vnd.docker.distribution.manifest.list.v2+json) ;;
+            *) echo "::error::source $SOURCE_REF is not a multi-arch index (mediaType: ${media_type:-none})"; exit 1 ;;
+          esac
+          platforms="$(jq -r '[.manifests[] | select(.platform.os != "unknown") | "\(.platform.os)/\(.platform.architecture)"] | sort | join(" ")' <<<"$raw")"
+          for want in linux/amd64 linux/arm64; do
+            grep -qw "$want" <<<"$platforms" || { echo "::error::source index lacks $want (has: $platforms)"; exit 1; }
+          done
+          digest="sha256:$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
+          echo "source $SOURCE_REF digest $digest platforms: $platforms"
+
+      - name: Check target tag
+        id: target
+        env:
+          SRC_DIGEST: ${{ steps.source.outputs.digest }}
+        run: |
+          set -euo pipefail
+          set +e
+          raw="$(skopeo inspect --raw --authfile "$DST_AUTH" "docker://$TARGET_REF" 2>"$RUNNER_TEMP/inspect.err")"
+          rc=$?
+          set -e
+          if [[ $rc -ne 0 ]]; then
+            if grep -qiE 'manifest unknown|name unknown' "$RUNNER_TEMP/inspect.err"; then
+              echo "target $TARGET_REF does not exist yet"
+              echo "action=copy" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::could not inspect $TARGET_REF. Docker Hub answers 'access denied' when the repository does not exist or the token lacks scope: create the repository with Terraform (infra/customer-registry) and check target_password."
+            sed 's/^/  /' "$RUNNER_TEMP/inspect.err"
+            exit 1
+          fi
+          dst_digest="sha256:$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
+          if [[ "$dst_digest" == "$SRC_DIGEST" ]]; then
+            echo "target $TARGET_REF already has digest $dst_digest; nothing to do"
+            echo "action=skip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::error::target $TARGET_REF exists with digest $dst_digest but source is $SRC_DIGEST; release tags are immutable, choose a new tag"
+          exit 1
+
+      - name: Copy image by digest
+        if: steps.target.outputs.action == 'copy'
+        run: |
+          set -euo pipefail
+          skopeo copy --all --preserve-digests \
+            --src-authfile "$SRC_AUTH" --dest-authfile "$DST_AUTH" \
+            "docker://$SOURCE_REF" "docker://$TARGET_REF"
+
+      - name: Verify target digest
+        if: steps.target.outputs.action == 'copy'
+        env:
+          SRC_DIGEST: ${{ steps.source.outputs.digest }}
+        run: |
+          set -euo pipefail
+          raw="$(skopeo inspect --raw --authfile "$DST_AUTH" "docker://$TARGET_REF")"
+          dst_digest="sha256:$(printf '%s' "$raw" | sha256sum | cut -d' ' -f1)"
+          [[ "$dst_digest" == "$SRC_DIGEST" ]] || { echo "::error::digest mismatch after copy: source $SRC_DIGEST, target $dst_digest"; exit 1; }
+          echo "verified $TARGET_REF@$dst_digest"
+
+      - name: Summary
+        if: always()
+        env:
+          IMAGE: ${{ inputs.image }}
+          ACTION: ${{ steps.target.outputs.action }}
+          DIGEST: ${{ steps.source.outputs.digest }}
+          PLATFORMS: ${{ steps.source.outputs.platforms }}
+        run: |
+          {
+            echo "### Promote $IMAGE"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Source | \`$SOURCE_REF\` |"
+            echo "| Target | \`$TARGET_REF\` |"
+            echo "| Digest | \`${DIGEST:-n/a}\` |"
+            echo "| Platforms | ${PLATFORMS:-n/a} |"
+            echo "| Result | ${ACTION:-failed} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove auth files
+        if: always()
+        run: rm -f "$SRC_AUTH" "$DST_AUTH"
