@@ -8,12 +8,17 @@ on:
         required: true
         type: string
         default: staging
-env: 
+      runner:
+        required: false
+        type: string
+        default: ubuntu-latest
+env:
   ENV_NAME: ${{ inputs.environment }}
 jobs:
   git-tag-env:
     environment: ${{ inputs.environment }}
-    runs-on: ubuntu-latest
+    # Production tags are always moved from GitHub-hosted runners, whatever the caller asks for.
+    runs-on: ${{ startsWith(inputs.environment, 'production') && 'ubuntu-latest' || inputs.runner }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
