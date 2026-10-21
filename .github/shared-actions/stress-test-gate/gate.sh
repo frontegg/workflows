@@ -29,8 +29,17 @@ run_url="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-local}/ac
 
 output() { echo "$1=$2" >> "${GITHUB_OUTPUT:-/dev/null}"; }
 
-# Copies remote tag $1 into local ref $2; fails when the remote has no such tag.
-fetch_tag() { git fetch -q --no-tags origin "+$1:$2" 2>/dev/null; }
+# Copies remote tag $1 into local ref $2; fails when the remote has no such tag. Any other
+# fetch error is reported, and also fails, so callers treat it as "no tag".
+fetch_tag() {
+  local err
+  err=$(git fetch -q --no-tags origin "+$1:$2" 2>&1) && return 0
+  case "$err" in
+    *"couldn't find remote ref"*) ;;
+    *) echo "::warning::Could not fetch $1 from AppState: $err" ;;
+  esac
+  return 1
+}
 
 read_marker() {
   if fetch_tag "$marker_ref" refs/gate/marker; then
@@ -41,12 +50,16 @@ read_marker() {
 }
 
 # Succeeds when the last read marker covers AppState commit $1 with this stress-tests commit.
+mismatch_reported=""
 covered() {
   local my_commit=$1 tested_with
   [ -n "$my_commit" ] && [ -n "$marker_sha" ] || return 1
   tested_with=$(git for-each-ref --format='%(contents)' refs/gate/marker | sed -n 's/^stress-tests: //p')
   if [ "$tested_with" != "$stress_tests_sha" ]; then
-    echo "$marker_tag was tested with stress-tests ${tested_with:-<unknown>}, this run has $stress_tests_sha."
+    if [ "$mismatch_reported" != "$marker_sha" ]; then
+      echo "$marker_tag was tested with stress-tests ${tested_with:-<unknown>}, this run has $stress_tests_sha."
+      mismatch_reported=$marker_sha
+    fi
     return 1
   fi
   git merge-base --is-ancestor "$my_commit" "refs/gate/marker^{commit}"
@@ -58,25 +71,48 @@ skip() {
   exit 0
 }
 
+# Returns 0 when this run now holds the lock, 1 when another run holds it. Any other push
+# failure (permissions, rulesets, network) is printed; three in a row fail the job, so a
+# misconfiguration surfaces in about a minute instead of as a lock timeout.
+push_failures=0
 try_lock() {
+  local err
   git tag -f -a -m "run: $run_url" "$lock_tag" origin/master >/dev/null
-  git push -q origin "$lock_ref" 2>/dev/null || return 1
-  lock_sha=$(git rev-parse "$lock_ref")
-  output lock_sha "$lock_sha"
+  if err=$(git push -q origin "$lock_ref" 2>&1); then
+    lock_sha=$(git rev-parse "$lock_ref")
+    output lock_sha "$lock_sha"
+    return 0
+  fi
+  case "$err" in
+    *"already exists"*) push_failures=0; return 1 ;;
+  esac
+  push_failures=$((push_failures + 1))
+  echo "::warning::Could not push $lock_tag to AppState (attempt $push_failures/3): $err"
+  if (( push_failures >= 3 )); then
+    echo "::error::Cannot create $lock_tag on AppState; check that the token may create and delete tags there."
+    exit 1
+  fi
+  return 1
+}
+
+# Deletes remote tag $1, expecting it to point at tag object $2. Prints git's error on failure.
+delete_tag() {
+  local err
+  err=$(git push -q --force-with-lease="$1:$2" origin ":$1" 2>&1) && return 0
+  echo "$err"
+  return 1
 }
 
 release_lock() {
   [ -n "$1" ] || return 0
-  git push -q --force-with-lease="$lock_ref:$1" origin ":$lock_ref" ||
-    echo "::warning::Could not release $lock_tag; other deployments can take it over after ${LOCK_TTL_SECONDS:-1800}s."
+  local err
+  err=$(delete_tag "$lock_ref" "$1") ||
+    echo "::warning::Could not release $lock_tag; other deployments can take it over after ${LOCK_TTL_SECONDS:-1800}s. $err"
 }
 
 break_stale_lock() {
-  if ! fetch_tag "$lock_ref" refs/gate/lock; then
-    echo "Could not push $lock_tag although nobody holds it; retrying."
-    return 0
-  fi
-  local held_sha since holder
+  fetch_tag "$lock_ref" refs/gate/lock || return 0
+  local held_sha since holder err
   held_sha=$(git rev-parse refs/gate/lock)
   since=$(git for-each-ref --format='%(taggerdate:unix)' refs/gate/lock)
   holder=$(git for-each-ref --format='%(contents)' refs/gate/lock | sed -n 's/^run: //p')
@@ -85,7 +121,17 @@ break_stale_lock() {
     return 0
   fi
   echo "::warning::Taking over $lock_tag from ${holder:-<unknown>}: held longer than ${LOCK_TTL_SECONDS}s."
-  git push -q --force-with-lease="$lock_ref:$held_sha" origin ":$lock_ref" 2>/dev/null || true
+  err=$(delete_tag "$lock_ref" "$held_sha") ||
+    echo "::warning::Could not delete the stale $lock_tag: $err"
+}
+
+# Newest commit on origin/master that is at least SETTLE_SECONDS old, along with everything
+# before it. Walks history instead of filtering by date, so a commit whose date is older than
+# its real push time (runner clock skew) cannot make a younger commit before it count as settled.
+settled_commit() {
+  local cutoff=$(( $(date +%s) - SETTLE_SECONDS ))
+  git log --first-parent --max-count=1000 --format='%ct %H' origin/master |
+    awk -v cutoff="$cutoff" '{ sha[NR] = $2 } $1 > cutoff { young = NR } END { if ((young + 1) in sha) print sha[young + 1] }'
 }
 
 acquire() {
@@ -124,17 +170,14 @@ acquire() {
     sleep "$POLL_SECONDS"
   done
 
-  # A run holding the lock may have finished and covered us between the last check and our push.
+  # A run holding the lock may have finished and covered us between the last check and our
+  # push. The lock is released by the `complete` step, which runs whenever lock_sha is set.
   read_marker
-  if covered "$my_commit"; then
-    release_lock "$lock_sha"
-    output lock_sha ""
-    skip "$my_commit"
-  fi
+  if covered "$my_commit"; then skip "$my_commit"; fi
 
   git fetch -q --no-tags origin master
   local tested
-  tested=$(git rev-list -1 --before="@$(( $(date +%s) - SETTLE_SECONDS ))" origin/master)
+  tested=$(settled_commit)
   if [ -n "$my_commit" ] && { [ -z "$tested" ] || ! git merge-base --is-ancestor "$my_commit" "$tested"; }; then
     echo "::warning::AppState commit $my_commit is not yet ${SETTLE_SECONDS}s old; this run's pass will not be recorded for it."
   fi
