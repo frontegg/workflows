@@ -418,7 +418,7 @@ jobs:
           lock_sha: ${{ steps.stress-gate.outputs.lock_sha }}
           test_outcome: ${{ steps.stress-tests.outcome }}
       - name: Verify Stress Test Success
-        if: inputs.run_stress_tests && steps.stress-tests.conclusion == 'failure'
+        if: failure() && inputs.run_stress_tests && steps.stress-tests.conclusion == 'failure'
         run: |
           echo "Stress tests failed! You cannot proceed."
           echo "Test source: https://github.com/frontegg/stress-tests/blob/main/tests/customer-flow-sug-test.js"
@@ -430,7 +430,7 @@ jobs:
           echo "Check the test results in the workflow logs above."
           exit 1
       - name: Skip Stress Test Message
-        if: inputs.run_stress_tests && steps.stress-tests.conclusion == 'skipped' && steps.stress-gate.outputs.covered != 'true'
+        if: failure() && inputs.run_stress_tests && steps.stress-tests.conclusion == 'skipped' && steps.stress-gate.outputs.covered != 'true'
         run: |
           echo "Stress tests were skipped. This might be due to a previous step failing (like Checkly validation if it ran)."
           echo "Please check the workflow logs."
