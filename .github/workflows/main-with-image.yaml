@@ -329,6 +329,8 @@ jobs:
     needs:
       - params
       - deploy-to-staging
+    env:
+      STRESS_API_BASE_URL: https://api.stg.frontegg.com
     steps:
       - name: Check Deployment Validation
         id: evaluator
@@ -388,6 +390,7 @@ jobs:
           mode: acquire
           github_token: ${{ secrets.admin_github_token }}
           repository_name: ${{ inputs.repository_name }}
+          target: ${{ env.STRESS_API_BASE_URL }}
           environment: ${{ inputs.staging_environment_name }}
           app_version: ${{ needs.params.outputs.short_sha }}
       - name: Setup K6
@@ -406,13 +409,13 @@ jobs:
           SECRET: f0b820ff-0534-4af9-aa66-967f4a539ff5
           ROLE_IDS: 0aef1e4b-6a1d-41e8-99b2-87e9c9495d3e
           VENDOR_HOST: https://fronteggers.stg.frontegg.com
-          API_BASE_URL: https://api.stg.frontegg.com
+          API_BASE_URL: ${{ env.STRESS_API_BASE_URL }}
       - name: Record stress test result and release lock
         if: always() && steps.stress-gate.outputs.lock_sha != ''
         uses: ./workflows/.github/shared-actions/stress-test-gate
         with:
           mode: complete
-          environment: ${{ inputs.staging_environment_name }}
+          target: ${{ env.STRESS_API_BASE_URL }}
           tested_sha: ${{ steps.stress-gate.outputs.tested_sha }}
           marker_sha: ${{ steps.stress-gate.outputs.marker_sha }}
           lock_sha: ${{ steps.stress-gate.outputs.lock_sha }}
@@ -426,7 +429,7 @@ jobs:
           echo "The test was run with the following parameters:"
           echo "- Test ID: sug-customer-flow"
           echo "- Environment: ${{ inputs.staging_environment_name }}"
-          echo "- API Base URL: https://api.stg.frontegg.com"
+          echo "- API Base URL: ${{ env.STRESS_API_BASE_URL }}"
           echo "Check the test results in the workflow logs above."
           exit 1
       - name: Skip Stress Test Message

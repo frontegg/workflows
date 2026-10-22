@@ -13,9 +13,12 @@ inputs:
   repository_name:
     description: "The deploying repository, as used under applications/ in AppState (acquire)"
     required: false
-  environment:
-    description: "The environment the stress test runs against, e.g. staging"
+  target:
+    description: "URL or host the stress test loads, e.g. https://api.stg.frontegg.com. The lock and marker are keyed on its host"
     required: true
+  environment:
+    description: "The environment the deploying version is on, as used under applications/<repo>/ in AppState, e.g. staging (acquire)"
+    required: false
   app_version:
     description: "The version this deployment put on the environment (acquire)"
     required: false
@@ -83,6 +86,7 @@ runs:
         APPSTATE_DIR: ${{ github.workspace }}/appstate-stress-gate
         STRESS_TESTS_DIR: ${{ github.workspace }}/${{ inputs.stress_tests_path }}
         REPOSITORY_NAME: ${{ inputs.repository_name }}
+        TARGET: ${{ inputs.target }}
         ENVIRONMENT: ${{ inputs.environment }}
         APP_VERSION: ${{ inputs.app_version }}
         TESTED_SHA: ${{ inputs.tested_sha }}

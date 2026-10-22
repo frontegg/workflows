@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Serializes the staging stress test across every repository deploying through
 # main-with-image.yaml, and skips it when a passing run already covered this deployment.
-# All state lives as tags on the AppState remote:
+# State is keyed on the host the stress test loads (<target>), since that is what two
+# concurrent runs would collide on, and lives as tags on the AppState remote:
 #
-#   stress-tested/<env>  Annotated tag on the newest AppState commit a passing stress test
-#                        covered. Its message records the stress-tests commit that ran, so a
-#                        change to the test itself invalidates it.
-#   stress-lock/<env>    Annotated tag held while a run is testing. The remote rejects a push
-#                        of a tag that already exists, which makes acquiring it atomic.
+#   stress-tested/<target>  Annotated tag on the newest AppState commit a passing stress test
+#                           covered. Its message records the stress-tests commit that ran, so
+#                           a change to the test itself invalidates it.
+#   stress-lock/<target>    Annotated tag held while a run is testing. The remote rejects a
+#                           push of a tag that already exists, which makes acquiring it atomic.
 #
 # "Covered" means the AppState commit that put this deployment's version on <env> is an
-# ancestor of stress-tested/<env>. A run only claims commits that were at least
+# ancestor of stress-tested/<target>. A run only claims commits that were at least
 # SETTLE_SECONDS old when it started testing: ArgoCD applies an AppState commit some time
 # after it is pushed, so a younger commit may not have been running yet.
 #
@@ -21,8 +22,15 @@ mode=${1:?usage: gate.sh acquire|complete}
 stress_tests_sha=$(git -C "${STRESS_TESTS_DIR:?}" rev-parse HEAD)
 cd "${APPSTATE_DIR:?}"
 
-marker_tag="stress-tested/${ENVIRONMENT:?}"
-lock_tag="stress-lock/${ENVIRONMENT}"
+target=${TARGET:?}
+target=${target#*://}
+target=${target%%/*}
+if ! git check-ref-format "refs/tags/stress-lock/$target"; then
+  echo "::error::'$TARGET' does not give a usable tag name."
+  exit 2
+fi
+marker_tag="stress-tested/$target"
+lock_tag="stress-lock/$target"
 marker_ref="refs/tags/$marker_tag"
 lock_ref="refs/tags/$lock_tag"
 run_url="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-local}/actions/runs/${GITHUB_RUN_ID:-0}"
@@ -140,19 +148,44 @@ settled_commit() {
     awk -v cutoff="$cutoff" '{ sha[NR] = $2 } $1 > cutoff { young = NR } END { if ((young + 1) in sha) print sha[young + 1] }'
 }
 
-acquire() {
-  git config user.name "${GITHUB_ACTOR:-stress-test-gate}"
-  git config user.email "${GITHUB_ACTOR:-stress-test-gate}@users.noreply.github.com"
-  git fetch -q --no-tags origin master
-
-  local file="applications/${REPOSITORY_NAME:?}/$ENVIRONMENT/values.yaml" staged my_commit=""
+# Sets my_commit to the AppState commit that put APP_VERSION on the environment, or to ""
+# when the environment now carries another version. Called before every coverage check, so
+# a newer deploy of this repo during the wait stops this run from reusing a result.
+find_my_commit() {
+  local file="applications/${REPOSITORY_NAME:?}/${ENVIRONMENT:?}/values.yaml" staged
+  git fetch -q --no-tags origin master ||
+    echo "::warning::Could not fetch AppState master; using the last fetched state."
   staged=$(git show "origin/master:$file" 2>/dev/null | yq '.appVersion' 2>/dev/null || true)
   if [ "$staged" = "${APP_VERSION:?}" ]; then
     my_commit=$(git log -1 --format=%H origin/master -- "$file")
-  else
-    echo "::warning::$file has appVersion '$staged', not '$APP_VERSION'; running the stress test without reusing earlier results."
+    return 0
   fi
+  my_commit=""
+  if [ "${version_reported-unset}" != "$staged" ]; then
+    echo "::warning::$file has appVersion '$staged', not '$APP_VERSION'; running the stress test without reusing earlier results."
+    version_reported=$staged
+  fi
+}
 
+# Releases the lock when acquire fails or is cancelled after taking it, so release does not
+# depend on the `complete` step receiving lock_sha. A covered skip exits 0 and leaves the lock
+# to `complete`.
+release_on_failure() {
+  local rc=$?
+  if (( rc != 0 )) && [ -n "$lock_sha" ]; then
+    release_lock "$lock_sha"
+    output lock_sha ""
+  fi
+}
+
+acquire() {
+  git config user.name "${GITHUB_ACTOR:-stress-test-gate}"
+  git config user.email "${GITHUB_ACTOR:-stress-test-gate}@users.noreply.github.com"
+  lock_sha=""
+  trap release_on_failure EXIT
+  trap 'exit 143' TERM INT
+
+  find_my_commit
   read_marker
   if covered "$my_commit"; then skip "$my_commit"; fi
 
@@ -166,6 +199,7 @@ acquire() {
 
   local deadline=$(( $(date +%s) + LOCK_TIMEOUT_SECONDS ))
   until try_lock; do
+    find_my_commit
     read_marker
     if covered "$my_commit"; then skip "$my_commit"; fi
     if (( $(date +%s) >= deadline )); then
@@ -178,16 +212,16 @@ acquire() {
 
   # A run holding the lock may have finished and covered us between the last check and our
   # push. The lock is released by the `complete` step, which runs whenever lock_sha is set.
+  find_my_commit
   read_marker
   if covered "$my_commit"; then skip "$my_commit"; fi
 
-  git fetch -q --no-tags origin master
   local tested
   tested=$(settled_commit)
   if [ -n "$my_commit" ] && { [ -z "$tested" ] || ! git merge-base --is-ancestor "$my_commit" "$tested"; }; then
     echo "::warning::AppState commit $my_commit is not yet ${SETTLE_SECONDS}s old; this run's pass will not be recorded for it."
   fi
-  echo "Stress testing $ENVIRONMENT as of AppState commit ${tested:-<none>}."
+  echo "Stress testing $target as of AppState commit ${tested:-<none>}."
   output covered false
   output tested_sha "$tested"
   output marker_sha "$marker_sha"
