@@ -1,0 +1,106 @@
+name: Stress test gate
+description: >-
+  Serializes the staging stress test across repositories and skips it when a passing run
+  already covered the AppState commit that deployed this version. Run `acquire` before the
+  stress test and `complete` after it with `if: always()`. See gate.sh for the state it keeps.
+inputs:
+  mode:
+    description: "`acquire` before the stress test, `complete` after it"
+    required: true
+  github_token:
+    description: "Token with push access to frontegg/AppState (acquire)"
+    required: false
+  repository_name:
+    description: "The deploying repository, as used under applications/ in AppState (acquire)"
+    required: false
+  target:
+    description: "URL or host the stress test loads, e.g. https://api.stg.frontegg.com. The lock and marker are keyed on its host"
+    required: true
+  environment:
+    description: "The environment the deploying version is on, as used under applications/<repo>/ in AppState, e.g. staging (acquire)"
+    required: false
+  app_version:
+    description: "The version this deployment put on the environment (acquire)"
+    required: false
+  stress_tests_path:
+    description: "Workspace path of the frontegg/stress-tests checkout"
+    required: false
+    default: stress-tests
+  tested_sha:
+    description: "`tested_sha` output of acquire (complete)"
+    required: false
+  marker_sha:
+    description: "`marker_sha` output of acquire (complete)"
+    required: false
+  lock_sha:
+    description: "`lock_sha` output of acquire (complete)"
+    required: false
+  test_outcome:
+    description: "Outcome of the stress test step (complete)"
+    required: false
+  settle_seconds:
+    description: "How old an AppState commit must be before it counts as running on the environment"
+    required: false
+    default: "600"
+  lock_timeout_seconds:
+    description: >-
+      How long acquire waits for other deployments' stress tests. A waiter is normally covered by
+      the first test that starts after it began waiting, so it sits behind at most two tests: 50
+      min at the 25-min step timeout. The lock is not first-come-first-served, so a failed test
+      plus another waiter taking the lock first can still exceed this; the AU job then fails
+      and can be re-run.
+    required: false
+    default: "3600"
+  lock_ttl_seconds:
+    description: >-
+      Age after which a lock left by a dead run may be taken over. Must stay above the stress
+      test step's timeout-minutes, or a slow but live run loses its lock.
+    required: false
+    default: "1800"
+outputs:
+  covered:
+    description: "`true` when the stress test can be skipped"
+    value: ${{ steps.gate.outputs.covered }}
+  tested_sha:
+    description: "Newest AppState commit this run's stress test covers"
+    value: ${{ steps.gate.outputs.tested_sha }}
+  marker_sha:
+    description: "stress-tested tag object seen while holding the lock"
+    value: ${{ steps.gate.outputs.marker_sha }}
+  lock_sha:
+    description: "Lock tag object held by this run; empty when no lock is held"
+    value: ${{ steps.gate.outputs.lock_sha }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout AppState
+      if: inputs.mode == 'acquire'
+      uses: actions/checkout@v4
+      with:
+        repository: frontegg/AppState
+        path: appstate-stress-gate
+        token: ${{ inputs.github_token }}
+        fetch-depth: 0
+        filter: blob:none
+
+    - name: Stress test gate (${{ inputs.mode }})
+      id: gate
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/gate.sh" "$MODE"
+      env:
+        MODE: ${{ inputs.mode }}
+        APPSTATE_DIR: ${{ github.workspace }}/appstate-stress-gate
+        STRESS_TESTS_DIR: ${{ github.workspace }}/${{ inputs.stress_tests_path }}
+        REPOSITORY_NAME: ${{ inputs.repository_name }}
+        TARGET: ${{ inputs.target }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        APP_VERSION: ${{ inputs.app_version }}
+        TESTED_SHA: ${{ inputs.tested_sha }}
+        MARKER_SHA: ${{ inputs.marker_sha }}
+        LOCK_SHA: ${{ inputs.lock_sha }}
+        TEST_OUTCOME: ${{ inputs.test_outcome }}
+        SETTLE_SECONDS: ${{ inputs.settle_seconds }}
+        LOCK_TIMEOUT_SECONDS: ${{ inputs.lock_timeout_seconds }}
+        LOCK_TTL_SECONDS: ${{ inputs.lock_ttl_seconds }}
+        POLL_SECONDS: "30"
