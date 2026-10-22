@@ -5,9 +5,9 @@ run-name: Promote ${{ inputs.image }}:${{ inputs.tag }} to ${{ inputs.target_nam
 # customer-facing Docker Hub namespace by digest (no rebuild). Idempotent: re-running for
 # a tag that already exists with the same digest is a no-op; a different digest fails.
 #
-# Callers must provide a read-only credential for the source namespace and a push-scoped
-# organization access token for the target namespace. Never pass the credential that
-# pushes internal images.
+# Callers provide a credential that can read the source namespace (prefer a read-only token,
+# and never a push credential from a public repository) and a push-scoped organization access
+# token for the target namespace.
 
 on:
   workflow_call:
@@ -35,13 +35,12 @@ on:
         default: ''
         type: string
       environment:
-        description: 'GitHub environment to run under (required reviewers / environment secrets)'
-        required: false
-        default: 'customer-registry'
+        description: 'GitHub environment the copy job runs under; its required reviewers gate publishing (e.g. production)'
+        required: true
         type: string
     secrets:
       source_user:
-        description: 'Docker Hub username with read-only access to the source repository'
+        description: 'Docker Hub username that can read the source repository'
         required: true
       source_password:
         description: 'Password / access token for source_user'
@@ -156,11 +155,14 @@ jobs:
 
       - name: Copy image by digest
         if: steps.target.outputs.action == 'copy'
+        env:
+          SRC_DIGEST: ${{ steps.source.outputs.digest }}
         run: |
           set -euo pipefail
+          # Pull the inspected digest, not the tag, so a tag moved meanwhile can't change what is published.
           skopeo copy --all --preserve-digests \
             --src-authfile "$SRC_AUTH" --dest-authfile "$DST_AUTH" \
-            "docker://$SOURCE_REF" "docker://$TARGET_REF"
+            "docker://${SOURCE_REF%:*}@$SRC_DIGEST" "docker://$TARGET_REF"
 
       - name: Verify target digest
         if: steps.target.outputs.action == 'copy'
