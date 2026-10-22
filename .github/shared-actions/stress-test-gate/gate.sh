@@ -110,14 +110,20 @@ release_lock() {
     echo "::warning::Could not release $lock_tag; other deployments can take it over after ${LOCK_TTL_SECONDS:-1800}s. $err"
 }
 
+# Logs the wait when the lock changes hands, then every 5 minutes while the same run holds it.
+waiting_for="" waiting_logged_at=0
 break_stale_lock() {
   fetch_tag "$lock_ref" refs/gate/lock || return 0
-  local held_sha since holder err
+  local held_sha since holder err now
   held_sha=$(git rev-parse refs/gate/lock)
   since=$(git for-each-ref --format='%(taggerdate:unix)' refs/gate/lock)
   holder=$(git for-each-ref --format='%(contents)' refs/gate/lock | sed -n 's/^run: //p')
-  if [ -n "$since" ] && (( $(date +%s) - since < LOCK_TTL_SECONDS )); then
-    echo "Waiting for $lock_tag, held by ${holder:-<unknown>}."
+  now=$(date +%s)
+  if [ -n "$since" ] && (( now - since < LOCK_TTL_SECONDS )); then
+    if [ "$held_sha" != "$waiting_for" ] || (( now - waiting_logged_at >= 300 )); then
+      echo "Waiting for $lock_tag, held by ${holder:-<unknown>} for $(( (now - since) / 60 ))m."
+      waiting_for=$held_sha waiting_logged_at=$now
+    fi
     return 0
   fi
   echo "::warning::Taking over $lock_tag from ${holder:-<unknown>}: held longer than ${LOCK_TTL_SECONDS}s."
