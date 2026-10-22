@@ -16,6 +16,12 @@ on:
       GH_REPOSITORY_ADMIN_TOKEN:
         description: 'Github repository admin token'
         required: true
+      GH_FRONTEGG_BOT_APP_ID:
+        description: 'Frontegg Bot Creds'
+        required: false
+      GH_FRONTEGG_BOT_APP_SECRET:
+        description: 'Frontegg Bot Creds'
+        required: false
       DEV_ARGOCD_PASSWORD:
         description: 'ArgoCD password'
         required: true
@@ -50,9 +56,7 @@ jobs:
     with:
       volatileEnvironment: true
       disableDashboard: true
-    secrets:
-      admin_github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
+    secrets: inherit
 
   start-venv-with-image:
     name: Build image and start venv
@@ -61,12 +65,7 @@ jobs:
     with:
       volatileEnvironment: true
       disableDashboard: true
-    secrets:
-      admin_github_token: ${{  secrets.GH_REPOSITORY_ADMIN_TOKEN }}
-      argocd_password: ${{ secrets.DEV_ARGOCD_PASSWORD }}
-      npm_token: ${{ secrets.NPM_TOKEN }}
-      docker_hub_user: ${{ secrets.DOCKER_HUB_ACTION_USER }}
-      docker_hub_password: ${{ secrets.DOCKER_HUB_ACTION_PASSWORD }}
+    secrets: inherit
 
   prepare-params:
     name: Prepare environment params
@@ -94,17 +93,25 @@ jobs:
       always() &&
       !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     steps:
+      - id: create_bot_token
+        name: Create bot token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_FRONTEGG_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_FRONTEGG_BOT_APP_SECRET }}
+          owner: ${{ github.repository_owner }}
+          permission-contents: read
       - name: Checkout codes
         uses: actions/checkout@v4
         with:
           repository: frontegg/e2e-system-tests
           ref: ${{ inputs.tests_tag }}
-          token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          token: ${{ steps.create_bot_token.outputs.token }}
 
       - name: Run API Tests from E2E-system-tests repo
         uses: ./.github/actions/api-tests
         with:
-          github_token: ${{ secrets.GH_REPOSITORY_ADMIN_TOKEN }}
+          github_token: ${{ steps.create_bot_token.outputs.token }}
           npm_token: ${{ secrets.NPM_TOKEN }}
           server_url: ${{ needs.prepare-params.outputs.apiUrl }}
           portal_url: ${{ needs.prepare-params.outputs.portalUrl }}
