@@ -399,6 +399,9 @@ jobs:
       - name: Run Stress Tests
         id: stress-tests
         if: inputs.run_stress_tests && steps.stress-gate.outputs.covered != 'true'
+        # Must stay below the gate's lock_ttl_seconds (30 min), or a waiting deploy treats this
+        # run's lock as dead and starts a second stress test against the same host.
+        timeout-minutes: 25
         run: |
           k6 run -o experimental-prometheus-rw --tag testid="sug-customer-flow" --out json=results.json  -c ./stress-tests/tests/options.json ./stress-tests/tests/customer-flow-sug-test.js
         env:

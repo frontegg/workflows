@@ -43,11 +43,18 @@ inputs:
     required: false
     default: "600"
   lock_timeout_seconds:
-    description: "How long acquire waits for another deployment's stress test to finish"
+    description: >-
+      How long acquire waits for other deployments' stress tests. A waiter is normally covered by
+      the first test that starts after it began waiting, so it sits behind at most two tests: 50
+      min at the 25-min step timeout. The lock is not first-come-first-served, so a failed test
+      plus another waiter taking the lock first can still exceed this; the AU job then fails
+      and can be re-run.
     required: false
-    default: "2700"
+    default: "3600"
   lock_ttl_seconds:
-    description: "Age after which a lock left by a dead run may be taken over"
+    description: >-
+      Age after which a lock left by a dead run may be taken over. Must stay above the stress
+      test step's timeout-minutes, or a slow but live run loses its lock.
     required: false
     default: "1800"
 outputs:
