@@ -1,0 +1,154 @@
+name: Routes config check
+
+# Regenerates the caller's routes config and fails when:
+# - the pull request adds a route without a rate limit, or removes a route's rate limit.
+#   The api-gateway forwards a route without a rate limit unlimited. Routes that were already
+#   unlimited on the base branch, and routes guarded by InternalRequestGuard, are allowed.
+# - the committed routes-config*.json files differ from what the generate script writes.
+#
+# The caller's package.json picks the tooling: yarn or npm from the lockfile, the build:no-cache
+# script over build, and routes-config:generate:ci over routes-config:generate.
+
+on:
+  workflow_call:
+    inputs:
+      working-directory:
+        description: 'Directory that holds the service package.json and routes-config.json'
+        required: false
+        default: '.'
+        type: string
+      generate-script:
+        description: 'Package script that writes routes-config.json; defaults to routes-config:generate:ci, then routes-config:generate'
+        required: false
+        default: ''
+        type: string
+      node-version:
+        description: 'Node version; defaults to the .nvmrc in working-directory'
+        required: false
+        default: ''
+        type: string
+    secrets:
+      NPM_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate routes config changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.working-directory }}
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version == '' && format('{0}/.nvmrc', inputs.working-directory) || '' }}
+
+      - name: Detect package manager and scripts
+        id: detect
+        env:
+          GENERATE_SCRIPT: ${{ inputs.generate-script }}
+        run: |
+          has_script() {
+            node -e "process.exit(require('./package.json').scripts?.[process.argv[1]] ? 0 : 1)" "$1"
+          }
+          package_manager_field=$(node -p "require('./package.json').packageManager || ''")
+          if [ -f yarn.lock ]; then
+            run_script="yarn run"
+            if [[ "$package_manager_field" == yarn@1* ]] || { [ -z "$package_manager_field" ] && [ ! -f .yarnrc.yml ]; }; then
+              install_command="yarn install --frozen-lockfile"
+            else
+              install_command="yarn install --immutable"
+            fi
+          else
+            run_script="npm run"
+            install_command="npm ci"
+          fi
+          if has_script build:no-cache; then build_script=build:no-cache; else build_script=build; fi
+          generate_script="$GENERATE_SCRIPT"
+          if [ -z "$generate_script" ]; then
+            if has_script routes-config:generate:ci; then generate_script=routes-config:generate:ci; else generate_script=routes-config:generate; fi
+          fi
+          {
+            echo "install=$install_command"
+            echo "build=$run_script $build_script"
+            echo "generate=$run_script $generate_script"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          ${{ steps.detect.outputs.install }}
+
+      - name: Build
+        run: ${{ steps.detect.outputs.build }}
+
+      - name: Generate routes config
+        id: generate
+        run: ${{ steps.detect.outputs.generate }}
+
+      - name: Fail on new routes without a rate limit
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' && github.event.pull_request.base.sha != '' }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          base_routes_path="$RUNNER_TEMP/base-routes-config.json"
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git show "$BASE_SHA:./routes-config.json" > "$base_routes_path" 2>/dev/null || echo '[]' > "$base_routes_path"
+          BASE_ROUTES_PATH="$base_routes_path" node - <<'SCRIPT'
+          const fs = require('fs');
+          const readRoutes = (path) => (fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, 'utf8')) : []);
+          const routeKey = ({ method, path }) => `${method} ${path}`;
+          const hasRateLimit = (route) => (route.rateLimitConfigV2 ?? []).length > 0;
+          const baseRoutes = new Map(readRoutes(process.env.BASE_ROUTES_PATH).map((route) => [routeKey(route), route]));
+          const internalOnlyRouteKeys = new Set(
+            readRoutes('routes-config-guards.json')
+              .filter((route) => (route.guards ?? []).includes('InternalRequestGuard'))
+              .map(routeKey)
+          );
+          const isNewOrLostItsLimit = (route) => {
+            const baseRoute = baseRoutes.get(routeKey(route));
+            return !baseRoute || hasRateLimit(baseRoute);
+          };
+          const violations = [
+            ...new Set(
+              readRoutes('routes-config.json')
+                .filter((route) => !hasRateLimit(route) && !internalOnlyRouteKeys.has(routeKey(route)))
+                .filter(isNewOrLostItsLimit)
+                .map(routeKey)
+            )
+          ];
+          if (violations.length) {
+            const hint =
+              'Add rateLimitV2 to the @RouteConfig of each route or of its controller. A routeType alone applies the preset limits, ' +
+              'for example @RouteConfig({ rateLimitV2: [{ key: RateLimitKeyEnum.VendorID, routeType: RouteTypeEnum.Management }] }).';
+            const message = `${violations.length} new route(s) declare no rate limit, so the api-gateway would forward them unlimited:\n  ${violations.join('\n  ')}\n${hint}`;
+            console.log(message);
+            console.log(`::error title=Routes without a rate limit::${message.replaceAll('\n', '%0A')}`);
+            process.exit(1);
+          }
+          console.log('No new routes without a rate limit.');
+          SCRIPT
+
+      - name: Fail when the committed routes config is stale
+        if: ${{ !cancelled() && steps.generate.outcome == 'success' }}
+        run: |
+          stale_files=$(git status --porcelain --untracked-files=all -- 'routes-config*.json')
+          if [ -n "$stale_files" ]; then
+            git --no-pager diff -- 'routes-config*.json'
+            echo "::error title=Routes config is out of date::Run the generate script locally and commit the result:%0A${stale_files//$'\n'/%0A}"
+            exit 1
+          fi
